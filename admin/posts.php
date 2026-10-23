@@ -1232,11 +1232,29 @@ require PATH_ADMIN . '/layout/header.php';
         </div>
 
         <div>
-          <label style="display:block; font-size:0.8rem; font-weight:600; margin-bottom:0.35rem;">Renk & Doku Teması:</label>
-          <div style="display:flex; gap:0.5rem;">
-            <button type="button" class="btn btn-sm" onclick="setCardTheme('paper')" style="flex:1; justify-content:center; background:#fbf7ee; color:#1a1a1a; border:1.5px solid #1a1a1a; font-weight:600;">Ham Kağıt</button>
-            <button type="button" class="btn btn-sm" onclick="setCardTheme('dark')" style="flex:1; justify-content:center; background:#141414; color:#f4eee1; border:1px solid #333; font-weight:600;">Gece Daktilosu</button>
-            <button type="button" class="btn btn-sm" onclick="setCardTheme('red')" style="flex:1; justify-content:center; background:#8b1e0f; color:#fbf7ee; border:1px solid #8b1e0f; font-weight:600;">Matbaa Bordo</button>
+          <label style="display:block; font-size:0.8rem; font-weight:600; margin-bottom:0.35rem;">Edebi Doku & Kusurluluk Teması:</label>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.45rem;" id="themeButtonsGroup">
+            <button type="button" class="btn btn-sm" id="thmPaperBtn" onclick="setCardTheme('paper')" style="justify-content:center; background:#1a1a1a; color:#fff; font-weight:700; font-size:0.75rem;">📜 Ham Kağıt & Bant</button>
+            <button type="button" class="btn btn-sm btn-secondary" id="thmFanzineBtn" onclick="setCardTheme('fanzine')" style="justify-content:center; font-size:0.75rem;">🖨️ Kusurlu Fanzin</button>
+            <button type="button" class="btn btn-sm btn-secondary" id="thmBlueprintBtn" onclick="setCardTheme('blueprint')" style="justify-content:center; font-size:0.75rem;">📐 Milimetrik Defter</button>
+            <button type="button" class="btn btn-sm btn-secondary" id="thmDarkBtn" onclick="setCardTheme('dark')" style="justify-content:center; font-size:0.75rem;">🖤 Gece Daktilosu</button>
+            <button type="button" class="btn btn-sm btn-secondary" id="thmBordeauxBtn" onclick="setCardTheme('bordeaux')" style="justify-content:center; font-size:0.75rem;">🍷 Matbaa Bordo</button>
+            <button type="button" class="btn btn-sm btn-secondary" id="thmPostageBtn" onclick="setCardTheme('postage')" style="justify-content:center; font-size:0.75rem;">✉️ Posta Pulu & Zarf</button>
+          </div>
+        </div>
+
+        <div>
+          <label style="display:block; font-size:0.8rem; font-weight:600; margin-bottom:0.35rem;">Kusurlu Edebi Katmanlar (Detaylar):</label>
+          <div style="display:flex; flex-wrap:wrap; gap:0.75rem; background:var(--adm-bg); padding:0.6rem 0.8rem; border-radius:6px; font-size:0.78rem;">
+            <label style="display:inline-flex; align-items:center; gap:0.35rem; cursor:pointer;">
+              <input type="checkbox" id="cardOptTape" checked onchange="drawQuoteCard()" /> Koli Bandı Şeritleri
+            </label>
+            <label style="display:inline-flex; align-items:center; gap:0.35rem; cursor:pointer;">
+              <input type="checkbox" id="cardOptStamp" checked onchange="drawQuoteCard()" /> Kusurlu Matbaa Kaşesi
+            </label>
+            <label style="display:inline-flex; align-items:center; gap:0.35rem; cursor:pointer;">
+              <input type="checkbox" id="cardOptTexture" checked onchange="drawQuoteCard()" /> Kağıt Lif & Doku
+            </label>
           </div>
         </div>
 
@@ -1280,6 +1298,7 @@ function openStoryModal(data) {
   modal.style.display = 'flex';
   
   setCardFormat('portrait');
+  setCardTheme(currentTheme || 'paper');
 }
 
 function closeStoryModal() {
@@ -1337,7 +1356,173 @@ function setCardFormat(fmt) {
 
 function setCardTheme(thm) {
   currentTheme = thm;
+  const themeIds = ['thmPaperBtn', 'thmFanzineBtn', 'thmBlueprintBtn', 'thmDarkBtn', 'thmBordeauxBtn', 'thmPostageBtn'];
+  themeIds.forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) {
+      btn.style.background = '';
+      btn.style.color = '';
+      btn.classList.add('btn-secondary');
+    }
+  });
+
+  const activeMap = {
+    'paper': 'thmPaperBtn',
+    'fanzine': 'thmFanzineBtn',
+    'blueprint': 'thmBlueprintBtn',
+    'dark': 'thmDarkBtn',
+    'bordeaux': 'thmBordeauxBtn',
+    'postage': 'thmPostageBtn'
+  };
+
+  const activeBtn = document.getElementById(activeMap[thm]);
+  if (activeBtn) {
+    activeBtn.style.background = '#1a1a1a';
+    activeBtn.style.color = '#fff';
+    activeBtn.classList.remove('btn-secondary');
+  }
+
   drawQuoteCard();
+}
+
+// ✦ Kusurluluk & Edebi Doku Çizim Yardımcıları ✦
+function drawNoiseTexture(ctx, w, h, count, color) {
+  ctx.save();
+  ctx.fillStyle = color || 'rgba(0, 0, 0, 0.04)';
+  for (let i = 0; i < count; i++) {
+    const rx = Math.random() * w;
+    const ry = Math.random() * h;
+    const s = Math.random() * 2.2 + 0.8;
+    ctx.fillRect(rx, ry, s, s);
+  }
+  ctx.restore();
+}
+
+function drawWashiTapeStrip(ctx, x, y, width, height, angle, tapeColor) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate((angle * Math.PI) / 180);
+  ctx.fillStyle = tapeColor || 'rgba(245, 230, 200, 0.82)';
+
+  const teeth = 8;
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(width, 0);
+  
+  // Sağ tırtıklı/yırtık uç
+  for (let i = 0; i <= teeth; i++) {
+    const ty = (i / teeth) * height;
+    const tx = width + (i % 2 === 0 ? 5 : -4);
+    ctx.lineTo(tx, ty);
+  }
+  ctx.lineTo(0, height);
+  
+  // Sol tırtıklı/yırtık uç
+  for (let i = teeth; i >= 0; i--) {
+    const ty = (i / teeth) * height;
+    const tx = 0 - (i % 2 === 0 ? 5 : -4);
+    ctx.lineTo(tx, ty);
+  }
+  ctx.closePath();
+  ctx.fill();
+
+  // Bant kenar gölgesi
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.12)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Bant lif çizgileri
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(10, height * 0.4);
+  ctx.lineTo(width - 10, height * 0.4);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawRubberStamp(ctx, x, y, radius, angle, color, subText) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate((angle * Math.PI) / 180);
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+
+  // Dış kalın halka
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.arc(0, 0, radius, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // İç kesik çizgili halka
+  ctx.lineWidth = 2;
+  ctx.setLineDash([8, 6]);
+  ctx.beginPath();
+  ctx.arc(0, 0, radius - 10, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Kaşe içi metinler
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  ctx.font = 'bold ' + Math.round(radius * 0.20) + 'px "Courier New", monospace';
+  ctx.fillText('PRATFALL', 0, -radius * 0.34);
+
+  ctx.font = '900 ' + Math.round(radius * 0.14) + 'px "Courier New", monospace';
+  ctx.fillText('EDİTORYA', 0, -radius * 0.13);
+
+  ctx.font = 'bold ' + Math.round(radius * 0.14) + 'px "Courier New", monospace';
+  ctx.fillText('✦ ✦ ✦', 0, radius * 0.08);
+
+  ctx.font = 'bold ' + Math.round(radius * 0.11) + 'px "Courier New", monospace';
+  ctx.fillText(subText || 'KUSURLU KALMA ÇABASI', 0, radius * 0.31);
+
+  ctx.font = 'italic ' + Math.round(radius * 0.11) + 'px Georgia, serif';
+  ctx.fillText('NO: 1984 / ONAYLI', 0, radius * 0.52);
+
+  ctx.restore();
+}
+
+function drawCornerCross(ctx, x, y, size, color) {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x - size, y);
+  ctx.lineTo(x + size, y);
+  ctx.moveTo(x, y - size);
+  ctx.lineTo(x, y + size);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(x, y, size * 0.45, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawAirmailBorders(ctx, w, h, thickness) {
+  ctx.save();
+  const stripeW = thickness * 1.5;
+  const colors = ['#b91c1c', '#ffffff', '#1e40af', '#ffffff'];
+
+  ctx.beginPath();
+  ctx.rect(0, 0, w, h);
+  ctx.rect(thickness, thickness, w - thickness * 2, h - thickness * 2);
+  ctx.clip('evenodd');
+
+  for (let x = -h; x < w + h; x += stripeW) {
+    const col = colors[Math.floor(Math.abs(x) / stripeW) % colors.length];
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x + stripeW, 0);
+    ctx.lineTo(x + stripeW - h, h);
+    ctx.lineTo(x - h, h);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
 }
 
 function drawQuoteCard() {
@@ -1347,46 +1532,228 @@ function drawQuoteCard() {
   const w = canvas.width;
   const h = canvas.height;
 
-  // Tema Renkleri
+  const isTwitter = currentFormat === 'twitter';
+  const isStory = currentFormat === 'story';
+  const isSquare = currentFormat === 'square';
+  const margin = isTwitter ? 36 : 48;
+
+  // Katman Seçenekleri
+  const optTape = document.getElementById('cardOptTape') ? document.getElementById('cardOptTape').checked : true;
+  const optStamp = document.getElementById('cardOptStamp') ? document.getElementById('cardOptStamp').checked : true;
+  const optTexture = document.getElementById('cardOptTexture') ? document.getElementById('cardOptTexture').checked : true;
+
+  // Tema Renk Değişkenleri
   let bgColor = '#fbf7ee';
+  let cardBg = '#fdfbf7';
   let textColor = '#1a1a1a';
   let accentColor = '#8b1e0f';
   let frameColor = '#1a1a1a';
   let mutedColor = '#555555';
   let watermarkColor = 'rgba(139, 30, 15, 0.05)';
+  let stampColor = 'rgba(139, 30, 15, 0.78)';
+  let tapeColor = 'rgba(240, 225, 195, 0.85)';
 
-  if (currentTheme === 'dark') {
-    bgColor = '#141414';
-    textColor = '#f4eee1';
-    accentColor = '#d97706';
-    frameColor = '#333333';
-    mutedColor = '#888888';
-    watermarkColor = 'rgba(255, 255, 255, 0.035)';
-  } else if (currentTheme === 'red') {
-    bgColor = '#8b1e0f';
-    textColor = '#fbf7ee';
-    accentColor = '#fbf7ee';
-    frameColor = '#fbf7ee';
-    mutedColor = 'rgba(251,247,238,0.75)';
-    watermarkColor = 'rgba(255, 255, 255, 0.07)';
+  if (currentTheme === 'paper') {
+    bgColor = '#ede5d5';
+    cardBg = '#faf6ed';
+    textColor = '#1e1c19';
+    accentColor = '#8b1e0f';
+    frameColor = '#2b2621';
+    mutedColor = '#5c544a';
+    watermarkColor = 'rgba(139, 30, 15, 0.05)';
+    stampColor = 'rgba(139, 30, 15, 0.82)';
+    tapeColor = 'rgba(235, 218, 185, 0.88)';
+  } else if (currentTheme === 'fanzine') {
+    bgColor = '#e5e3dc';
+    cardBg = '#ffffff';
+    textColor = '#050505';
+    accentColor = '#000000';
+    frameColor = '#000000';
+    mutedColor = '#333333';
+    watermarkColor = 'rgba(0, 0, 0, 0.05)';
+    stampColor = 'rgba(0, 0, 0, 0.88)';
+    tapeColor = 'rgba(254, 240, 138, 0.9)'; // Sarı fanzin koli bandı
+  } else if (currentTheme === 'blueprint') {
+    bgColor = '#edf3f8';
+    cardBg = '#f8fbfe';
+    textColor = '#0f172a';
+    accentColor = '#1e40af';
+    frameColor = '#1e3a8a';
+    mutedColor = '#475569';
+    watermarkColor = 'rgba(30, 64, 175, 0.06)';
+    stampColor = 'rgba(30, 64, 175, 0.82)';
+    tapeColor = 'rgba(219, 234, 254, 0.88)';
+  } else if (currentTheme === 'dark') {
+    bgColor = '#0f0f10';
+    cardBg = '#18181b';
+    textColor = '#f4f4f5';
+    accentColor = '#f59e0b'; // Amber altın
+    frameColor = '#3f3f46';
+    mutedColor = '#a1a1aa';
+    watermarkColor = 'rgba(255, 255, 255, 0.04)';
+    stampColor = 'rgba(245, 158, 11, 0.85)';
+    tapeColor = 'rgba(63, 63, 70, 0.8)';
+  } else if (currentTheme === 'bordeaux') {
+    bgColor = '#380a0f';
+    cardBg = '#4c0d14';
+    textColor = '#fdf8f0';
+    accentColor = '#fbbf24'; // Matbaa yaldız
+    frameColor = '#d97706';
+    mutedColor = '#e2c5b0';
+    watermarkColor = 'rgba(251, 191, 36, 0.06)';
+    stampColor = 'rgba(251, 191, 36, 0.88)';
+    tapeColor = 'rgba(180, 83, 9, 0.7)';
+  } else if (currentTheme === 'postage') {
+    bgColor = '#f4efe6';
+    cardBg = '#fcf9f2';
+    textColor = '#1c1917';
+    accentColor = '#b91c1c';
+    frameColor = '#1e3a8a';
+    mutedColor = '#57534e';
+    watermarkColor = 'rgba(185, 28, 28, 0.05)';
+    stampColor = 'rgba(185, 28, 28, 0.82)';
+    tapeColor = 'rgba(245, 230, 205, 0.85)';
   }
 
-  // 1. Zemin Doldur
+  // 1. Ana Dış Zemin
   ctx.fillStyle = bgColor;
   ctx.fillRect(0, 0, w, h);
 
-  // 2. Dış Çerçeve
-  const isTwitter = currentFormat === 'twitter';
-  const margin = isTwitter ? 36 : 48;
-  ctx.strokeStyle = frameColor;
-  ctx.lineWidth = isTwitter ? 4 : 6;
-  ctx.strokeRect(margin, margin, w - margin * 2, h - margin * 2);
+  // 1.b Tema Özel Arka Plan Desenleri
+  if (currentTheme === 'blueprint') {
+    // Milimetrik çizgiler
+    ctx.save();
+    ctx.strokeStyle = 'rgba(30, 64, 175, 0.12)';
+    ctx.lineWidth = 1;
+    const gridStep = 32;
+    for (let gx = 0; gx < w; gx += gridStep) {
+      ctx.beginPath();
+      ctx.moveTo(gx, 0);
+      ctx.lineTo(gx, h);
+      ctx.stroke();
+    }
+    for (let gy = 0; gy < h; gy += gridStep) {
+      ctx.beginPath();
+      ctx.moveTo(0, gy);
+      ctx.lineTo(w, gy);
+      ctx.stroke();
+    }
+    // Defter marjin kırmızı çizgisi
+    ctx.strokeStyle = 'rgba(239, 68, 68, 0.45)';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(margin + 70, 0);
+    ctx.lineTo(margin + 70, h);
+    ctx.stroke();
+    ctx.restore();
+  } else if (currentTheme === 'postage') {
+    // Posta çavuş şeritleri
+    drawAirmailBorders(ctx, w, h, isTwitter ? 24 : 32);
+  }
 
-  // 3. Üst Logo & Slogan
+  // 2. İç Kart / Kusurlu Edebi Blok (Hard Shadow & Container)
+  const cardPad = isTwitter ? 24 : (currentTheme === 'postage' ? 44 : 36);
+  const cardX = cardPad;
+  const cardY = cardPad;
+  const cardW = w - (cardPad * 2);
+  const cardH = h - (cardPad * 2);
+
+  // Neo-Brutalist Sert Gölge (Paper, Fanzine temalarında kusurlu kutu kayması)
+  if (currentTheme === 'paper' || currentTheme === 'fanzine') {
+    ctx.save();
+    ctx.fillStyle = currentTheme === 'fanzine' ? '#000000' : 'rgba(0, 0, 0, 0.22)';
+    const shadowOffset = isTwitter ? 8 : 14;
+    ctx.fillRect(cardX + shadowOffset, cardY + shadowOffset, cardW, cardH);
+    ctx.restore();
+  }
+
+  // İç Kart Gövdesi
+  ctx.fillStyle = cardBg;
+  ctx.fillRect(cardX, cardY, cardW, cardH);
+
+  // Kart Çerçevesi
+  ctx.strokeStyle = frameColor;
+  ctx.lineWidth = currentTheme === 'fanzine' ? 5 : (isTwitter ? 3 : 4);
+
+  if (currentTheme === 'fanzine') {
+    ctx.strokeRect(cardX, cardY, cardW, cardH);
+    // Üst kesik/perfore çizgi süsü
+    ctx.save();
+    ctx.setLineDash([12, 8]);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#000';
+    ctx.beginPath();
+    ctx.moveTo(cardX + 20, cardY + 28);
+    ctx.lineTo(cardX + cardW - 20, cardY + 28);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.font = 'bold 13px monospace';
+    ctx.fillStyle = '#000';
+    ctx.fillText('✂ [ KUSURLU FANZİN SAYFASI - KESİK HATTI ]', cardX + 35, cardY + 24);
+    ctx.restore();
+  } else if (currentTheme === 'bordeaux') {
+    // Çift yaldız çizgi & köşe süsleri
+    ctx.strokeRect(cardX, cardY, cardW, cardH);
+    ctx.strokeStyle = 'rgba(251, 191, 36, 0.45)';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(cardX + 12, cardY + 12, cardW - 24, cardH - 24);
+  } else if (currentTheme === 'dark') {
+    ctx.strokeRect(cardX, cardY, cardW, cardH);
+    // 4 köşeye matbaa registration haçları
+    const crossOffset = 22;
+    drawCornerCross(ctx, cardX + crossOffset, cardY + crossOffset, 12, accentColor);
+    drawCornerCross(ctx, cardX + cardW - crossOffset, cardY + crossOffset, 12, accentColor);
+    drawCornerCross(ctx, cardX + crossOffset, cardY + cardH - crossOffset, 12, accentColor);
+    drawCornerCross(ctx, cardX + cardW - crossOffset, cardY + cardH - crossOffset, 12, accentColor);
+  } else {
+    ctx.strokeRect(cardX, cardY, cardW, cardH);
+  }
+
+  // Posta Pulu Figürü (Postage Teması için)
+  if (currentTheme === 'postage') {
+    ctx.save();
+    const stampW = isTwitter ? 90 : 120;
+    const stampH = isTwitter ? 110 : 145;
+    const stampX = cardX + cardW - stampW - 30;
+    const stampY = cardY + 30;
+    
+    // Pul arkaplanı
+    ctx.fillStyle = '#fff9f0';
+    ctx.strokeStyle = '#b91c1c';
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([5, 4]);
+    ctx.strokeRect(stampX, stampY, stampW, stampH);
+    ctx.fillRect(stampX, stampY, stampW, stampH);
+    ctx.setLineDash([]);
+
+    // Pul içi
+    ctx.fillStyle = '#b91c1c';
+    ctx.font = 'bold 12px "Courier New", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('PRATFALL', stampX + (stampW / 2), stampY + 24);
+    ctx.font = 'bold 26px Georgia, serif';
+    ctx.fillText('✒️', stampX + (stampW / 2), stampY + 65);
+    ctx.font = 'bold 11px "Courier New", monospace';
+    ctx.fillText('100 KURUŞ', stampX + (stampW / 2), stampY + 95);
+
+    // Damga dalgaları
+    ctx.strokeStyle = 'rgba(30, 58, 138, 0.65)';
+    ctx.lineWidth = 2;
+    for (let dw = 0; dw < 3; dw++) {
+      ctx.beginPath();
+      const waveY = stampY + 35 + (dw * 14);
+      ctx.moveTo(stampX - 45, waveY);
+      ctx.bezierCurveTo(stampX - 25, waveY - 8, stampX - 5, waveY + 8, stampX + 15, waveY);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // 3. Üst Logo & Slogan Hiyerarşisi
   ctx.textAlign = 'center';
   ctx.fillStyle = accentColor;
   ctx.font = (isTwitter ? 'bold 24px' : 'bold 30px') + ' "Courier New", monospace';
-  const headerY1 = margin + (isTwitter ? 40 : 54);
+  const headerY1 = cardY + (isTwitter ? 46 : 60);
   ctx.fillText('✦ PRATFALL ✦', w / 2, headerY1);
 
   ctx.fillStyle = textColor;
@@ -1408,10 +1775,10 @@ function drawQuoteCard() {
   ctx.lineTo(w / 2 + (isTwitter ? 100 : 130), headerLineY);
   ctx.stroke();
 
-  // 4. Alt Bölüm (Yazar, Eser, Domain) Konumları
+  // 4. Alt Bilgi Alanı Konumu
   const author = document.getElementById('cardAuthor').value.trim();
   const title = document.getElementById('cardTitle').value.trim();
-  const footerSeparatorY = h - margin - (isTwitter ? 115 : (currentFormat === 'story' ? 220 : 160));
+  const footerSeparatorY = cardY + cardH - (isTwitter ? 105 : (isStory ? 210 : 155));
 
   // 5. İçerik Alanı & Arka Plan Alıntı Filigranı (Watermark)
   const contentTop = headerLineY + 20;
@@ -1420,42 +1787,41 @@ function drawQuoteCard() {
   const availHeight = contentBottom - contentTop;
 
   ctx.save();
-  ctx.font = (isTwitter ? 'bold 200px' : 'bold 300px') + ' Georgia, serif';
+  ctx.font = (isTwitter ? 'bold 200px' : 'bold 320px') + ' Georgia, serif';
   ctx.fillStyle = watermarkColor;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText('“', w / 2, contentCenterY);
   ctx.restore();
 
-  // 6. Alıntı Metni Sarma & Dinamik Boyutlandırma
+  // 6. Alıntı Metni Sarma & Boyutlandırma Motoru
   const quote = document.getElementById('cardQuoteText').value.trim() || 'Sözcüklerin kusuru, insanın hakiki yarasına denk gelir.';
-  const maxTextWidth = isTwitter ? w - 220 : w - 240;
+  const maxTextWidth = isTwitter ? w - 240 : (w - (cardPad * 2) - 130);
 
-  function wrapWords(text, fontSize) {
-    ctx.font = `italic ${fontSize}px Georgia, serif`;
+  function wrapWords(text, fSize) {
+    ctx.font = `italic ${fSize}px Georgia, serif`;
     const words = text.split(/\s+/);
-    let lines = [];
+    let lns = [];
     let curLine = '';
     for (let n = 0; n < words.length; n++) {
       const test = curLine + words[n] + ' ';
       if (ctx.measureText(test).width > maxTextWidth && n > 0) {
-        lines.push(curLine.trim());
+        lns.push(curLine.trim());
         curLine = words[n] + ' ';
       } else {
         curLine = test;
       }
     }
-    if (curLine.trim()) lines.push(curLine.trim());
-    return lines;
+    if (curLine.trim()) lns.push(curLine.trim());
+    return lns;
   }
 
-  let fontSize = isTwitter ? 34 : (currentFormat === 'story' ? 52 : (currentFormat === 'portrait' ? 46 : 42));
+  let fontSize = isTwitter ? 34 : (isStory ? 52 : (currentFormat === 'portrait' ? 46 : 42));
   let lines = wrapWords(quote, fontSize);
   let lineHeight = fontSize * 1.55;
   let totalTextHeight = lines.length * lineHeight;
 
-  // Uzun alıntılarda fontu ayrılan alana tam sığacak şekilde dinamik küçült
-  const minFont = isTwitter ? 17 : 22;
+  const minFont = isTwitter ? 17 : 21;
   while ((totalTextHeight + 60 > availHeight) && fontSize > minFont) {
     fontSize -= 2;
     lineHeight = fontSize * 1.55;
@@ -1463,17 +1829,31 @@ function drawQuoteCard() {
     totalTextHeight = lines.length * lineHeight;
   }
 
-  // Metnin dikey başlangıç konumu
   let startY = contentCenterY - (totalTextHeight / 2) + (fontSize * 0.4);
 
-  // 7. Zarif Alıntı Simgesi (Metnin daima tam üstünde, asla çakışmaz!)
+  // 7. Vurucu Alıntı Tırnağı İkonu
   const quoteBadgeY = startY - (lineHeight * 0.7);
   ctx.font = 'bold ' + Math.min(42, Math.max(24, Math.round(fontSize * 0.85))) + 'px Georgia, serif';
   ctx.fillStyle = accentColor;
   ctx.textAlign = 'center';
   ctx.fillText('“', w / 2, quoteBadgeY);
 
-  // 8. Metin Satırlarını Çiz
+  // 8. Fanzin Vurgulayıcı Kalem Efekti (Fanzine temasında satır altı fosforlu bant)
+  if (currentTheme === 'fanzine' && lines.length > 0) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(254, 240, 138, 0.72)';
+    for (let k = 0; k < lines.length; k++) {
+      ctx.font = `italic ${fontSize}px Georgia, serif`;
+      const lineMetrics = ctx.measureText(lines[k]);
+      const lineW = lineMetrics.width;
+      const lx = (w / 2) - (lineW / 2) - 8;
+      const ly = startY + (k * lineHeight) - (fontSize * 0.72);
+      ctx.fillRect(lx, ly, lineW + 16, fontSize * 0.88);
+    }
+    ctx.restore();
+  }
+
+  // 9. Metin Satırlarını Çiz
   ctx.font = `italic ${fontSize}px Georgia, serif`;
   ctx.fillStyle = textColor;
   ctx.textAlign = 'center';
@@ -1481,8 +1861,7 @@ function drawQuoteCard() {
     ctx.fillText(lines[k], w / 2, startY + (k * lineHeight));
   }
 
-  // 9. Alt Bilgi Çizimi
-  // Ayırıcı çizgi alt
+  // 10. Alt Bilgi Çizimi
   ctx.strokeStyle = frameColor;
   ctx.lineWidth = 2;
   ctx.beginPath();
@@ -1505,7 +1884,33 @@ function drawQuoteCard() {
   // En alt domain
   ctx.font = (isTwitter ? '16px' : '20px') + ' "Courier New", monospace';
   ctx.fillStyle = mutedColor;
-  ctx.fillText('www.pratfall.com.tr', w / 2, h - margin - (isTwitter ? 16 : 26));
+  ctx.fillText('www.pratfall.com.tr', w / 2, cardY + cardH - (isTwitter ? 16 : 24));
+
+  // 11. Kusurlu Katmanlar (Koli Bandı & Matbaa Kaşesi)
+  if (optTape) {
+    // Üst orta sabitleyici koli bandı
+    const tapeW = isTwitter ? 150 : 200;
+    const tapeH = isTwitter ? 32 : 42;
+    drawWashiTapeStrip(ctx, (w / 2) - (tapeW / 2), cardY - 14, tapeW, tapeH, -2, tapeColor);
+
+    // Sağ alt köşeye çapraz destek bandı
+    if (!isTwitter) {
+      drawWashiTapeStrip(ctx, cardX + cardW - 130, cardY + cardH - 60, 160, 36, -38, tapeColor);
+    }
+  }
+
+  if (optStamp) {
+    // Sol alt veya sağ üst köşeye vurulmuş kaşe
+    const stampRadius = isTwitter ? 58 : 80;
+    const stampX = cardX + (isTwitter ? 85 : 125);
+    const stampY = cardY + cardH - (isTwitter ? 85 : 125);
+    drawRubberStamp(ctx, stampX, stampY, stampRadius, -14, stampColor, 'KUSURLU KALMA ÇABASI');
+  }
+
+  // 12. Kağıt Lif & Doku (Noise) Katmanı
+  if (optTexture) {
+    drawNoiseTexture(ctx, w, h, isTwitter ? 1800 : 3500, currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.035)' : 'rgba(0, 0, 0, 0.045)');
+  }
 }
 
 function downloadQuoteCard() {
