@@ -70,13 +70,14 @@ if ( empty( $feed_posts ) && ! empty( $posts ) ) {
     $feed_posts = $posts;
 }
 
-// Yazarları Çek (Kimler Yazmış?)
+// Ana Sayfa: Rastgele 4 Yazar (Her sayfa yenilendiğinde başka 4 yazar gelir)
 $authors = $db->query( "
     SELECT a.*, COUNT(p.id) AS post_count 
     FROM authors a
     LEFT JOIN posts p ON a.id = p.author_id AND p.status = 'published'
     GROUP BY a.id
-    ORDER BY post_count DESC, a.id ASC
+    ORDER BY RANDOM()
+    LIMIT 4
 " )->fetchAll();
 
 // Dergileri Çek
@@ -322,7 +323,7 @@ require PATH_VIEWS . '/layout/header.php';
 
     <!-- 5. YAZARLAR MASASI (YOKLAMA LİSTESİ - KİMLER YAZMIŞ?) -->
     <section class="author-spotlight-section" id="yazarlar">
-      <div class="author-spotlight-header">
+      <div class="author-spotlight-header" style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:1rem;">
         <div>
           <span class="tape-badge rot-n1" style="font-size:0.75rem; margin-bottom:0.35rem; display:inline-block;">
             ✦ KİMLER YAZMIŞ?
@@ -331,8 +332,13 @@ require PATH_VIEWS . '/layout/header.php';
             Yazarlar Masası
           </h2>
           <p style="margin:0.25rem 0 0 0; font-family:var(--font-mono); font-size:0.85rem; color:var(--text-muted);">
-            Burası sadece yoklama listesi.
+            Burası sadece yoklama listesi. Her ziyarette kadromuzdan rastgele 4 yazar selamlar.
           </p>
+        </div>
+        <div>
+          <a href="<?= SITE_URL; ?>/yazarlar" class="stamp-tag" style="background:var(--accent-primary); color:#fff; text-decoration:none; font-size:0.82rem; padding:0.5rem 1rem; display:inline-flex; align-items:center; gap:0.4rem; cursor:pointer; box-shadow:2px 2px 0 var(--border-color); font-weight:700; transition:all 0.15s ease;" onmouseover="this.style.transform='translate(-1px,-1px)'; this.style.boxShadow='3px 3px 0 var(--border-color)';" onmouseout="this.style.transform='none'; this.style.boxShadow='2px 2px 0 var(--border-color)';">
+            Tüm Yazarlarımız ↗
+          </a>
         </div>
       </div>
 

@@ -163,6 +163,13 @@ class Seo {
         echo "    <priority>0.8</priority>\n";
         echo "  </url>\n";
 
+        // Tüm Yazarlarımız Sayfası
+        echo "  <url>\n";
+        echo "    <loc>" . htmlspecialchars( SITE_URL . '/yazarlar', ENT_XML1 ) . "</loc>\n";
+        echo "    <changefreq>weekly</changefreq>\n";
+        echo "    <priority>0.8</priority>\n";
+        echo "  </url>\n";
+
         // Yazılar
         foreach ( $posts as $p ) {
             $loc = SITE_URL . '/eser/' . $p['slug'];
