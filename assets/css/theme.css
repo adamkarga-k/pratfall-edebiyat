@@ -733,6 +733,16 @@ html.dark .tape-badge.tape-peach {
   line-height: 1.3;
 }
 
+.insta-profile-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 4px 4px 0 var(--border-color) !important;
+  background-color: var(--bg-card) !important;
+}
+.insta-profile-card:active {
+  transform: translateY(0);
+  box-shadow: 1px 1px 0 var(--border-color) !important;
+}
+
 /* --------------------------------------------------------------------------
    5. YAZARLAR MASASI & KADRO VİTRİNİ (AUTHORS SPOTLIGHT)
    -------------------------------------------------------------------------- */

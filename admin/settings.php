@@ -23,7 +23,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 
         if ( $action_type === 'settings' ) {
             $settings_keys = [
-                'site_name', 'site_slogan', 'site_location_badge', 'site_instagram_url',
+                'site_name', 'site_slogan', 'site_location_badge', 'site_instagram_url', 'site_instagram_kitap_url',
                 'ticker_1', 'ticker_2', 'ticker_3', 'ticker_4',
                 'authors_badge', 'authors_title', 'authors_desc',
                 'feed_badge', 'feed_title',
@@ -175,8 +175,12 @@ require PATH_ADMIN . '/layout/header.php';
         <input type="text" name="site_location_badge" class="form-control" value="<?= htmlspecialchars( Database::get_setting('site_location_badge', 'Edebiyat & Fikir & Kültür & Sanat'), ENT_QUOTES, 'UTF-8' ); ?>" />
       </div>
       <div class="form-group">
-        <label class="form-label">Sağ Üst Instagram Bağlantısı</label>
+        <label class="form-label">Pratfall Dergi Instagram Bağlantısı</label>
         <input type="text" name="site_instagram_url" class="form-control" value="<?= htmlspecialchars( Database::get_setting('site_instagram_url', 'https://www.instagram.com/pratfalldergi/'), ENT_QUOTES, 'UTF-8' ); ?>" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Pratfall Kitap Instagram Bağlantısı</label>
+        <input type="text" name="site_instagram_kitap_url" class="form-control" value="<?= htmlspecialchars( Database::get_setting('site_instagram_kitap_url', 'https://www.instagram.com/pratfallkitap/'), ENT_QUOTES, 'UTF-8' ); ?>" />
       </div>
     </div>
   </div>

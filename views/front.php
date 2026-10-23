@@ -61,8 +61,9 @@ if ( $lead_post ) {
     $other_posts = $posts;
 }
 
-$secondary_post = ( $page === 1 && count( $other_posts ) > 0 ) ? array_shift( $other_posts ) : null;
 $feed_posts = ( $page === 1 ) ? $other_posts : $posts;
+$insta_dergi_url = Database::get_setting( 'site_instagram_url', 'https://www.instagram.com/pratfalldergi/' );
+$insta_kitap_url = Database::get_setting( 'site_instagram_kitap_url', 'https://www.instagram.com/pratfallkitap/' );
 
 // Eğer feed boşsa veya az yazı varsa demo yazıları göster
 if ( empty( $feed_posts ) && ! empty( $posts ) ) {
@@ -251,28 +252,53 @@ require PATH_VIEWS . '/layout/header.php';
             </div>
           </div>
 
-          <?php if ( $secondary_post ) : ?>
-          <div class="brutal-card secondary-feature-card rot-n05 rot-hover-straight">
-            <div class="secondary-feature-thumb">
-              <a href="<?= SITE_URL; ?>/eser/<?= $secondary_post['slug']; ?>">
-                <img src="<?= ! empty( $secondary_post['featured_image'] ) ? htmlspecialchars( $secondary_post['featured_image'] ) : 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=300&q=80'; ?>" alt="<?= htmlspecialchars( $secondary_post['title'] ); ?>" />
-              </a>
-            </div>
-            <div>
-              <span class="stamp-tag" style="margin-bottom:0.35rem; font-size:0.65rem;">
-                <?= htmlspecialchars( $secondary_post['category'] ); ?>
+          <!-- 2. Instagram Hesapları Bloğu -->
+          <div class="brutal-card rot-n05 rot-hover-straight" style="padding:1.25rem; background:var(--bg-card);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1.5px dashed var(--border-color); padding-bottom:0.6rem;">
+              <span class="stamp-tag" style="font-size:0.68rem; background:var(--text-main); color:var(--bg-card); font-weight:700;">
+                ✦ BİZİ TAKİP EDİN
               </span>
-              <h4 class="secondary-feature-title">
-                <a href="<?= SITE_URL; ?>/eser/<?= $secondary_post['slug']; ?>">
-                  <?= htmlspecialchars( $secondary_post['title'] ); ?>
-                </a>
-              </h4>
-              <div style="font-family:var(--font-mono); font-size:0.72rem; color:var(--text-muted);">
-                <?= htmlspecialchars( $secondary_post['author_name'] ); ?> · <?= Helpers::literary_reading_rhythm( (int) $secondary_post['reading_time'], $secondary_post['category'] ?? '' ); ?>
-              </div>
+              <span style="font-family:var(--font-mono); font-size:0.72rem; color:var(--text-muted); font-weight:600; letter-spacing:0.04em;">
+                INSTAGRAM
+              </span>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:0.75rem;">
+              
+              <!-- Pratfall Dergi -->
+              <a href="<?= htmlspecialchars( $insta_dergi_url, ENT_QUOTES, 'UTF-8' ); ?>" target="_blank" rel="noopener" class="insta-profile-card" style="display:flex; align-items:center; justify-content:space-between; padding:0.75rem 0.85rem; background:var(--bg-surface); border:1.5px solid var(--border-color); text-decoration:none; color:var(--text-main); transition:transform 0.15s ease, box-shadow 0.15s ease; box-shadow:2px 2px 0 var(--border-color);">
+                <div style="display:flex; align-items:center; gap:0.75rem; min-width:0;">
+                  <div style="width:40px; height:40px; border-radius:50%; background:linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0; box-shadow:0 2px 5px rgba(0,0,0,0.15);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                  </div>
+                  <div style="min-width:0;">
+                    <div style="font-family:var(--font-serif); font-size:1.05rem; font-weight:700; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Pratfall Dergi</div>
+                    <div style="font-family:var(--font-mono); font-size:0.72rem; color:var(--text-muted);">@pratfalldergi</div>
+                  </div>
+                </div>
+                <span class="stamp-tag" style="font-size:0.65rem; padding:0.22rem 0.55rem; background:var(--bg-tape); color:inherit; border:1px solid var(--border-color); flex-shrink:0;">
+                  Takip Et ↗
+                </span>
+              </a>
+
+              <!-- Pratfall Kitap -->
+              <a href="<?= htmlspecialchars( $insta_kitap_url, ENT_QUOTES, 'UTF-8' ); ?>" target="_blank" rel="noopener" class="insta-profile-card" style="display:flex; align-items:center; justify-content:space-between; padding:0.75rem 0.85rem; background:var(--bg-surface); border:1.5px solid var(--border-color); text-decoration:none; color:var(--text-main); transition:transform 0.15s ease, box-shadow 0.15s ease; box-shadow:2px 2px 0 var(--border-color);">
+                <div style="display:flex; align-items:center; gap:0.75rem; min-width:0;">
+                  <div style="width:40px; height:40px; border-radius:50%; background:linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0; box-shadow:0 2px 5px rgba(0,0,0,0.15);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                  </div>
+                  <div style="min-width:0;">
+                    <div style="font-family:var(--font-serif); font-size:1.05rem; font-weight:700; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Pratfall Kitap</div>
+                    <div style="font-family:var(--font-mono); font-size:0.72rem; color:var(--text-muted);">@pratfallkitap</div>
+                  </div>
+                </div>
+                <span class="stamp-tag" style="font-size:0.65rem; padding:0.22rem 0.55rem; background:var(--bg-tape); color:inherit; border:1px solid var(--border-color); flex-shrink:0;">
+                  Takip Et ↗
+                </span>
+              </a>
+
             </div>
           </div>
-          <?php endif; ?>
 
           <div class="brutal-card" style="padding:1.25rem; background:var(--bg-card); border-left:4px solid var(--accent-secondary);">
             <div style="font-family:var(--font-mono); font-size:0.75rem; font-weight:700; color:var(--accent-secondary); margin-bottom:0.25rem;">
