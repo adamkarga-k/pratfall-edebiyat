@@ -71,9 +71,9 @@ $copyright_text   = str_ireplace( 'mecmuaya', 'platforma', Database::get_setting
         <ul class="footer-links">
           <li><a href="<?= SITE_URL; ?>/">✦ Ana Sayfa</a></li>
           <li><a href="<?= SITE_URL; ?>/#dergiler">✦ Dergilerimizin Sayıları</a></li>
-          <li><a href="<?= SITE_URL; ?>/kitaplik">✦ Pratfall Kitaplığı</a></li>
+          <li><a href="<?= SITE_URL; ?>/kitaplik">✦ Pratfall Kitap</a></li>
           <li><a href="<?= SITE_URL; ?>/#yazarlar">✦ Kimler Yazmış?</a></li>
-          <li><a href="<?= SITE_URL; ?>/yazarlar">✦ Tüm Yazarlarımız</a></li>
+          <li><a href="<?= SITE_URL; ?>/yazarlar">✦ Dostlarımız</a></li>
         </ul>
       </div>
 

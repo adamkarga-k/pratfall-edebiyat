@@ -23,6 +23,8 @@ Router::get( '/', PATH_VIEWS . '/front.php' );
 Router::get( '/dergiler', PATH_VIEWS . '/dergiler.php' );
 Router::get( '/kitaplik', PATH_VIEWS . '/kitaplik.php' );
 Router::get( '/kitaplik.php', PATH_VIEWS . '/kitaplik.php' );
+Router::get( '/pratfall-kitap', PATH_VIEWS . '/kitaplik.php' );
+Router::get( '/kitaplar', PATH_VIEWS . '/kitaplik.php' );
 Router::get( '/yazarlar', PATH_VIEWS . '/yazarlar.php' );
 Router::get( '/yazarlar.php', PATH_VIEWS . '/yazarlar.php' );
 Router::get( '/eser/{slug}', PATH_VIEWS . '/single.php' );

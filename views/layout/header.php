@@ -118,9 +118,8 @@ $ticker_items = array_filter( $ticker_items );
       <nav class="pratfall-nav" role="navigation" aria-label="Ana Menü">
         <ul class="pratfall-menu">
           <li><a href="<?= SITE_URL; ?>/">Ana Sayfa</a></li>
-          <li><a href="<?= SITE_URL; ?>/#dergiler">Dergilerimiz</a></li>
-          <li><a href="<?= SITE_URL; ?>/kitaplik">Kitaplık</a></li>
-          <li><a href="<?= SITE_URL; ?>/#yazarlar">Kimler Yazmış?</a></li>
+          <li><a href="<?= SITE_URL; ?>/kitaplik">Pratfall Kitap</a></li>
+          <li><a href="<?= SITE_URL; ?>/yazarlar">Dostlarımız</a></li>
           <li><a href="<?= SITE_URL; ?>/#eserler">Son Eserler</a></li>
           <li><a href="<?= SITE_URL; ?>/#manifesto">Pratfall?</a></li>
         </ul>
