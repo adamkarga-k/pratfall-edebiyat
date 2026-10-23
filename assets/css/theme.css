@@ -340,7 +340,8 @@ html.dark .tape-badge.tape-peach {
 
 .pratfall-ticker-track {
   display: inline-flex;
-  animation: pratfallTickerScroll 35s linear infinite;
+  align-items: center;
+  animation: pratfallTickerScroll 42s linear infinite;
   white-space: nowrap;
 }
 
@@ -351,13 +352,98 @@ html.dark .tape-badge.tape-peach {
 .pratfall-ticker-item {
   display: inline-flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0 1.5rem;
+  gap: 1.15rem;
+  padding: 0 1.25rem;
 }
 
 .pratfall-ticker-item .ticker-dot {
   color: var(--accent-primary);
-  font-weight: bold;
+  font-weight: 700;
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+/* ==========================================================================
+   "KUSURLU KALMA ÇABASI" 7 FARKLI EDİTORYAL VE TİPOGRAFİK STİL
+   ========================================================================== */
+/* 1. Klasik Edebi Manşet Serif */
+.kusurlu-style-1 {
+  font-family: var(--font-serif);
+  font-weight: 800;
+  font-size: 0.94rem;
+  letter-spacing: 2.5px;
+  color: #ffffff;
+  text-transform: uppercase;
+}
+
+/* 2. Daktilo / Monospace Sarı Vurgulu */
+.kusurlu-style-2 {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 1.8px;
+  font-style: italic;
+  color: #facc15;
+  text-transform: uppercase;
+}
+
+/* 3. Ultra-Bold Neo-Brutalist Sans */
+.kusurlu-style-3 {
+  font-family: var(--font-sans);
+  font-weight: 900;
+  font-size: 0.92rem;
+  letter-spacing: 3.5px;
+  color: #f8fafc;
+  text-transform: uppercase;
+}
+
+/* 4. Zarif Edebi İtalik Serif */
+.kusurlu-style-4 {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 1.02rem;
+  letter-spacing: 2px;
+  color: #e2e8f0;
+  text-transform: uppercase;
+}
+
+/* 5. İçi Boş / Konturlu Outline Tipografi */
+.kusurlu-style-5 {
+  font-family: var(--font-sans);
+  font-weight: 900;
+  font-size: 0.92rem;
+  letter-spacing: 3.5px;
+  text-transform: uppercase;
+  -webkit-text-stroke: 1.2px #f8fafc;
+  color: transparent;
+}
+
+/* 6. Zıt Matbaa Damga / Pul Kutusu */
+.kusurlu-style-6 {
+  background: #f8fafc;
+  color: #0f172a;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: 0.78rem;
+  padding: 2px 8px;
+  border-radius: 2px;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  box-shadow: 1px 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+/* 7. Alt-Üst Editoryal Çizgili Klasik Tipografi */
+.kusurlu-style-7 {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-decoration: underline overline;
+  text-underline-offset: 3.5px;
+  text-decoration-thickness: 1.5px;
+  letter-spacing: 2.2px;
+  color: #cbd5e1;
+  text-transform: uppercase;
 }
 
 @keyframes pratfallTickerScroll {
@@ -655,6 +741,16 @@ html.dark .tape-badge.tape-peach {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+}
+
+.hero-author-item {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.hero-author-item:hover {
+  transform: translate(-1.5px, -1.5px);
+  box-shadow: 3px 3px 0 var(--border-color) !important;
+  border-color: var(--accent-primary) !important;
 }
 
 .curator-note-card {
@@ -1813,6 +1909,19 @@ html.dark .author-polaroid-wrap {
     font-size: 0.7rem;
     padding: 0.35rem 0;
   }
+
+  .pratfall-ticker-item {
+    gap: 0.85rem;
+    padding: 0 0.85rem;
+  }
+
+  .kusurlu-style-1 { font-size: 0.82rem; letter-spacing: 2px; }
+  .kusurlu-style-2 { font-size: 0.75rem; letter-spacing: 1.5px; }
+  .kusurlu-style-3 { font-size: 0.82rem; letter-spacing: 2.5px; }
+  .kusurlu-style-4 { font-size: 0.88rem; letter-spacing: 1.5px; }
+  .kusurlu-style-5 { font-size: 0.82rem; letter-spacing: 2.5px; }
+  .kusurlu-style-6 { font-size: 0.72rem; padding: 1.5px 6px; letter-spacing: 1.5px; }
+  .kusurlu-style-7 { font-size: 0.8rem; letter-spacing: 1.8px; }
 
   /* Manşet Bölümü */
   .editorial-hero-grid {

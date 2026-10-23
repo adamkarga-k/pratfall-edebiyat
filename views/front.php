@@ -276,22 +276,10 @@ require PATH_VIEWS . '/layout/header.php';
           </article>
         </div>
 
-        <!-- Yan Kolaj -->
+        <!-- Yan Kolaj: Üstte Bizi Takip Edin, Altta Yazarlar Masası -->
         <aside class="hero-side-column">
           
-          <div class="brutal-card curator-note-card rot-p1 rot-hover-straight">
-            <div class="curator-title">
-              <span>✦ KÜRATÖRÜN MASASI</span>
-            </div>
-            <blockquote class="curator-quote">
-              "Bir yazıdaki en sahici cümle, yazarın silmekten korktuğu ama sonunda sayfada bıraktığı o kusurlu cümledir."
-            </blockquote>
-            <div class="curator-sign">
-              — Sayı #18 Yayın Kurulu Notu
-            </div>
-          </div>
-
-          <!-- 2. Instagram Hesapları Bloğu -->
+          <!-- 1. Bizi Takip Edin (Instagram Hesapları Bloğu) -->
           <div class="brutal-card rot-n05 rot-hover-straight" style="padding:1.25rem; background:var(--bg-card);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem; border-bottom:1.5px dashed var(--border-color); padding-bottom:0.6rem;">
               <span class="stamp-tag" style="font-size:0.68rem; background:var(--text-main); color:var(--bg-card); font-weight:700;">
@@ -339,13 +327,44 @@ require PATH_VIEWS . '/layout/header.php';
             </div>
           </div>
 
-          <div class="brutal-card" style="padding:1.25rem; background:var(--bg-card); border-left:4px solid var(--accent-secondary);">
-            <div style="font-family:var(--font-mono); font-size:0.75rem; font-weight:700; color:var(--accent-secondary); margin-bottom:0.25rem;">
-              ✦ MATBAADAN TAZE ÇIKANLAR
+          <!-- 2. Yazarlar Masası (Yoklama Listesi: Rastgele 4 Yazar & Tüm Yazarlarımız Butonu) -->
+          <div class="brutal-card hero-authors-card rot-p05 rot-hover-straight" id="yazarlar" style="padding:1.25rem; background:var(--bg-card);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.85rem; border-bottom:1.5px dashed var(--border-color); padding-bottom:0.6rem; flex-wrap:wrap; gap:0.4rem;">
+              <div>
+                <span class="tape-badge tape-peach rot-n1" style="font-size:0.62rem; padding:0.15rem 0.5rem; margin-bottom:0.2rem; display:inline-block;">
+                  ✦ YOKLAMA LİSTESİ
+                </span>
+                <h3 style="font-family:var(--font-serif); font-size:1.15rem; font-weight:800; margin:0; line-height:1.2;">
+                  Yazarlar Masası
+                </h3>
+              </div>
+              <a href="<?= SITE_URL; ?>/yazarlar" class="stamp-tag" style="background:var(--accent-primary); color:#fff; text-decoration:none; font-size:0.72rem; padding:0.28rem 0.65rem; font-weight:700; box-shadow:1.5px 1.5px 0 var(--border-color); transition:all 0.15s ease;" title="Tüm Yazarlarımız">
+                Tüm Yazarlarımız ↗
+              </a>
             </div>
-            <p style="font-size:0.85rem; margin:0; line-height:1.5; color:var(--text-muted);">
-              Dergimizin yeni sayısı ve yazarlarımızın bağımsız fanzinleri şimdi vitrinde listeleniyor.
-            </p>
+
+            <div class="hero-authors-list" style="display:flex; flex-direction:column; gap:0.55rem;">
+              <?php foreach ( $authors as $author ) : ?>
+              <a href="<?= SITE_URL; ?>/yazar/<?= $author['slug']; ?>" class="hero-author-item" style="display:flex; align-items:center; justify-content:space-between; padding:0.5rem 0.75rem; background:var(--bg-surface); border:1.5px solid var(--border-color); text-decoration:none; color:var(--text-main); transition:all 0.15s ease; box-shadow:2px 2px 0 var(--border-color);">
+                <div style="display:flex; align-items:center; gap:0.65rem; min-width:0;">
+                  <div style="flex-shrink:0;">
+                    <?= Helpers::author_avatar( $author, 36 ); ?>
+                  </div>
+                  <div style="min-width:0;">
+                    <div style="font-family:var(--font-serif); font-size:0.92rem; font-weight:700; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                      <?= htmlspecialchars( $author['name'] ); ?>
+                    </div>
+                    <div style="font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                      <?= htmlspecialchars( ! empty($author['title']) ? $author['title'] : 'Yazar' ); ?>
+                    </div>
+                  </div>
+                </div>
+                <span class="stamp-tag" style="font-size:0.62rem; padding:0.15rem 0.45rem; background:var(--bg-card); color:var(--text-muted); border:1px solid var(--border-color); flex-shrink:0;">
+                  ✦ <?= (int) $author['post_count']; ?> Eser
+                </span>
+              </a>
+              <?php endforeach; ?>
+            </div>
           </div>
 
         </aside>
@@ -354,54 +373,12 @@ require PATH_VIEWS . '/layout/header.php';
     </section>
     <?php endif; ?>
 
-    <!-- Tırtıklı Perfore Ayraç: Yazarlar Masası -->
-    <div class="perforated-divider">
-      <span class="perforated-badge">✂ · KİMLER YAZMIŞ? · YOKLAMA LİSTESİ · ✦</span>
-    </div>
-
-    <!-- 5. YAZARLAR MASASI (YOKLAMA LİSTESİ - KİMLER YAZMIŞ?) -->
-    <section class="author-spotlight-section" id="yazarlar">
-      <div class="author-spotlight-header" style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:1rem;">
-        <div>
-          <span class="tape-badge rot-n1" style="font-size:0.75rem; margin-bottom:0.35rem; display:inline-block;">
-            ✦ KİMLER YAZMIŞ?
-          </span>
-          <h2 class="author-spotlight-title" style="margin-top:0.25rem;">
-            Yazarlar Masası
-          </h2>
-          <p style="margin:0.25rem 0 0 0; font-family:var(--font-mono); font-size:0.85rem; color:var(--text-muted);">
-            Burası sadece yoklama listesi. Her ziyarette kadromuzdan rastgele 4 yazar selamlar.
-          </p>
-        </div>
-        <div>
-          <a href="<?= SITE_URL; ?>/yazarlar" class="stamp-tag" style="background:var(--accent-primary); color:#fff; text-decoration:none; font-size:0.82rem; padding:0.5rem 1rem; display:inline-flex; align-items:center; gap:0.4rem; cursor:pointer; box-shadow:2px 2px 0 var(--border-color); font-weight:700; transition:all 0.15s ease;" onmouseover="this.style.transform='translate(-1px,-1px)'; this.style.boxShadow='3px 3px 0 var(--border-color)';" onmouseout="this.style.transform='none'; this.style.boxShadow='2px 2px 0 var(--border-color)';">
-            Tüm Yazarlarımız ↗
-          </a>
-        </div>
-      </div>
-
-      <div class="author-spotlight-grid">
-        <?php foreach ( $authors as $author ) : ?>
-        <a href="<?= SITE_URL; ?>/yazar/<?= $author['slug']; ?>" class="author-pill-card" style="text-decoration:none; color:inherit;">
-          <div class="author-pill-avatar">
-            <?= Helpers::author_avatar( $author, 52 ); ?>
-          </div>
-          <div class="author-pill-info">
-            <span class="author-pill-name"><?= htmlspecialchars( $author['name'] ); ?></span>
-            <span class="author-pill-role"><?= htmlspecialchars( ! empty($author['title']) ? $author['title'] : 'Yazar & Katkıda Bulunan' ); ?></span>
-            <span class="author-pill-count">✦ <?= (int) $author['post_count']; ?> Eser</span>
-          </div>
-        </a>
-        <?php endforeach; ?>
-      </div>
-    </section>
-
     <!-- Tırtıklı Perfore Ayraç: Eserler Akışı -->
-    <div class="perforated-divider">
+    <div class="perforated-divider" style="margin: 2.25rem 0 1.5rem 0;">
       <span class="perforated-badge">✂ · YENİ METİNLER & ESERLER · ✦</span>
     </div>
 
-    <!-- 6. ASİMETRİK ESER & YAZI AKIŞI -->
+    <!-- 5. ASİMETRİK ESER & YAZI AKIŞI -->
     <section class="asymmetric-feed-section" id="eserler">
       <div class="section-headline">
         <h2 class="section-headline-title">

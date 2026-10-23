@@ -47,26 +47,41 @@ $ticker_items = array_filter( $ticker_items );
   <div class="reading-progress-bar" aria-hidden="true"></div>
 <?php endif; ?>
 
-<!-- 1. En Üst Canlı Marquee Duyuru Bandı -->
-<?php if ( ! empty( $ticker_items ) ) : ?>
-<div class="pratfall-ticker-wrapper" aria-label="Canlı Edebi Akış">
+<!-- 1. En Üst Canlı Marquee Duyuru Bandı: "KUSURLU KALMA ÇABASI" (7 Farklı Edebi Tipografik Stil) -->
+<div class="pratfall-ticker-wrapper" aria-label="Kusurlu Kalma Çabası">
   <div class="pratfall-ticker-track">
-    <?php foreach ( $ticker_items as $item ) : ?>
+    <?php for ( $loop = 0; $loop < 2; $loop++ ) : ?>
       <div class="pratfall-ticker-item">
         <span class="ticker-dot">✦</span>
-        <?= htmlspecialchars( $item, ENT_QUOTES, 'UTF-8' ); ?>
+        <span class="kusurlu-style-1">KUSURLU KALMA ÇABASI</span>
       </div>
-    <?php endforeach; ?>
-    <!-- Kesintisiz akış için kopyası -->
-    <?php foreach ( $ticker_items as $item ) : ?>
+      <div class="pratfall-ticker-item">
+        <span class="ticker-dot">·</span>
+        <span class="kusurlu-style-2">KUSURLU KALMA ÇABASI</span>
+      </div>
       <div class="pratfall-ticker-item">
         <span class="ticker-dot">✦</span>
-        <?= htmlspecialchars( $item, ENT_QUOTES, 'UTF-8' ); ?>
+        <span class="kusurlu-style-3">KUSURLU KALMA ÇABASI</span>
       </div>
-    <?php endforeach; ?>
+      <div class="pratfall-ticker-item">
+        <span class="ticker-dot">·</span>
+        <span class="kusurlu-style-4">KUSURLU KALMA ÇABASI</span>
+      </div>
+      <div class="pratfall-ticker-item">
+        <span class="ticker-dot">✦</span>
+        <span class="kusurlu-style-5">KUSURLU KALMA ÇABASI</span>
+      </div>
+      <div class="pratfall-ticker-item">
+        <span class="ticker-dot">·</span>
+        <span class="kusurlu-style-6">KUSURLU KALMA ÇABASI</span>
+      </div>
+      <div class="pratfall-ticker-item">
+        <span class="ticker-dot">✦</span>
+        <span class="kusurlu-style-7">KUSURLU KALMA ÇABASI</span>
+      </div>
+    <?php endfor; ?>
   </div>
 </div>
-<?php endif; ?>
 
 <!-- 2. Editoryal Masthead & Navigasyon -->
 <header class="pratfall-header">

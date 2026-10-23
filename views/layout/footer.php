@@ -73,9 +73,7 @@ $copyright_text   = str_ireplace( 'mecmuaya', 'platforma', Database::get_setting
           <li><a href="<?= SITE_URL; ?>/#dergiler">✦ Dergilerimizin Sayıları</a></li>
           <li><a href="<?= SITE_URL; ?>/kitaplik">✦ Pratfall Kitaplığı</a></li>
           <li><a href="<?= SITE_URL; ?>/#yazarlar">✦ Kimler Yazmış?</a></li>
-          <li><a href="<?= SITE_URL; ?>/yazarlar">✦ Tüm Yazarlarımız (A-Z)</a></li>
-          <li><a href="<?= SITE_URL; ?>/#manifesto">✦ Pratfall?</a></li>
-          <li><a href="<?= SITE_URL; ?>/dergiler">✦ Tüm Arşiv & Fanzinler</a></li>
+          <li><a href="<?= SITE_URL; ?>/yazarlar">✦ Tüm Yazarlarımız</a></li>
         </ul>
       </div>
 
