@@ -20,8 +20,9 @@ $action = $_GET['action'] ?? 'list';
 $msg = $_GET['msg'] ?? '';
 $err = $_GET['err'] ?? '';
 
-// Yazar Listesi
-$authors = $db->query( "SELECT id, name FROM authors ORDER BY name ASC" )->fetchAll();
+// Yazar Listesi (A'dan Z'ye Türkçe Harf Sıralı)
+$authors = $db->query( "SELECT id, name FROM authors" )->fetchAll();
+Helpers::sort_turkish_alphabetical( $authors );
 
 // Kategori Listesi
 $all_categories = $db->query( "SELECT * FROM categories ORDER BY order_num ASC, name ASC" )->fetchAll();
@@ -745,14 +746,61 @@ require PATH_ADMIN . '/layout/header.php';
     });
 
     // Hızlı Yazar Ekleme Fonksiyonları
+    function sortSelectOptions(selectEl, selectedId) {
+      if (!selectEl) return;
+      var options = Array.from(selectEl.options);
+      var firstOpt = (options[0] && (options[0].value === '0' || options[0].value === '')) ? options.shift() : null;
+
+      options.sort(function(a, b) {
+        return a.text.localeCompare(b.text, 'tr');
+      });
+
+      selectEl.innerHTML = '';
+      if (firstOpt) selectEl.appendChild(firstOpt);
+      options.forEach(function(o) {
+        if (selectedId && String(o.value) === String(selectedId)) {
+          o.selected = true;
+        }
+        selectEl.appendChild(o);
+      });
+    }
+
     function toggleQuickAuthorBox() {
       var box = document.getElementById('quickAuthorBox');
       if (box.style.display === 'none' || box.style.display === '') {
         box.style.display = 'block';
+
+        // Seçili kategoriye göre edebi unvanı otomatik belirle (Şiir -> Şair, diğerleri -> Yazar)
+        var catSelect = document.getElementById('category');
+        var currentCat = catSelect ? catSelect.value.trim().toLowerCase() : '';
+        var titleInput = document.getElementById('quickAuthorTitle');
+        if (titleInput) {
+          if (currentCat.includes('şiir') || currentCat === 'siir') {
+            titleInput.value = 'Şair';
+          } else {
+            titleInput.value = 'Yazar';
+          }
+        }
+
         document.getElementById('quickAuthorName').focus();
       } else {
         box.style.display = 'none';
       }
+    }
+
+    // Kategori değiştiğinde açık olan hızlı yazar unvanını da dinamik güncelle
+    var catSelectEl = document.getElementById('category');
+    if (catSelectEl) {
+      catSelectEl.addEventListener('change', function() {
+        var box = document.getElementById('quickAuthorBox');
+        if (box && box.style.display === 'block') {
+          var val = this.value.trim().toLowerCase();
+          var titleInput = document.getElementById('quickAuthorTitle');
+          if (titleInput) {
+            titleInput.value = (val.includes('şiir') || val === 'siir') ? 'Şair' : 'Yazar';
+          }
+        }
+      });
     }
 
     function updateAuthorEditLink() {
@@ -775,7 +823,10 @@ require PATH_ADMIN . '/layout/header.php';
       var msg = document.getElementById('quickAuthorMsg');
 
       var name = nameInput.value.trim();
-      var title = titleInput.value.trim();
+      var catSelect = document.getElementById('category');
+      var currentCat = catSelect ? catSelect.value.trim().toLowerCase() : '';
+      var defaultTitle = (currentCat.includes('şiir') || currentCat === 'siir') ? 'Şair' : 'Yazar';
+      var title = titleInput.value.trim() || defaultTitle;
 
       if (!name) {
         alert('Lütfen yazar adı ve soyadı giriniz.');
@@ -800,13 +851,15 @@ require PATH_ADMIN . '/layout/header.php';
       .then(function(res) { return res.json(); })
       .then(function(data) {
         if (data.success) {
-          // 1. Yeni yazarı dropdown listesine ekle ve seç
+          // 1. Yeni yazarı dropdown listesine ekle ve A-Z harf sırasına göre dizip seç
           var sel = document.getElementById('author_id');
           var opt = document.createElement('option');
           opt.value = data.id;
           opt.textContent = data.name + (data.title ? ' (' + data.title + ')' : '');
-          opt.selected = true;
           sel.appendChild(opt);
+
+          // A'dan Z'ye sırala ve yeni ekleneni seç
+          sortSelectOptions(sel, data.id);
 
           // 2. Düzenleme bağlantısını anında aktif et
           updateAuthorEditLink();
@@ -864,13 +917,133 @@ require PATH_ADMIN . '/layout/header.php';
   <?php endif; ?>
 
   <?php
-  $all_posts = $db->query( "
+  // 1. Filtreler ve Sayfalama Parametreleri
+  $search_query   = trim( $_GET['q'] ?? '' );
+  $filter_cat     = trim( $_GET['category'] ?? '' );
+  $filter_author  = (int) ( $_GET['author_id'] ?? 0 );
+  $filter_status  = trim( $_GET['status'] ?? '' );
+  $current_paged  = max( 1, (int) ( $_GET['paged'] ?? 1 ) );
+  $per_page       = 20;
+
+  // 2. Dinamik SQL Filtresi
+  $where_parts = [ '1=1' ];
+  $params = [];
+
+  if ( ! empty( $search_query ) ) {
+      $where_parts[] = "(p.title LIKE ? OR p.excerpt LIKE ? OR p.tags LIKE ?)";
+      $term = '%' . $search_query . '%';
+      $params[] = $term;
+      $params[] = $term;
+      $params[] = $term;
+  }
+
+  if ( ! empty( $filter_cat ) ) {
+      $where_parts[] = "p.category = ?";
+      $params[] = $filter_cat;
+  }
+
+  if ( $filter_author > 0 ) {
+      $where_parts[] = "p.author_id = ?";
+      $params[] = $filter_author;
+  }
+
+  if ( in_array( $filter_status, [ 'published', 'draft' ], true ) ) {
+      $where_parts[] = "p.status = ?";
+      $params[] = $filter_status;
+  }
+
+  $where_sql = implode( ' AND ', $where_parts );
+
+  // 3. Toplam Kayıt Sayısı
+  $count_stmt = $db->prepare( "SELECT COUNT(*) FROM posts p WHERE {$where_sql}" );
+  $count_stmt->execute( $params );
+  $total_posts = (int) $count_stmt->fetchColumn();
+  $total_pages = max( 1, (int) ceil( $total_posts / $per_page ) );
+
+  if ( $current_paged > $total_pages && $total_posts > 0 ) {
+      $current_paged = $total_pages;
+  }
+  $offset = ( $current_paged - 1 ) * $per_page;
+
+  // 4. Sayfalı Veriyi Çek
+  $list_sql = "
       SELECT p.*, a.name AS author_name, a.slug AS author_slug 
       FROM posts p 
       LEFT JOIN authors a ON p.author_id = a.id 
-      ORDER BY p.published_at DESC
-  " )->fetchAll();
+      WHERE {$where_sql}
+      ORDER BY p.published_at DESC, p.id DESC
+      LIMIT {$per_page} OFFSET {$offset}
+  ";
+  $posts_stmt = $db->prepare( $list_sql );
+  $posts_stmt->execute( $params );
+  $all_posts = $posts_stmt->fetchAll();
+
+  $has_active_filters = ( ! empty( $search_query ) || ! empty( $filter_cat ) || $filter_author > 0 || ! empty( $filter_status ) );
+
+  // Sayfalama Linki Üretici
+  $build_page_url = function( $p ) {
+      $query = $_GET;
+      $query['paged'] = $p;
+      return SITE_URL . '/admin/posts.php?' . http_build_query( $query );
+  };
   ?>
+
+  <!-- Arama ve Filtreleme Araç Çubuğu -->
+  <div class="card" style="margin-bottom:1.25rem; padding:1rem 1.25rem;">
+    <form method="GET" action="<?= SITE_URL; ?>/admin/posts.php" style="display:flex; flex-wrap:wrap; gap:0.75rem; align-items:center;">
+      
+      <!-- Arama Kutusu -->
+      <div style="flex:1; min-width:200px;">
+        <input type="text" name="q" value="<?= htmlspecialchars( $search_query, ENT_QUOTES, 'UTF-8' ); ?>" placeholder="Başlık, etiket veya özet ara..." class="form-control" style="font-size:0.85rem;" />
+      </div>
+
+      <!-- Kategori Filtresi -->
+      <div style="min-width:140px;">
+        <select name="category" class="form-control" style="font-size:0.85rem;">
+          <option value="">Tüm Kategoriler</option>
+          <?php foreach ( $all_categories as $cat ) : ?>
+            <option value="<?= htmlspecialchars( $cat['name'] ); ?>" <?= $filter_cat === $cat['name'] ? 'selected' : ''; ?>>
+              <?= htmlspecialchars( $cat['name'] ); ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+
+      <!-- Yazar Filtresi -->
+      <div style="min-width:140px;">
+        <select name="author_id" class="form-control" style="font-size:0.85rem;">
+          <option value="0">Tüm Yazarlar</option>
+          <?php foreach ( $authors as $auth ) : ?>
+            <option value="<?= $auth['id']; ?>" <?= $filter_author === (int) $auth['id'] ? 'selected' : ''; ?>>
+              <?= htmlspecialchars( $auth['name'] ); ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+
+      <!-- Durum Filtresi -->
+      <div style="min-width:110px;">
+        <select name="status" class="form-control" style="font-size:0.85rem;">
+          <option value="">Tüm Durumlar</option>
+          <option value="published" <?= $filter_status === 'published' ? 'selected' : ''; ?>>● Yayında</option>
+          <option value="draft" <?= $filter_status === 'draft' ? 'selected' : ''; ?>>○ Taslak</option>
+        </select>
+      </div>
+
+      <!-- Butonlar -->
+      <div style="display:flex; gap:0.4rem;">
+        <button type="submit" class="btn btn-primary btn-sm" style="padding:0.45rem 0.9rem;">
+          <span>🔍</span> Filtrele
+        </button>
+        <?php if ( $has_active_filters ) : ?>
+          <a href="<?= SITE_URL; ?>/admin/posts.php" class="btn btn-sm" style="padding:0.45rem 0.75rem; color:#ef4444;" title="Filtreleri Temizle">
+            ✕ Temizle
+          </a>
+        <?php endif; ?>
+      </div>
+
+    </form>
+  </div>
 
   <div class="card">
     <div style="overflow-x:auto;">
@@ -947,13 +1120,62 @@ require PATH_ADMIN . '/layout/header.php';
           <?php else : ?>
             <tr>
               <td colspan="8" style="text-align:center; padding:3rem; color:var(--adm-muted);">
-                Henüz kayıtlı bir metin bulunmuyor.
+                <?= $has_active_filters ? 'Arama kriterlerinize uygun eser bulunamadı.' : 'Henüz kayıtlı bir metin bulunmuyor.'; ?>
               </td>
             </tr>
           <?php endif; ?>
         </tbody>
       </table>
     </div>
+
+    <!-- Sayfalama ve İstatistik Çubuğu -->
+    <?php if ( $total_posts > 0 ) : ?>
+      <div style="padding:1rem 1.25rem; border-top:1px solid var(--adm-border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; background:#fafafa;">
+        <div style="font-size:0.82rem; color:var(--adm-muted);">
+          Toplam <strong><?= number_format( $total_posts ); ?></strong> eserden <strong><?= $offset + 1; ?> - <?= min( $offset + $per_page, $total_posts ); ?></strong> arası gösteriliyor (Sayfa <?= $current_paged; ?> / <?= $total_pages; ?>)
+        </div>
+
+        <?php if ( $total_pages > 1 ) : ?>
+          <div style="display:flex; align-items:center; gap:0.3rem;">
+            <?php if ( $current_paged > 1 ) : ?>
+              <a href="<?= $build_page_url( 1 ); ?>" class="btn btn-sm" style="padding:0.25rem 0.55rem; font-size:0.75rem;" title="İlk Sayfa">« İlk</a>
+              <a href="<?= $build_page_url( $current_paged - 1 ); ?>" class="btn btn-sm" style="padding:0.25rem 0.55rem; font-size:0.75rem;" title="Önceki Sayfa">‹ Önceki</a>
+            <?php endif; ?>
+
+            <?php
+            $start_page = max( 1, $current_paged - 2 );
+            $end_page   = min( $total_pages, $current_paged + 2 );
+
+            if ( $start_page > 1 ) {
+                echo '<span style="padding:0 0.25rem; color:var(--adm-muted); font-size:0.75rem;">…</span>';
+            }
+
+            for ( $p = $start_page; $p <= $end_page; $p++ ) :
+                if ( $p === $current_paged ) : ?>
+                  <span class="btn btn-sm btn-accent" style="padding:0.25rem 0.65rem; font-size:0.75rem; font-weight:700; cursor:default; pointer-events:none;">
+                    <?= $p; ?>
+                  </span>
+                <?php else : ?>
+                  <a href="<?= $build_page_url( $p ); ?>" class="btn btn-sm" style="padding:0.25rem 0.65rem; font-size:0.75rem;">
+                    <?= $p; ?>
+                  </a>
+                <?php endif;
+            endfor;
+
+            if ( $end_page < $total_pages ) {
+                echo '<span style="padding:0 0.25rem; color:var(--adm-muted); font-size:0.75rem;">…</span>';
+            }
+            ?>
+
+            <?php if ( $current_paged < $total_pages ) : ?>
+              <a href="<?= $build_page_url( $current_paged + 1 ); ?>" class="btn btn-sm" style="padding:0.25rem 0.55rem; font-size:0.75rem;" title="Sonraki Sayfa">Sonraki ›</a>
+              <a href="<?= $build_page_url( $total_pages ); ?>" class="btn btn-sm" style="padding:0.25rem 0.55rem; font-size:0.75rem;" title="Son Sayfa">Son »</a>
+            <?php endif; ?>
+          </div>
+        <?php endif; ?>
+      </div>
+    <?php endif; ?>
+
   </div>
 
 <?php endif; ?>

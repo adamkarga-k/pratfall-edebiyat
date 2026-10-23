@@ -132,4 +132,53 @@ class Helpers {
             return self::turkish_upper( $m[1] );
         }, $lower );
     }
+
+    /**
+     * Diziyi Türkçe Harf Sırasına (A'dan Z'ye) Göre Sırala
+     * A, B, C, Ç, D, E, F, G, Ğ, H, I, İ, J, K, L, M, N, O, Ö, P, R, S, Ş, T, U, Ü, V, Y, Z
+     */
+    public static function sort_turkish_alphabetical( array &$list, string $key = 'name' ): void {
+        if ( class_exists( 'Collator' ) ) {
+            $c = new Collator( 'tr_TR' );
+            usort( $list, function( $a, $b ) use ( $c, $key ) {
+                $valA = is_array( $a ) ? ( $a[$key] ?? '' ) : ( $a->$key ?? '' );
+                $valB = is_array( $b ) ? ( $b[$key] ?? '' ) : ( $b->$key ?? '' );
+                return $c->compare( (string) $valA, (string) $valB );
+            } );
+            return;
+        }
+
+        $alphabet = [
+            'a'=>1, 'A'=>1, 'b'=>2, 'B'=>2, 'c'=>3, 'C'=>3, 'ç'=>4, 'Ç'=>4,
+            'd'=>5, 'D'=>5, 'e'=>6, 'E'=>6, 'f'=>7, 'F'=>7, 'g'=>8, 'G'=>8,
+            'ğ'=>9, 'Ğ'=>9, 'h'=>10, 'H'=>10, 'ı'=>11, 'I'=>11, 'i'=>12, 'İ'=>12,
+            'j'=>13, 'J'=>13, 'k'=>14, 'K'=>14, 'l'=>15, 'L'=>15, 'm'=>16, 'M'=>16,
+            'n'=>17, 'N'=>17, 'o'=>18, 'O'=>18, 'ö'=>19, 'Ö'=>19, 'p'=>20, 'P'=>20,
+            'r'=>21, 'R'=>21, 's'=>22, 'S'=>22, 'ş'=>23, 'Ş'=>23, 't'=>24, 'T'=>24,
+            'u'=>25, 'U'=>25, 'ü'=>26, 'Ü'=>26, 'v'=>27, 'V'=>27, 'y'=>28, 'Y'=>28,
+            'z'=>29, 'Z'=>29
+        ];
+
+        usort( $list, function( $a, $b ) use ( $alphabet, $key ) {
+            $valA = is_array( $a ) ? ( $a[$key] ?? '' ) : ( $a->$key ?? '' );
+            $valB = is_array( $b ) ? ( $b[$key] ?? '' ) : ( $b->$key ?? '' );
+
+            $strA = self::turkish_lower( trim( (string) $valA ) );
+            $strB = self::turkish_lower( trim( (string) $valB ) );
+            $lenA = mb_strlen( $strA, 'UTF-8' );
+            $lenB = mb_strlen( $strB, 'UTF-8' );
+            $minLen = min( $lenA, $lenB );
+
+            for ( $i = 0; $i < $minLen; $i++ ) {
+                $charA = mb_substr( $strA, $i, 1, 'UTF-8' );
+                $charB = mb_substr( $strB, $i, 1, 'UTF-8' );
+                $wA = $alphabet[$charA] ?? ( 100 + ord( $charA ) );
+                $wB = $alphabet[$charB] ?? ( 100 + ord( $charB ) );
+                if ( $wA !== $wB ) {
+                    return $wA - $wB;
+                }
+            }
+            return $lenA - $lenB;
+        } );
+    }
 }

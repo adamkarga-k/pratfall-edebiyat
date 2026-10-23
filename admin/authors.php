@@ -26,6 +26,9 @@ if ( $action === 'ajax_create' && $_SERVER['REQUEST_METHOD'] === 'POST' ) {
     }
     $name  = trim( (string) ( $_POST['name'] ?? '' ) );
     $title = trim( (string) ( $_POST['title'] ?? '' ) );
+    if ( empty( $title ) ) {
+        $title = 'Yazar';
+    }
 
     if ( empty( $name ) ) {
         echo json_encode( [ 'success' => false, 'message' => 'Yazar adı boş bırakılamaz.' ] );

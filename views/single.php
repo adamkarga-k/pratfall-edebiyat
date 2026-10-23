@@ -32,6 +32,7 @@ if ( empty( $_SESSION[$viewed_key] ) ) {
 }
 
 $is_single = true;
+$is_poem = ( mb_stripos( $post['category'] ?? '', 'şiir' ) !== false || mb_stripos( $post['category'] ?? '', 'siir' ) !== false );
 
 // SEO Bilgileri
 $seo_data = [
@@ -54,7 +55,7 @@ require PATH_VIEWS . '/layout/header.php';
   <div style="position:absolute; right:0; top:-2px; width:7px; height:7px; background:#141416; border-radius:50%; box-shadow:0 0 5px rgba(0,0,0,0.5);"></div>
 </div>
 
-<article class="single-article">
+<article class="single-article <?= $is_poem ? 'is-poem' : ''; ?>">
   <div class="pratfall-container-narrow">
     
     <!-- Başlık Alanı -->
@@ -106,7 +107,7 @@ require PATH_VIEWS . '/layout/header.php';
 
   <!-- Eser Gövde Metni -->
   <div class="pratfall-container-narrow">
-    <div class="single-content">
+    <div class="single-content <?= $is_poem ? 'is-poem no-dropcap' : ''; ?>">
       <?= $post['content']; ?>
     </div>
 
