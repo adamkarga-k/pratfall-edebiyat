@@ -136,12 +136,13 @@ require PATH_VIEWS . '/layout/header.php';
                   <?= htmlspecialchars( $mag['title'], ENT_QUOTES, 'UTF-8' ); ?>
                 </a>
               </h3>
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span class="dergi-period"><?= htmlspecialchars( $mag['period'] ?? '', ENT_QUOTES, 'UTF-8' ); ?></span>
-                <span class="dergi-price"><?= htmlspecialchars( $mag['price'] ?? '', ENT_QUOTES, 'UTF-8' ); ?></span>
-              </div>
+              <?php if ( ! empty( $mag['period'] ) ) : ?>
+                <div style="margin-bottom:0.4rem;">
+                  <span class="dergi-period"><?= htmlspecialchars( $mag['period'], ENT_QUOTES, 'UTF-8' ); ?></span>
+                </div>
+              <?php endif; ?>
               <a href="<?= htmlspecialchars( $mag['buy_url'] ?? '#', ENT_QUOTES, 'UTF-8' ); ?>" target="_blank" rel="noopener" class="dergi-buy-btn">
-                Satın Al ↗
+                İncele ↗
               </a>
             </div>
           </div>
@@ -417,12 +418,13 @@ require PATH_VIEWS . '/layout/header.php';
                   <?= htmlspecialchars( $b['title'], ENT_QUOTES, 'UTF-8' ); ?>
                 </a>
               </h3>
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
-                <span class="dergi-period" style="color:var(--accent-primary); font-weight:700;"><?= htmlspecialchars( $b['author'] ?? '', ENT_QUOTES, 'UTF-8' ); ?></span>
-                <span class="dergi-price"><?= htmlspecialchars( $b['price'] ?? '', ENT_QUOTES, 'UTF-8' ); ?></span>
-              </div>
+              <?php if ( ! empty( $b['author'] ) ) : ?>
+                <div style="margin-bottom:0.5rem;">
+                  <span class="dergi-period" style="color:var(--accent-primary); font-weight:700;"><?= htmlspecialchars( $b['author'], ENT_QUOTES, 'UTF-8' ); ?></span>
+                </div>
+              <?php endif; ?>
               <a href="<?= htmlspecialchars( $b['buy_url'] ?? '#', ENT_QUOTES, 'UTF-8' ); ?>" target="_blank" rel="noopener" class="dergi-buy-btn">
-                Satın Al ↗
+                İncele ↗
               </a>
             </div>
           </div>
