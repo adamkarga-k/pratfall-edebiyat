@@ -3,6 +3,12 @@
  * Pratfall Standalone - cPanel Git Senkronizasyon ve Canlı Dağıtım Paneli
  */
 
+if ( ! defined( 'PRATFALL_ROOT' ) ) {
+    require_once dirname( __DIR__ ) . '/config.php';
+}
+
+Auth::require_login();
+
 $page_title = 'Git Senkronizasyon';
 $active_tab = 'git-sync';
 

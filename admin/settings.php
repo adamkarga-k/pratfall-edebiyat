@@ -3,6 +3,12 @@
  * Pratfall Standalone - Mecmua ve Sistem Ayarları
  */
 
+if ( ! defined( 'PRATFALL_ROOT' ) ) {
+    require_once dirname( __DIR__ ) . '/config.php';
+}
+
+Auth::require_login();
+
 $page_title = 'Mecmua Ayarları';
 $active_tab = 'settings';
 

@@ -134,9 +134,9 @@ class Database {
     private static function seed_data(): void {
         $db = self::$pdo;
 
-        // Varsayılan Admin (Kullanıcı: admin / Şifre: pratfall2026!)
-        $admin_pass = password_hash( 'pratfall2026!', PASSWORD_BCRYPT );
-        $stmt = $db->prepare( "INSERT OR IGNORE INTO users (username, password_hash, email, role) VALUES ('admin', ?, 'admin@pratfall.com', 'admin')" );
+        // İlk Kurulum Yönetici Hesabı (Varsayılan geçici şifre)
+        $admin_pass = password_hash( 'changeme123', PASSWORD_BCRYPT );
+        $stmt = $db->prepare( "INSERT OR IGNORE INTO users (username, password_hash, email, role) VALUES ('admin', ?, 'admin@localhost', 'admin')" );
         $stmt->execute( [ $admin_pass ] );
 
         // Varsayılan Site Ayarları
@@ -175,15 +175,15 @@ class Database {
         // Demo Yazarlar
         $authors = [
             [
-                'name'      => 'Ubeydullah Öz',
-                'slug'      => 'ubeydullah-oz',
-                'title'     => 'Genel Yayın Yönetmeni & Deneme',
+                'name'      => 'Mecmua Editörü',
+                'slug'      => 'editor',
+                'title'     => 'Yayın Kurulu & Deneme',
                 'quote'     => 'Sözcüklerin kusuru, insanın hakiki yarasına denk gelir. Kusursuz bir dil, henüz acı çekmemiş bir zihnin ezberidir.',
-                'bio'       => 'Mecmuamızın bağımsız yazarı. Edebiyat, felsefe, matbaa ve kültür yazılarıyla Pratfall Mecmua sayfalarında yer almaktadır.',
-                'photo'     => 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
-                'twitter'   => 'ubeydullahoz',
-                'instagram' => 'ubeydullahoz',
-                'website'   => 'https://ubeydullahoz.com',
+                'bio'       => 'Mecmuamızın bağımsız yazarı. Edebiyat, felsefe, matbaa ve kültür yazılarıyla mecmua sayfalarında yer almaktadır.',
+                'photo'     => '',
+                'twitter'   => '',
+                'instagram' => '',
+                'website'   => '',
             ],
             [
                 'name'      => 'Nilgün Marmara',

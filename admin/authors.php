@@ -3,6 +3,12 @@
  * Pratfall Standalone - Yazarlar Yönetimi (Kimler Yazmış?)
  */
 
+if ( ! defined( 'PRATFALL_ROOT' ) ) {
+    require_once dirname( __DIR__ ) . '/config.php';
+}
+
+Auth::require_login();
+
 $page_title = 'Yazarlar Yönetimi';
 $active_tab = 'authors';
 

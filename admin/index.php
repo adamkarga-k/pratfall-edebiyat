@@ -3,6 +3,10 @@
  * Pratfall Standalone - Yönetim Masası Ana Gösterge (Dashboard)
  */
 
+if ( ! defined( 'PRATFALL_ROOT' ) ) {
+    require_once dirname( __DIR__ ) . '/config.php';
+}
+
 $page_title = 'Gösterge';
 $active_tab = 'dashboard';
 require PATH_ADMIN . '/layout/header.php';

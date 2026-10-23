@@ -62,11 +62,10 @@ Options -Indexes
     RewriteEngine On
     RewriteBase /
 
-    # Mevcut dosya veya dizin varsa doğrudan sun (css, js, resimler vb.)
-    RewriteCond %{REQUEST_FILENAME} -f [OR]
-    RewriteCond %{REQUEST_FILENAME} -d
+    # Mevcut fiziksel dosya varsa doğrudan sun (css, js, resimler vb.)
+    RewriteCond %{REQUEST_FILENAME} -f
     RewriteRule ^ - [L]
 
-    # Geri kalan tüm istekleri index.php'ye yönlendir
+    # Geri kalan tüm istekleri (admin dahil) index.php'ye yönlendir
     RewriteRule ^(.*)$ index.php [QSA,L]
 </IfModule>

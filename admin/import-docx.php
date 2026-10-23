@@ -3,6 +3,12 @@
  * Pratfall Standalone - Word (.docx) Toplu İçe Aktarıcı (Bulk Importer)
  */
 
+if ( ! defined( 'PRATFALL_ROOT' ) ) {
+    require_once dirname( __DIR__ ) . '/config.php';
+}
+
+Auth::require_login();
+
 $page_title = 'Word (.docx) Toplu İçe Aktar';
 $active_tab = 'import';
 

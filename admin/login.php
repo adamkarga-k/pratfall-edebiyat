@@ -3,6 +3,10 @@
  * Pratfall Standalone - Yönetim Masası Giriş Ekranı (Login)
  */
 
+if ( ! defined( 'PRATFALL_ROOT' ) ) {
+    require_once dirname( __DIR__ ) . '/config.php';
+}
+
 if ( Auth::check() ) {
     header( 'Location: ' . SITE_URL . '/admin' );
     exit;
@@ -68,10 +72,6 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
         <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; padding:0.75rem;">
           Yönetim Masasına Giriş Yap →
         </button>
-      </div>
-
-      <div style="margin-top:1.5rem; text-align:center; font-family:var(--admin-mono); font-size:0.75rem; color:var(--admin-muted);">
-        Varsayılan: <code>admin</code> / <code>pratfall2026!</code>
       </div>
     </form>
 

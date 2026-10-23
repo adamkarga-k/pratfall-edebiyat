@@ -3,6 +3,12 @@
  * Pratfall Standalone - Dergilerimiz Vitrini Yönetimi
  */
 
+if ( ! defined( 'PRATFALL_ROOT' ) ) {
+    require_once dirname( __DIR__ ) . '/config.php';
+}
+
+Auth::require_login();
+
 $page_title = 'Dergilerimiz Yönetimi';
 $active_tab = 'magazines';
 

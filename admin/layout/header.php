@@ -3,6 +3,10 @@
  * Pratfall Standalone - Yönetim Masası Ortak Üstbilgi
  */
 
+if ( ! defined( 'PRATFALL_ROOT' ) ) {
+    require_once dirname( dirname( __DIR__ ) ) . '/config.php';
+}
+
 Auth::require_login();
 $active_tab = $active_tab ?? 'dashboard';
 ?>

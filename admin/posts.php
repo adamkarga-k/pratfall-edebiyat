@@ -3,6 +3,12 @@
  * Pratfall Standalone - Eserler / Yazılar Yönetimi
  */
 
+if ( ! defined( 'PRATFALL_ROOT' ) ) {
+    require_once dirname( __DIR__ ) . '/config.php';
+}
+
+Auth::require_login();
+
 $page_title = 'Yazılar Yönetimi';
 $active_tab = 'posts';
 
