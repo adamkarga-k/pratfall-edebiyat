@@ -48,17 +48,6 @@ require PATH_VIEWS . '/layout/header.php';
     margin: 0;
   }
 
-  .kitaplik-meta-strip {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 1.5rem;
-    margin-top: 1.5rem;
-    font-family: var(--font-mono);
-    font-size: 0.8rem;
-    color: var(--accent-primary);
-  }
-
   /* Kitaplık Raf Izgarası */
   .kitaplik-shelf-grid {
     display: grid;
@@ -66,6 +55,70 @@ require PATH_VIEWS . '/layout/header.php';
     gap: 4rem 3rem;
     margin-bottom: 5rem;
     align-items: start;
+  }
+
+  /* Mobil İki Sütunlu Zarif Düzen */
+  @media (max-width: 768px) {
+    .kitaplik-hero {
+      margin-top: 1.75rem;
+      margin-bottom: 2.25rem;
+      padding-bottom: 1.5rem;
+    }
+    .kitaplik-title {
+      font-size: 2.1rem;
+      margin: 0.35rem 0 0.75rem 0;
+    }
+    .kitaplik-desc {
+      font-size: 1.02rem;
+      line-height: 1.6;
+    }
+    .kitaplik-shelf-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 2.25rem 1.15rem;
+      margin-bottom: 3.5rem;
+    }
+    .book-meta-box {
+      margin-top: 0.85rem;
+      gap: 0.25rem;
+    }
+    .book-title-link {
+      font-size: 1.05rem;
+      line-height: 1.25;
+    }
+    .book-author-text {
+      font-size: 0.75rem;
+    }
+    .book-year-badge {
+      font-size: 0.68rem;
+    }
+    .book-desc-quote {
+      font-size: 0.82rem;
+      line-height: 1.45;
+      margin: 0.35rem 0 0.6rem 0;
+      -webkit-line-clamp: 2;
+    }
+    .book-action-btn {
+      padding: 0.35rem 0.75rem;
+      font-size: 0.72rem;
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  @media (max-width: 440px) {
+    .kitaplik-shelf-grid {
+      gap: 1.75rem 0.85rem;
+    }
+    .book-title-link {
+      font-size: 0.95rem;
+    }
+    .book-author-text {
+      font-size: 0.7rem;
+    }
+    .book-action-btn {
+      padding: 0.3rem 0.55rem;
+      font-size: 0.68rem;
+    }
   }
 
   /* Tekil Kitap Parçası */
@@ -254,12 +307,6 @@ require PATH_VIEWS . '/layout/header.php';
     <p class="kitaplik-desc">
       Kağıdın kokusu, cildin ağırlığı ve kusurlu matbaa mürekkebi. Yayınevimiz tarafından basılıp yayına hazırlanan tüm eserleri doğrudan buradan inceleyebilir, kapaklara tıklayarak detaylarına ulaşabilirsiniz.
     </p>
-
-    <div class="kitaplik-meta-strip">
-      <span>● Bağımsız Neşriyat</span>
-      <span>● Özel Matbaa Baskısı</span>
-      <span>● Kapaklara Tıklayarak İnceleyin</span>
-    </div>
   </header>
 
   <!-- Kitaplık Rafı / Galerisi -->

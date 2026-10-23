@@ -178,13 +178,15 @@ require PATH_VIEWS . '/layout/header.php';
           </span>
         </div>
 
-        <div class="dergiler-nav-controls">
-          <button type="button" class="dergi-nav-btn dergi-nav-prev" title="Önceki Sayılar" aria-label="Önceki Sayılar">
-            ←
-          </button>
-          <button type="button" class="dergi-nav-btn dergi-nav-next" title="Sonraki Sayılar" aria-label="Sonraki Sayılar">
-            →
-          </button>
+        <div class="dergiler-header-right">
+          <div class="dergiler-nav-controls">
+            <button type="button" class="dergi-nav-btn dergi-nav-prev" title="Önceki Sayılar" aria-label="Önceki Sayılar">
+              ←
+            </button>
+            <button type="button" class="dergi-nav-btn dergi-nav-next" title="Sonraki Sayılar" aria-label="Sonraki Sayılar">
+              →
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -469,7 +471,7 @@ require PATH_VIEWS . '/layout/header.php';
           </span>
         </div>
 
-        <div style="display:flex; align-items:center; gap:1.25rem;">
+        <div class="dergiler-header-right">
           <a href="<?= SITE_URL; ?>/kitaplik" class="stamp-tag" style="font-size:0.75rem; text-decoration:none;">
             Tüm Kitaplığı Gör (<?= count( $books ); ?>) ↗
           </a>
@@ -489,13 +491,13 @@ require PATH_VIEWS . '/layout/header.php';
     <div class="pratfall-dergiler-viewport">
       <div class="pratfall-dergiler-track">
         <?php foreach ( $books as $b ) : ?>
-          <div class="dergi-card">
-            <a href="<?= htmlspecialchars( $b['buy_url'] ?? '#', ENT_QUOTES, 'UTF-8' ); ?>" target="_blank" rel="noopener" class="dergi-cover-wrap" style="height:280px;" title="<?= htmlspecialchars( $b['title'], ENT_QUOTES, 'UTF-8' ); ?> - İncele & Satın Al">
+          <div class="dergi-card book-vitrin-card">
+            <a href="<?= htmlspecialchars( $b['buy_url'] ?? '#', ENT_QUOTES, 'UTF-8' ); ?>" target="_blank" rel="noopener" class="dergi-cover-wrap book-vitrin-cover" title="<?= htmlspecialchars( $b['title'], ENT_QUOTES, 'UTF-8' ); ?> - İncele & Satın Al">
               <?php if ( ! empty( $b['publish_year'] ) ) : ?>
                 <span class="dergi-issue-badge" style="background:#0f172a;"><?= htmlspecialchars( $b['publish_year'], ENT_QUOTES, 'UTF-8' ); ?></span>
               <?php endif; ?>
               <?php if ( ! empty( $b['cover_image'] ) ) : ?>
-                <img src="<?= htmlspecialchars( $b['cover_image'] ); ?>" alt="<?= htmlspecialchars( $b['title'], ENT_QUOTES, 'UTF-8' ); ?>" class="dergi-cover-img" style="height:100%; object-fit:cover;" />
+                <img src="<?= htmlspecialchars( $b['cover_image'] ); ?>" alt="<?= htmlspecialchars( $b['title'], ENT_QUOTES, 'UTF-8' ); ?>" class="dergi-cover-img" loading="lazy" />
               <?php else : ?>
                 <div style="width:100%; height:100%; background:#1e293b; color:#f8fafc; display:flex; align-items:center; justify-content:center; padding:1rem; text-align:center; font-family:var(--font-serif);">
                   <?= htmlspecialchars( $b['title'], ENT_QUOTES, 'UTF-8' ); ?>
