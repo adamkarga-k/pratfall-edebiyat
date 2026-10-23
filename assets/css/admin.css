@@ -673,11 +673,41 @@ html, body {
   text-justify: inter-word;
 }
 
+/* Editör İçi Hizalamalara Tam Öncelik Ver */
+.editor-content-area p[style*="text-align: center"],
+.editor-content-area p[style*="text-align:center"],
+.editor-content-area [style*="text-align: center"],
+.editor-content-area [style*="text-align:center"] {
+  text-align: center !important;
+  text-align-last: center !important;
+}
+
+.editor-content-area p[style*="text-align: right"],
+.editor-content-area p[style*="text-align:right"],
+.editor-content-area [style*="text-align: right"],
+.editor-content-area [style*="text-align:right"] {
+  text-align: right !important;
+  text-align-last: right !important;
+}
+
 .editor-content-area p[style*="text-align: left"],
 .editor-content-area p[style*="text-align:left"],
-.editor-content-area p[align="left"] {
-  text-align: justify !important;
+.editor-content-area [style*="text-align: left"],
+.editor-content-area [style*="text-align:left"] {
+  text-align: left !important;
   text-align-last: left !important;
+}
+
+.editor-content-area p[style*="text-align: justify"],
+.editor-content-area p[style*="text-align:justify"] {
+  text-align: justify !important;
+}
+
+/* Alt-Üst Çizgi Efekti */
+.alt-ust-cizgi {
+  text-decoration: underline overline !important;
+  text-decoration-thickness: 1.5px !important;
+  text-underline-offset: 3px !important;
 }
 
 .editor-content-area blockquote {

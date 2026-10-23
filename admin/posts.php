@@ -253,6 +253,9 @@ require PATH_ADMIN . '/layout/header.php';
                     <button type="button" class="editor-btn" onclick="execCmd('strikeThrough')" title="Üstü Çizili">
                       <s>S</s>
                     </button>
+                    <button type="button" class="editor-btn" onclick="toggleAltUstCizgi()" title="Alt-Üst Çizme Efekti (Metnin hem altına hem üstüne editoryal çizgi çeker)" style="text-decoration:underline overline; text-decoration-thickness:1.5px; font-weight:700;">
+                      ≍ Alt-Üst Çiz
+                    </button>
                   </div>
 
                   <!-- 3. Grup: Edebi Hizalama & Dizgi -->
@@ -511,6 +514,46 @@ require PATH_ADMIN . '/layout/header.php';
       syncContent();
     }
 
+    function toggleAltUstCizgi() {
+      const visual = document.getElementById('editorVisual');
+      visual.focus();
+      const selection = window.getSelection();
+      if (!selection.rangeCount || selection.isCollapsed) {
+        alert('Lütfen alt-üst çizgi efekti uygulamak istediğiniz kelime veya cümleyi seçin.');
+        return;
+      }
+
+      const range = selection.getRangeAt(0);
+      let container = selection.anchorNode;
+      if (container.nodeType === 3) container = container.parentNode;
+
+      const existing = container.closest('.alt-ust-cizgi');
+      if (existing) {
+        const parent = existing.parentNode;
+        while (existing.firstChild) {
+          parent.insertBefore(existing.firstChild, existing);
+        }
+        parent.removeChild(existing);
+      } else {
+        const span = document.createElement('span');
+        span.className = 'alt-ust-cizgi';
+        span.style.textDecoration = 'underline overline';
+        span.style.textDecorationThickness = '1.5px';
+        span.style.textUnderlineOffset = '3px';
+        try {
+          span.appendChild(range.extractContents());
+          range.insertNode(span);
+          selection.removeAllRanges();
+          const newRange = document.createRange();
+          newRange.selectNodeContents(span);
+          selection.addRange(newRange);
+        } catch(e) {
+          document.execCommand('insertHTML', false, '<span class="alt-ust-cizgi" style="text-decoration:underline overline; text-decoration-thickness:1.5px; text-underline-offset:3px;">' + selection.toString() + '</span>');
+        }
+      }
+      syncContent();
+    }
+
     function applyAlignment(textAlign, textAlignLast = 'auto') {
       const visual = document.getElementById('editorVisual');
       visual.focus();
@@ -544,10 +587,18 @@ require PATH_ADMIN . '/layout/header.php';
 
       if (target) {
         target.style.textAlign = textAlign;
-        if (textAlignLast && textAlignLast !== 'auto') {
-          target.style.textAlignLast = textAlignLast;
-        } else {
-          target.style.removeProperty('text-align-last');
+        if (textAlign === 'center') {
+          target.style.textAlignLast = 'center';
+        } else if (textAlign === 'right') {
+          target.style.textAlignLast = 'right';
+        } else if (textAlign === 'left') {
+          target.style.textAlignLast = 'left';
+        } else if (textAlign === 'justify') {
+          if (textAlignLast && textAlignLast !== 'auto') {
+            target.style.textAlignLast = textAlignLast;
+          } else {
+            target.style.removeProperty('text-align-last');
+          }
         }
       }
       syncContent();
