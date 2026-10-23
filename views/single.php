@@ -110,7 +110,7 @@ require PATH_VIEWS . '/layout/header.php';
   <!-- Eser Gövde Metni -->
   <div class="pratfall-container-narrow">
     <div class="single-content <?= $is_poem ? 'is-poem no-dropcap' : ''; ?>">
-      <?= $post['content']; ?>
+      <?= $is_poem ? Helpers::format_poem_content( $post['content'] ) : $post['content']; ?>
     </div>
 
     <?php if ( ! empty( $post['tags'] ) ) : ?>

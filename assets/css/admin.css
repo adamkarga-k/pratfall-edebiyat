@@ -703,6 +703,35 @@ html, body {
   text-align: justify !important;
 }
 
+/* Editör İçi Şiir Modu (Mısralar alt alta sıralanır, satırlar arasına otomatik devasa boşluk atmaz) */
+.editor-content-area.is-poem {
+  text-align: left !important;
+  text-align-last: left !important;
+  text-justify: auto !important;
+  line-height: 1.85 !important;
+}
+
+.editor-content-area.is-poem p {
+  margin: 0 0 0.35rem 0 !important;
+  text-align: left !important;
+  text-align-last: left !important;
+  text-justify: auto !important;
+  hyphens: none !important;
+}
+
+.editor-content-area.is-poem p.poem-stanza {
+  margin: 0 0 2rem 0 !important;
+  line-height: 1.85 !important;
+  text-align: left !important;
+  text-align-last: left !important;
+}
+
+.editor-content-area.is-poem p:empty,
+.editor-content-area.is-poem p:has(> br:only-child) {
+  margin-bottom: 2rem !important;
+  min-height: 1.25rem !important;
+}
+
 /* Alt-Üst Çizgi Efekti */
 .alt-ust-cizgi {
   text-decoration: underline overline !important;

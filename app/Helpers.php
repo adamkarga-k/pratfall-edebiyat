@@ -181,4 +181,122 @@ class Helpers {
             return $lenA - $lenB;
         } );
     }
+
+    /**
+     * Şiir Metinlerini Semantik Kıta (Stanza) ve Mısra Düzenine Kavuştur
+     * 
+     * - Mısralar alt alta sıkı sıralanır (<br> ile bağlanır, araya otomatik devasa paragraf boşluğu atmaz).
+     * - Boş satırlar veya kıta ayrımları ferah <p class="poem-stanza"> bloklarına dönüştürülür.
+     * - Yazarın daha önce elle <br> ile biçimlendirdiği kıtaları bozmaz, korur.
+     */
+    public static function format_poem_content( string $content ): string {
+        $content = trim( $content );
+        if ( empty( $content ) ) {
+            return '';
+        }
+
+        // Eğer içerik zaten poem-stanza ile biçimlendirilmişse doğrudan döndür
+        if ( strpos( $content, 'class="poem-stanza"' ) !== false || strpos( $content, "class='poem-stanza'" ) !== false ) {
+            return $content;
+        }
+
+        // HTML etiketleri yoksa (düz metinse)
+        if ( strpos( $content, '<' ) === false ) {
+            $raw_stanzas = preg_split( '/\r?\n\s*\r?\n/u', $content );
+            $out = [];
+            foreach ( $raw_stanzas as $st ) {
+                $st = trim( $st );
+                if ( $st === '' ) continue;
+                $lines = array_map( function( $l ) {
+                    return htmlspecialchars( trim( $l ), ENT_QUOTES, 'UTF-8' );
+                }, preg_split( '/\r?\n/u', $st ) );
+                $lines = array_filter( $lines, function( $l ) { return $l !== ''; } );
+                if ( ! empty( $lines ) ) {
+                    $out[] = '<p class="poem-stanza">' . implode( "<br>\n", $lines ) . '</p>';
+                }
+            }
+            return implode( "\n\n", $out );
+        }
+
+        // Kıta ayracı belirteci
+        $token = '<!--PRATFALL_STANZA_SPLIT-->';
+
+        // 1. Boş paragrafları veya boş div'leri kıta ayracına dönüştür
+        $clean = preg_replace( '#<p[^>]*>\s*(?:<br\s*/?>|&nbsp;|\s)*</p>#iu', $token, $content );
+        $clean = preg_replace( '#<div[^>]*>\s*(?:<br\s*/?>|&nbsp;|\s)*</div>#iu', $token, $clean );
+        $clean = preg_replace( '#(?:<br\s*/?>\s*){2,}#iu', $token, $clean );
+
+        // 2. Token ile ayrılan blokları incele
+        $sections = explode( $token, $clean );
+        $final_stanzas = [];
+
+        foreach ( $sections as $sec ) {
+            $sec = trim( $sec );
+            if ( $sec === '' ) {
+                continue;
+            }
+
+            // Eğer bölüm içinde <p> veya <div> etiketleri varsa
+            if ( preg_match_all( '#<(p|div)(?:[^>]*)>(.*?)</\1>#is', $sec, $matches ) ) {
+                $current_lines = [];
+
+                foreach ( $matches[2] as $inner ) {
+                    $stripped = trim( strip_tags( $inner ) );
+                    if ( $stripped === '' || $stripped === '&nbsp;' ) {
+                        // Kendi içindeki boşluk kıtayı böler
+                        if ( ! empty( $current_lines ) ) {
+                            $final_stanzas[] = '<p class="poem-stanza">' . implode( "<br>\n", $current_lines ) . '</p>';
+                            $current_lines = [];
+                        }
+                        continue;
+                    }
+
+                    // Eğer bu paragraf zaten kendi içinde <br> içeriyorsa (yazarın daha önce elle ayırdığı kıta)
+                    if ( preg_match( '#<br\s*/?>#i', $inner ) ) {
+                        if ( ! empty( $current_lines ) ) {
+                            $final_stanzas[] = '<p class="poem-stanza">' . implode( "<br>\n", $current_lines ) . '</p>';
+                            $current_lines = [];
+                        }
+                        $sub_lines = preg_split( '#<br\s*/?>#i', $inner );
+                        $clean_sub = [];
+                        foreach ( $sub_lines as $sl ) {
+                            $tsl = trim( $sl );
+                            if ( $tsl !== '' && $tsl !== '&nbsp;' ) {
+                                $clean_sub[] = $tsl;
+                            }
+                        }
+                        if ( ! empty( $clean_sub ) ) {
+                            $final_stanzas[] = '<p class="poem-stanza">' . implode( "<br>\n", $clean_sub ) . '</p>';
+                        }
+                    } else {
+                        // Tek dize
+                        $current_lines[] = trim( $inner );
+                    }
+                }
+
+                if ( ! empty( $current_lines ) ) {
+                    $final_stanzas[] = '<p class="poem-stanza">' . implode( "<br>\n", $current_lines ) . '</p>';
+                }
+            } else {
+                // <p> etiketi olmayan düz veya <br>'li içerik
+                $lines = preg_split( '#(?:<br\s*/?>|\r?\n)+#iu', $sec );
+                $clean_lines = [];
+                foreach ( $lines as $l ) {
+                    $tl = trim( $l );
+                    if ( $tl !== '' && $tl !== '&nbsp;' ) {
+                        $clean_lines[] = $tl;
+                    }
+                }
+                if ( ! empty( $clean_lines ) ) {
+                    $final_stanzas[] = '<p class="poem-stanza">' . implode( "<br>\n", $clean_lines ) . '</p>';
+                }
+            }
+        }
+
+        if ( empty( $final_stanzas ) ) {
+            return $content;
+        }
+
+        return implode( "\n\n", $final_stanzas );
+    }
 }

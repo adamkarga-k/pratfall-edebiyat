@@ -117,6 +117,12 @@ class DocxImporter {
             $category = self::suggest_category( $parsed['raw_text'], $title );
         }
 
+        // Eğer Şiir ise mısraları semantik kıta formatına dönüştür
+        $doc_content = $parsed['html'];
+        if ( mb_stripos( $category, 'şiir' ) !== false || mb_stripos( $category, 'siir' ) !== false ) {
+            $doc_content = Helpers::format_poem_content( $doc_content );
+        }
+
         // 8. Önerilen Etiketler (Tags)
         $tags = ! empty( $parsed['detected_tags'] )
             ? $parsed['detected_tags']
@@ -144,7 +150,7 @@ class DocxImporter {
             'category'       => trim( $category ),
             'tags'           => trim( $tags ),
             'excerpt'        => trim( $excerpt ),
-            'content'        => $parsed['html'],
+            'content'        => $doc_content,
             'featured_image' => $featured_image,
             'reading_time'   => $reading_time,
             'word_count'     => $word_count,
@@ -302,6 +308,18 @@ class DocxImporter {
 
                     $trimmed_plain = trim( $p_plain );
                     if ( $trimmed_plain === '' ) {
+                        // Boş satırı kıta ayracı veya paragraf aralığı olarak koru
+                        if ( ! empty( $paragraph_texts ) ) {
+                            $last_p = end( $paragraph_texts );
+                            if ( ! empty( $last_p['plain'] ) ) {
+                                $paragraph_texts[] = [
+                                    'html'       => '<br>',
+                                    'plain'      => '',
+                                    'is_heading' => false,
+                                    'level'      => 0,
+                                ];
+                            }
+                        }
                         continue;
                     }
 
@@ -348,6 +366,8 @@ class DocxImporter {
 
                     if ( $pt['is_heading'] ) {
                         $html_output[] = "<h{$pt['level']}>{$pt['html']}</h{$pt['level']}>";
+                    } elseif ( $pt['plain'] === '' ) {
+                        $html_output[] = "<p><br></p>";
                     } else {
                         $html_output[] = "<p>{$pt['html']}</p>";
                     }
@@ -479,6 +499,9 @@ class DocxImporter {
         $tags           = trim( $data['tags'] ?? '' );
         $excerpt        = trim( $data['excerpt'] ?? '' );
         $content        = trim( $data['content'] ?? '' );
+        if ( mb_stripos( $category, 'şiir' ) !== false || mb_stripos( $category, 'siir' ) !== false ) {
+            $content = Helpers::format_poem_content( $content );
+        }
         $featured_image = trim( $data['featured_image'] ?? '' );
         $reading_time   = (int) ( $data['reading_time'] ?? 5 );
         $status         = trim( $data['status'] ?? 'published' );

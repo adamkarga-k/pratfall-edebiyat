@@ -43,6 +43,7 @@ class Database {
             self::ensure_books();
             self::ensure_subscribers();
             self::clean_mecmua_settings();
+            self::normalize_existing_poems();
         }
         return self::$pdo;
     }
@@ -536,5 +537,44 @@ class Database {
         $text = preg_replace( '~-+~', '-', $text );
         $text = strtolower( $text );
         return empty( $text ) ? 'n-a-' . time() : $text;
+    }
+
+    /**
+     * Önceden Eklenmiş Tüm Şiirleri Semantik Kıta & Dize Düzenine Otomatik Dönüştür
+     * Mısralar alt alta sıralanır, satırlar arasına otomatik devasa boşluk atılmaz.
+     */
+    public static function normalize_existing_poems(): void {
+        try {
+            if ( ! self::$pdo ) {
+                return;
+            }
+
+            // 'Şiir' veya 'siir' kategorisinde olup henüz poem-stanza ile biçimlendirilmemiş şiirleri çek
+            $stmt = self::$pdo->query( "
+                SELECT id, content 
+                FROM posts 
+                WHERE (category LIKE '%Şiir%' OR category LIKE '%şiir%' OR category LIKE '%siir%' OR category LIKE '%Siir%')
+                  AND content NOT LIKE '%poem-stanza%'
+            " );
+            $posts = $stmt ? $stmt->fetchAll() : [];
+
+            if ( empty( $posts ) ) {
+                return;
+            }
+
+            $update = self::$pdo->prepare( "UPDATE posts SET content = ? WHERE id = ?" );
+            foreach ( $posts as $p ) {
+                $raw = $p['content'] ?? '';
+                if ( empty( $raw ) ) {
+                    continue;
+                }
+                $formatted = Helpers::format_poem_content( $raw );
+                if ( $formatted !== $raw ) {
+                    $update->execute( [ $formatted, $p['id'] ] );
+                }
+            }
+        } catch ( Throwable $e ) {
+            // Arka plan otomatik iyileştirmesi sitenin açılışını asla aksatmamalıdır
+        }
     }
 }

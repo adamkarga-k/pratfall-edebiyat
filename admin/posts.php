@@ -87,6 +87,9 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
         $tags            = trim( $_POST['tags'] ?? '' );
         $excerpt         = trim( $_POST['excerpt'] ?? '' );
         $content         = trim( $_POST['content'] ?? '' );
+        if ( mb_stripos( $category, 'şiir' ) !== false || mb_stripos( $category, 'siir' ) !== false ) {
+            $content = Helpers::format_poem_content( $content );
+        }
         $status          = trim( $_POST['status'] ?? 'published' );
         $is_featured     = isset( $_POST['is_featured'] ) ? 1 : 0;
         $featured_image  = trim( $_POST['featured_image'] ?? '' );
@@ -349,7 +352,8 @@ require PATH_ADMIN . '/layout/header.php';
                 </div>
 
                 <!-- Görsel Düzenleme Alanı (ContentEditable) -->
-                <div id="editorVisual" class="editor-content-area" contenteditable="true"><?= $post['content']; ?></div>
+                <?php $is_post_poem = ( mb_stripos( $post['category'] ?? '', 'şiir' ) !== false || mb_stripos( $post['category'] ?? '', 'siir' ) !== false ); ?>
+                <div id="editorVisual" class="editor-content-area <?= $is_post_poem ? 'is-poem' : ''; ?>" contenteditable="true"><?= $post['content']; ?></div>
 
                 <!-- Gizli / Senkronize Form Alanı -->
                 <textarea name="content" id="content" style="display:none; width:100%; min-height:420px; font-family:var(--adm-font-mono); font-size:0.9rem; padding:1.5rem; border:none; outline:none; resize:vertical; line-height:1.6; background:#fafbfc;"><?= htmlspecialchars( $post['content'], ENT_QUOTES, 'UTF-8' ); ?></textarea>
@@ -735,6 +739,21 @@ require PATH_ADMIN . '/layout/header.php';
     try {
       document.execCommand('defaultParagraphSeparator', false, 'p');
     } catch(e) {}
+
+    // Kategori Şiir seçildiğinde editör alanını otomatik Şiir Tipografisine (alt alta sıkı mısralar) uyarla
+    const catSelect = document.getElementById('category');
+    const visualEditor = document.getElementById('editorVisual');
+    function updatePoemEditorMode() {
+      if (!catSelect || !visualEditor) return;
+      const catVal = catSelect.value.toLowerCase();
+      if (catVal.includes('şiir') || catVal.includes('siir')) {
+        visualEditor.classList.add('is-poem');
+      } else {
+        visualEditor.classList.remove('is-poem');
+      }
+    }
+    catSelect?.addEventListener('change', updatePoemEditorMode);
+    updatePoemEditorMode();
 
     document.getElementById('editorVisual')?.addEventListener('input', syncContent);
     document.getElementById('editorVisual')?.addEventListener('blur', syncContent);

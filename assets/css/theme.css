@@ -1436,6 +1436,46 @@ html.dark .author-polaroid-wrap {
   color: var(--accent-primary);
 }
 
+/* ==========================================================================
+   ŞİİR TİPOGRAFİSİ: MISRALAR ALT ALTA SIK VE AKICI, KITALAR FERAH AYRIK
+   ========================================================================== */
+.is-poem .single-content,
+.single-content.is-poem {
+  font-size: 1.18rem;
+  line-height: 1.85;
+}
+
+/* Şiirlerde mısralar alt alta sıralanır, satırlar arasına otomatik devasa boşluk atmaz */
+.is-poem .single-content p,
+.single-content.is-poem p {
+  margin-bottom: 0.35rem !important;
+  text-align: left !important;
+  text-align-last: left !important;
+  text-justify: auto !important;
+  hyphens: none !important;
+  line-height: 1.85 !important;
+}
+
+/* Kıta blokları: Kıta içi mısralar sıkı alt alta, iki kıta arası belirgin ve ferah boşluk */
+.is-poem .single-content p.poem-stanza,
+.single-content.is-poem p.poem-stanza {
+  margin-bottom: 2.25rem !important;
+  line-height: 1.9 !important;
+  text-align: left !important;
+  text-align-last: left !important;
+}
+
+/* Yazarın kıta geçişlerinde bıraktığı boş satırlar */
+.is-poem .single-content p:empty,
+.is-poem .single-content p:has(> br:only-child),
+.is-poem .single-content p.stanza-break,
+.single-content.is-poem p:empty,
+.single-content.is-poem p:has(> br:only-child),
+.single-content.is-poem p.stanza-break {
+  margin-bottom: 2.25rem !important;
+  min-height: 1.25rem !important;
+}
+
 /* Şiir Kategorisinde veya no-dropcap Sınıfında İlk Harf Büyütmeyi İptal Et */
 .is-poem .single-content > p:first-of-type::first-letter,
 .single-content.is-poem > p:first-of-type::first-letter,
