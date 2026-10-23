@@ -53,6 +53,9 @@ $authors = $db->query( "
 // Dergileri Çek
 $magazines = $db->query( "SELECT * FROM magazines ORDER BY order_num ASC, id DESC" )->fetchAll();
 
+// Pratfall Kitaplığı (Yayınevi Kitapları)
+$books = $db->query( "SELECT * FROM books ORDER BY order_num ASC, id DESC" )->fetchAll();
+
 // Eğer dergi eklenmemişse şık demo dergileri oluştur
 if ( empty( $magazines ) ) {
     $magazines = [
@@ -360,5 +363,73 @@ require PATH_VIEWS . '/layout/header.php';
     </section>
 
   </div><!-- .pratfall-container -->
+
+  <!-- 7. PRATFALL KİTAPLIĞI YATAY VİTRİN ŞERİDİ (Son Eserlerin Altında) -->
+  <?php if ( ! empty( $books ) ) : ?>
+  <section class="pratfall-dergiler-section" id="kitaplik-vitrin" aria-label="Pratfall Kitaplığı Yatay Vitrini" style="margin-top:2rem; margin-bottom:3rem; background:var(--bg-card); border-top:2px solid var(--border-color); border-bottom:2px solid var(--border-color); padding:2.5rem 0;">
+    <div class="pratfall-container">
+      <div class="pratfall-dergiler-header">
+        <div class="dergiler-header-left">
+          <h2 class="pratfall-dergiler-title">
+            Pratfall Kitaplığı
+          </h2>
+          <span class="tape-badge tape-peach rot-p1">
+            YAYINEVİMİZDEN ÇIKANLAR
+          </span>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:1.25rem;">
+          <a href="<?= SITE_URL; ?>/kitaplik" class="stamp-tag" style="font-size:0.75rem; text-decoration:none;">
+            Tüm Kitaplığı Gör (<?= count( $books ); ?>) ↗
+          </a>
+          <div class="dergiler-nav-controls">
+            <button type="button" class="dergi-nav-btn dergi-nav-prev" title="Önceki Kitaplar" aria-label="Önceki Kitaplar">
+              ←
+            </button>
+            <button type="button" class="dergi-nav-btn dergi-nav-next" title="Sonraki Kitaplar" aria-label="Sonraki Kitaplar">
+              →
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Yatay Kaydırma Alanı (Drag-to-Scroll) -->
+    <div class="pratfall-dergiler-viewport">
+      <div class="pratfall-dergiler-track">
+        <?php foreach ( $books as $b ) : ?>
+          <div class="dergi-card">
+            <a href="<?= htmlspecialchars( $b['buy_url'] ?? '#', ENT_QUOTES, 'UTF-8' ); ?>" target="_blank" rel="noopener" class="dergi-cover-wrap" style="height:280px;" title="<?= htmlspecialchars( $b['title'], ENT_QUOTES, 'UTF-8' ); ?> - İncele & Satın Al">
+              <?php if ( ! empty( $b['publish_year'] ) ) : ?>
+                <span class="dergi-issue-badge" style="background:#0f172a;"><?= htmlspecialchars( $b['publish_year'], ENT_QUOTES, 'UTF-8' ); ?></span>
+              <?php endif; ?>
+              <?php if ( ! empty( $b['cover_image'] ) ) : ?>
+                <img src="<?= htmlspecialchars( $b['cover_image'] ); ?>" alt="<?= htmlspecialchars( $b['title'], ENT_QUOTES, 'UTF-8' ); ?>" class="dergi-cover-img" style="height:100%; object-fit:cover;" />
+              <?php else : ?>
+                <div style="width:100%; height:100%; background:#1e293b; color:#f8fafc; display:flex; align-items:center; justify-content:center; padding:1rem; text-align:center; font-family:var(--font-serif);">
+                  <?= htmlspecialchars( $b['title'], ENT_QUOTES, 'UTF-8' ); ?>
+                </div>
+              <?php endif; ?>
+            </a>
+            <div class="dergi-info">
+              <h3 class="dergi-title" title="<?= htmlspecialchars( $b['title'], ENT_QUOTES, 'UTF-8' ); ?>">
+                <a href="<?= htmlspecialchars( $b['buy_url'] ?? '#', ENT_QUOTES, 'UTF-8' ); ?>" target="_blank" rel="noopener">
+                  <?= htmlspecialchars( $b['title'], ENT_QUOTES, 'UTF-8' ); ?>
+                </a>
+              </h3>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+                <span class="dergi-period" style="color:var(--accent-primary); font-weight:700;"><?= htmlspecialchars( $b['author'] ?? '', ENT_QUOTES, 'UTF-8' ); ?></span>
+                <span class="dergi-price"><?= htmlspecialchars( $b['price'] ?? '', ENT_QUOTES, 'UTF-8' ); ?></span>
+              </div>
+              <a href="<?= htmlspecialchars( $b['buy_url'] ?? '#', ENT_QUOTES, 'UTF-8' ); ?>" target="_blank" rel="noopener" class="dergi-buy-btn">
+                Satın Al ↗
+              </a>
+            </div>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    </div>
+  </section>
+  <?php endif; ?>
 
 <?php require PATH_VIEWS . '/layout/footer.php'; ?>

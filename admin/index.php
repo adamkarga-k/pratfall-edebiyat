@@ -19,6 +19,7 @@ $published_posts   = (int) $db->query( "SELECT COUNT(*) FROM posts WHERE status 
 $draft_posts       = (int) $db->query( "SELECT COUNT(*) FROM posts WHERE status = 'draft'" )->fetchColumn();
 $total_authors     = (int) $db->query( "SELECT COUNT(*) FROM authors" )->fetchColumn();
 $total_magazines   = (int) $db->query( "SELECT COUNT(*) FROM magazines" )->fetchColumn();
+$total_books       = (int) $db->query( "SELECT COUNT(*) FROM books" )->fetchColumn();
 $total_categories  = (int) $db->query( "SELECT COUNT(*) FROM categories" )->fetchColumn();
 
 // Son Yazılar (Son Etkinlik için)
@@ -109,6 +110,11 @@ $db_size = file_exists( DB_FILE ) ? round( filesize( DB_FILE ) / 1024, 1 ) . ' K
         <li class="content-summary-item">
           <span>Dergilerimiz (Sayılar)</span>
           <span class="pill-badge pill-blue">@ <?= $total_magazines; ?></span>
+        </li>
+
+        <li class="content-summary-item">
+          <span>Pratfall Kitaplığı</span>
+          <span class="pill-badge pill-purple">@ <?= $total_books; ?></span>
         </li>
 
         <li class="content-summary-item">

@@ -95,6 +95,16 @@ require PATH_VIEWS . '/layout/header.php';
       <?= $post['content']; ?>
     </div>
 
+    <?php if ( ! empty( $post['tags'] ) ) : ?>
+      <div class="single-tags-row" style="margin-top:2.5rem; display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center;">
+        <span style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-muted); font-weight:700;">✦ ETİKETLER:</span>
+        <?php foreach ( explode( ',', $post['tags'] ) as $tag ) : ?>
+          <?php $tag = trim( $tag ); if ( empty( $tag ) ) continue; ?>
+          <span class="stamp-tag" style="font-size:0.75rem;">#<?= htmlspecialchars( $tag, ENT_QUOTES, 'UTF-8' ); ?></span>
+        <?php endforeach; ?>
+      </div>
+    <?php endif; ?>
+
     <!-- Yazı Sonu Yazar Masası Kartı -->
     <div class="article-author-box rot-hover-straight" style="margin-top:4rem;">
       <div class="article-author-box-avatar">

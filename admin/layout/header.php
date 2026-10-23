@@ -99,6 +99,14 @@ $current_user = Auth::user();
             </span>
           </a>
         </li>
+        <li>
+          <a href="<?= SITE_URL; ?>/admin/books.php" class="sidebar-link <?= $active_tab === 'books' ? 'active' : ''; ?>">
+            <span class="sidebar-link-content">
+              <span class="sidebar-link-icon">📚</span>
+              <span>Pratfall Kitaplığı</span>
+            </span>
+          </a>
+        </li>
       </ul>
 
       <!-- YÖNET -->
@@ -165,6 +173,9 @@ $current_user = Auth::user();
         </a>
         <a href="<?= SITE_URL; ?>/admin/magazines.php?action=new" class="btn btn-sm">
           <span>📖</span> Dergi Ekle
+        </a>
+        <a href="<?= SITE_URL; ?>/admin/books.php?action=new" class="btn btn-sm">
+          <span>📚</span> Kitap Ekle
         </a>
 
         <div style="height:20px; width:1px; background:var(--adm-border); margin:0 0.25rem;"></div>

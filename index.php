@@ -21,6 +21,8 @@ Router::get( '/robots.txt', function() {
 // 2. Ön Yüz (Front-End) Rotaları
 Router::get( '/', PATH_VIEWS . '/front.php' );
 Router::get( '/dergiler', PATH_VIEWS . '/dergiler.php' );
+Router::get( '/kitaplik', PATH_VIEWS . '/kitaplik.php' );
+Router::get( '/kitaplik.php', PATH_VIEWS . '/kitaplik.php' );
 Router::get( '/eser/{slug}', PATH_VIEWS . '/single.php' );
 Router::get( '/yazar/{slug}', PATH_VIEWS . '/author.php' );
 
@@ -60,6 +62,9 @@ Router::any( '/admin/authors.php', PATH_ADMIN . '/authors.php' );
 
 Router::any( '/admin/magazines', PATH_ADMIN . '/magazines.php' );
 Router::any( '/admin/magazines.php', PATH_ADMIN . '/magazines.php' );
+
+Router::any( '/admin/books', PATH_ADMIN . '/books.php' );
+Router::any( '/admin/books.php', PATH_ADMIN . '/books.php' );
 
 Router::any( '/admin/import-docx', PATH_ADMIN . '/import-docx.php' );
 Router::any( '/admin/import-docx.php', PATH_ADMIN . '/import-docx.php' );

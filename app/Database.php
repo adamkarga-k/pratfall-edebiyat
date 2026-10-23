@@ -39,6 +39,8 @@ class Database {
             // Vitrinin boş kalmaması için ilk yazıları kontrol et
             self::ensure_initial_posts();
             self::ensure_categories();
+            self::ensure_columns();
+            self::ensure_books();
         }
         return self::$pdo;
     }
@@ -94,6 +96,7 @@ class Database {
                 title TEXT NOT NULL,
                 slug TEXT UNIQUE NOT NULL,
                 category TEXT DEFAULT 'Deneme',
+                tags TEXT,
                 excerpt TEXT,
                 content TEXT,
                 featured_image TEXT,
@@ -126,7 +129,23 @@ class Database {
             );
         " );
 
-        // 5. Site Ayarları
+        // 5. Pratfall Kitaplığı (Yayınevi Kitapları)
+        $db->exec( "
+            CREATE TABLE IF NOT EXISTS books (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                author TEXT,
+                cover_image TEXT,
+                buy_url TEXT DEFAULT '#',
+                price TEXT,
+                publish_year TEXT,
+                description TEXT,
+                order_num INTEGER DEFAULT 0,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+        " );
+
+        // 6. Site Ayarları
         $db->exec( "
             CREATE TABLE IF NOT EXISTS settings (
                 key TEXT PRIMARY KEY,
@@ -169,6 +188,78 @@ class Database {
                 $stmt = $db->prepare( "INSERT OR IGNORE INTO categories (name, slug, description, order_num) VALUES (?, ?, ?, ?)" );
                 foreach ( $defaults as $cat ) {
                     $stmt->execute( $cat );
+                }
+            }
+        } catch ( Throwable $e ) {}
+    }
+
+    public static function ensure_columns(): void {
+        try {
+            $cols = self::$pdo->query( "PRAGMA table_info(posts)" )->fetchAll();
+            $col_names = array_column( $cols, 'name' );
+            if ( ! in_array( 'tags', $col_names ) ) {
+                self::$pdo->exec( "ALTER TABLE posts ADD COLUMN tags TEXT;" );
+            }
+        } catch ( Throwable $e ) {}
+    }
+
+    public static function ensure_books(): void {
+        try {
+            $db = self::$pdo;
+            $db->exec( "
+                CREATE TABLE IF NOT EXISTS books (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    title TEXT NOT NULL,
+                    author TEXT,
+                    cover_image TEXT,
+                    buy_url TEXT DEFAULT '#',
+                    price TEXT,
+                    publish_year TEXT,
+                    description TEXT,
+                    order_num INTEGER DEFAULT 0,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                );
+            " );
+            $count = (int) $db->query( "SELECT COUNT(*) FROM books" )->fetchColumn();
+            if ( $count === 0 ) {
+                $defaults = [
+                    [
+                        'Kusurlu Kalma Sanatı',
+                        'Kolektif',
+                        'https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=800&q=80',
+                        'https://www.instagram.com/pratfalldergi/',
+                        '160 TL',
+                        '2026 · 1. Baskı',
+                        'Pratfall Kitaplığı’nın ilk basımı: Edebiyatın, kusurlu estetiğin ve matbaanın manifestosu.',
+                        1
+                    ],
+                    [
+                        'Geceye Düşen Mürekkep',
+                        'Cahit Sıtkı Tarancı & Dostları',
+                        'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=800&q=80',
+                        'https://www.instagram.com/pratfalldergi/',
+                        '140 TL',
+                        '2025 · 2. Baskı',
+                        'Unutulmuş şiir fragmanları ve mektuplar.',
+                        2
+                    ],
+                    [
+                        'Şehir ve Yalnızlık Fragmanları',
+                        'Ahmet Hamdi Tanpınar',
+                        'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=800&q=80',
+                        'https://www.instagram.com/pratfalldergi/',
+                        '150 TL',
+                        '2025 · 1. Baskı',
+                        'İstanbul sokaklarının melankolisi ve zaman felsefesi.',
+                        3
+                    ],
+                ];
+                $stmt = $db->prepare( "
+                    INSERT INTO books (title, author, cover_image, buy_url, price, publish_year, description, order_num)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                " );
+                foreach ( $defaults as $b ) {
+                    $stmt->execute( $b );
                 }
             }
         } catch ( Throwable $e ) {}

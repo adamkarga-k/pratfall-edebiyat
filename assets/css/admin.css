@@ -430,6 +430,12 @@ html, body {
   border: 1px solid #dbeafe;
 }
 
+.pill-purple {
+  background-color: #f3e8ff;
+  color: #7e22ce;
+  border: 1px solid #e9d5ff;
+}
+
 .pill-gray {
   background-color: var(--adm-surface-alt);
   color: var(--adm-muted);

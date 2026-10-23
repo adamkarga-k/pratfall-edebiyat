@@ -42,6 +42,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
         $title           = trim( $_POST['title'] ?? '' );
         $author_id       = (int) ( $_POST['author_id'] ?? 0 );
         $category        = trim( $_POST['category'] ?? 'Deneme' );
+        $tags            = trim( $_POST['tags'] ?? '' );
         $excerpt         = trim( $_POST['excerpt'] ?? '' );
         $content         = trim( $_POST['content'] ?? '' );
         $status          = trim( $_POST['status'] ?? 'published' );
@@ -82,21 +83,21 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
                     // Güncelle
                     $stmt = $db->prepare( "
                         UPDATE posts 
-                        SET title = ?, slug = ?, author_id = ?, category = ?, excerpt = ?, content = ?, featured_image = ?, reading_time = ?, status = ?, updated_at = CURRENT_TIMESTAMP
+                        SET title = ?, slug = ?, author_id = ?, category = ?, tags = ?, excerpt = ?, content = ?, featured_image = ?, reading_time = ?, status = ?, updated_at = CURRENT_TIMESTAMP
                         WHERE id = ?
                     " );
                     $stmt->execute( [
-                        $title, $slug, ( $author_id > 0 ? $author_id : null ), $category, $excerpt, $content, $featured_image, $reading_time, $status, $id
+                        $title, $slug, ( $author_id > 0 ? $author_id : null ), $category, $tags, $excerpt, $content, $featured_image, $reading_time, $status, $id
                     ] );
                     $msg = 'Eser başarıyla güncellendi.';
                 } else {
                     // Yeni Ekle
                     $stmt = $db->prepare( "
-                        INSERT INTO posts (title, slug, author_id, category, excerpt, content, featured_image, reading_time, status)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        INSERT INTO posts (title, slug, author_id, category, tags, excerpt, content, featured_image, reading_time, status)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     " );
                     $stmt->execute( [
-                        $title, $slug, ( $author_id > 0 ? $author_id : null ), $category, $excerpt, $content, $featured_image, $reading_time, $status
+                        $title, $slug, ( $author_id > 0 ? $author_id : null ), $category, $tags, $excerpt, $content, $featured_image, $reading_time, $status
                     ] );
                     $id = (int) $db->lastInsertId();
                     $msg = 'Yeni eser başarıyla yayınlandı.';
@@ -120,6 +121,7 @@ $post = [
     'slug'           => '',
     'author_id'      => 0,
     'category'       => 'Deneme',
+    'tags'           => '',
     'excerpt'        => '',
     'content'        => '',
     'featured_image' => '',
@@ -353,6 +355,12 @@ require PATH_ADMIN . '/layout/header.php';
                   </option>
                 <?php endif; ?>
               </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="tags">Etiketler</label>
+              <input type="text" name="tags" id="tags" class="form-control" value="<?= htmlspecialchars( $post['tags'] ?? '', ENT_QUOTES, 'UTF-8' ); ?>" placeholder="edebiyat, felsefe, şiir (virgülle ayırın)" style="font-size:0.85rem;" />
+              <div style="font-size:0.72rem; color:var(--adm-muted); margin-top:0.25rem;">Eserle ilgili anahtar kavramlar.</div>
             </div>
 
             <div style="margin-top:1.5rem;">

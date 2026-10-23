@@ -66,6 +66,7 @@ $copyright_text   = Database::get_setting( 'footer_copyright', 'Tüm hakları ya
         <ul class="footer-links">
           <li><a href="<?= SITE_URL; ?>/">✦ Ana Sayfa</a></li>
           <li><a href="<?= SITE_URL; ?>/#dergiler">✦ Dergilerimizin Sayıları</a></li>
+          <li><a href="<?= SITE_URL; ?>/kitaplik">✦ Pratfall Kitaplığı</a></li>
           <li><a href="<?= SITE_URL; ?>/#yazarlar">✦ Kimler Yazmış?</a></li>
           <li><a href="<?= SITE_URL; ?>/#manifesto">✦ Pratfall?</a></li>
           <li><a href="<?= SITE_URL; ?>/dergiler">✦ Tüm Arşiv & Fanzinler</a></li>
