@@ -10,7 +10,12 @@ deployment:
     - /bin/chmod 755 $DEPLOYPATH/data
     - /bin/chmod 755 $DEPLOYPATH/uploads
     
-    # 2. Güvenlik Dosyalarını ve İzinleri Belirle
+    # 2. Statik Dosyalar (CSS, JS, Resimler) Okuma İzinlerini Ver
+    - /bin/chmod -R 755 $DEPLOYPATH/assets 2>/dev/null || true
+    - /bin/chmod 644 $DEPLOYPATH/assets/css/* 2>/dev/null || true
+    - /bin/chmod 644 $DEPLOYPATH/assets/js/* 2>/dev/null || true
+    
+    # 3. Güvenlik Dosyalarını ve İzinleri Belirle
     - /bin/chmod 644 $DEPLOYPATH/.htaccess 2>/dev/null || true
     - /bin/chmod 644 $DEPLOYPATH/data/.htaccess 2>/dev/null || true
     - /bin/chmod 644 $DEPLOYPATH/uploads/.htaccess 2>/dev/null || true

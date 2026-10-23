@@ -32,8 +32,8 @@ $ticker_items = array_filter( $ticker_items );
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;0,6..72,800;1,6..72,400;1,6..72,600&display=swap" rel="stylesheet" />
 
   <!-- Stiller -->
-  <link rel="stylesheet" href="<?= SITE_URL; ?>/assets/css/theme.css?v=<?= PRATFALL_APP_VERSION; ?>" />
-  <link rel="stylesheet" href="<?= SITE_URL; ?>/assets/css/dergiler-vitrin.css?v=<?= PRATFALL_APP_VERSION; ?>" />
+  <link rel="stylesheet" href="<?= SITE_URL; ?>/assets/css/theme.css?v=<?= PRATFALL_APP_VERSION; ?>.<?= time(); ?>" />
+  <link rel="stylesheet" href="<?= SITE_URL; ?>/assets/css/dergiler-vitrin.css?v=<?= PRATFALL_APP_VERSION; ?>.<?= time(); ?>" />
 </head>
 <body>
 

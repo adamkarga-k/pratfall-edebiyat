@@ -40,10 +40,14 @@ define( 'PATH_APP', PRATFALL_ROOT . '/app' );
 // SQLite Veritabanı Dosya Yolu
 define( 'DB_FILE', PATH_DATA . '/database.sqlite' );
 
-// Dinamik Site URL Algılama
+// Dinamik Site URL Algılama (HTTPS ve Proxy Korumalı)
 function pratfall_base_url() {
-    $protocol = ( ( isset( $_SERVER['HTTPS'] ) && ( $_SERVER['HTTPS'] === 'on' || $_SERVER['HTTPS'] === 1 ) )
-               || ( isset( $_SERVER['HTTP_X_FORWARDED_PROTO'] ) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https' ) ) ? 'https://' : 'http://';
+    $is_https = ( ( isset( $_SERVER['HTTPS'] ) && ( $_SERVER['HTTPS'] === 'on' || $_SERVER['HTTPS'] === '1' || $_SERVER['HTTPS'] === 1 ) )
+               || ( isset( $_SERVER['HTTP_X_FORWARDED_PROTO'] ) && strtolower( $_SERVER['HTTP_X_FORWARDED_PROTO'] ) === 'https' )
+               || ( isset( $_SERVER['HTTP_X_FORWARDED_SSL'] ) && strtolower( $_SERVER['HTTP_X_FORWARDED_SSL'] ) === 'on' )
+               || ( isset( $_SERVER['SERVER_PORT'] ) && (int) $_SERVER['SERVER_PORT'] === 443 ) );
+    
+    $protocol = $is_https ? 'https://' : 'http://';
     $host = isset( $_SERVER['HTTP_HOST'] ) ? $_SERVER['HTTP_HOST'] : 'localhost';
     
     // Canlı domainlerde (pratfall.com.tr vb.) doğrudan alan adını kullan

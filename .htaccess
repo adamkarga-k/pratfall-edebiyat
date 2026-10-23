@@ -65,6 +65,10 @@ Options -Indexes
     # index.php için tekrar yönlendirmeyi durdur (Döngü 500 hatasını önler)
     RewriteRule ^index\.php$ - [L]
 
+    # Statik varlıkları (CSS, JS, Resimler, Fontlar) doğrudan sun, ASLA index.php'ye yönlendirme!
+    RewriteCond %{REQUEST_URI} \.(css|js|jpe?g|png|gif|webp|svg|ico|woff2?|ttf|eot)$ [NC]
+    RewriteRule ^ - [L]
+
     # Gerçek dosya veya dizin varsa doğrudan sun (css, js, resimler, admin dizini vb.)
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
