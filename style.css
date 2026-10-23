@@ -335,3 +335,33 @@ h1, h2, h3, h4, h5, h6 {
   text-transform: uppercase;
   z-index: 1;
 }
+
+/* ==========================================================================
+   STANDART EDİTORYAL ORAN BİRLİĞİ (16:9 - TÜM GÖRSELLER BİREBİR AYNI ORANDA)
+   ========================================================================== */
+.lead-image-wrap {
+  aspect-ratio: 16 / 9 !important;
+}
+
+.post-card-thumb {
+  aspect-ratio: 16 / 9 !important;
+}
+
+.secondary-feature-thumb {
+  width: 140px !important;
+  aspect-ratio: 16 / 9 !important;
+  height: auto !important;
+  box-shadow: 2px 2px 0px var(--border-color);
+}
+
+.single-featured-image {
+  aspect-ratio: 16 / 9 !important;
+  background-color: #141416;
+}
+
+.single-featured-image img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+}

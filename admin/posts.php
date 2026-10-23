@@ -1431,8 +1431,8 @@ function drawCoverImage() {
   }
   ctx.restore();
 
-  // 3. Çift Brutalist Çerçeve
-  const m = 40;
+  // 3. Çift Brutalist Çerçeve (Merkezi Güvenli Alan Mimarisi)
+  const m = 48;
   ctx.strokeStyle = frameColor;
   ctx.lineWidth = 4;
   ctx.strokeRect(m, m, w - m * 2, h - m * 2);
@@ -1456,27 +1456,27 @@ function drawCoverImage() {
   drawCross(m + 22, h - m - 22);
   drawCross(w - m - 22, h - m - 22);
 
-  // 5. Üst Bilgi Başlığı (Sol: Platform, Sağ: Kategori Pulu)
+  // 5. Üst Bilgi Başlığı (Sol Köşe Boş Bırakılır: Sitedeki "EDİTORYAL MANŞET" & "KATEGORİ" Bantları ile Çakışmaz!)
   const badgeTitle = document.getElementById('coverGenBadge').value.trim() || 'PRATFALL · EDEBİYAT & FİKİR & KÜLTÜR & SANAT PLATFORMU';
   const category = document.getElementById('coverGenCategory').value.trim() || 'Edebiyat';
 
-  ctx.font = 'bold 17px "Courier New", monospace';
+  ctx.font = 'bold 15px "Courier New", monospace';
   ctx.fillStyle = mutedColor;
-  ctx.textAlign = 'left';
-  ctx.fillText(badgeTitle.toUpperCase(), m + 35, m + 52);
+  ctx.textAlign = 'center';
+  ctx.fillText(badgeTitle.toUpperCase(), w / 2, m + 36);
 
-  // Kategori Pulu (Hafif Eğik / Zine Stamp)
+  // Kategori Pulu (Sağ Üst Köşede Zarif Zine Damgası)
   ctx.save();
-  ctx.translate(w - m - 35, m + 45);
+  ctx.translate(w - m - 30, m + 44);
   ctx.rotate(-0.02);
   ctx.fillStyle = badgeBg;
   ctx.strokeStyle = frameColor;
   ctx.lineWidth = 2;
   const catText = '✦ ' + (category.toUpperCase()) + ' ✦';
-  ctx.font = 'bold 18px "Courier New", monospace';
-  const badgeW = ctx.measureText(catText).width + 28;
-  ctx.fillRect(-badgeW, -17, badgeW, 34);
-  ctx.strokeRect(-badgeW, -17, badgeW, 34);
+  ctx.font = 'bold 16px "Courier New", monospace';
+  const badgeW = ctx.measureText(catText).width + 24;
+  ctx.fillRect(-badgeW, -15, badgeW, 30);
+  ctx.strokeRect(-badgeW, -15, badgeW, 30);
   ctx.fillStyle = badgeText;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -1484,7 +1484,7 @@ function drawCoverImage() {
   ctx.restore();
 
   // Üst Tırtıklı / Perfore Ayraç
-  const headDivY = m + 85;
+  const headDivY = m + 78;
   ctx.strokeStyle = frameColor;
   ctx.lineWidth = 1.5;
   ctx.setLineDash([8, 6]);
@@ -1494,9 +1494,9 @@ function drawCoverImage() {
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // 6. Alt Bilgi Çubuğu (Yazar & Edebi Arşiv)
+  // 6. Alt Bilgi Çubuğu (Merkezi Güvenli Alan: Yazar & Edebi Arşiv)
   const author = document.getElementById('coverGenAuthor').value.trim() || 'Pratfall Yazarı';
-  const footDivY = h - m - 85;
+  const footDivY = h - m - 78;
 
   ctx.strokeStyle = frameColor;
   ctx.lineWidth = 1.5;
@@ -1507,17 +1507,16 @@ function drawCoverImage() {
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // Yazar Bilgisi (Sol)
-  ctx.textAlign = 'left';
-  ctx.font = 'bold 26px "Courier New", monospace';
+  // Yazar Bilgisi (Merkezde Vurgulu Daktilo Damgası)
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 24px "Courier New", monospace';
   ctx.fillStyle = accentColor;
-  ctx.fillText('[ YAZAR: ' + author.toUpperCase() + ' ]', m + 35, h - m - 40);
+  ctx.fillText('[ YAZAR: ' + author.toUpperCase() + ' ]', w / 2, footDivY + 34);
 
-  // Slogan & Domain (Sağ)
-  ctx.textAlign = 'right';
-  ctx.font = 'bold 18px "Courier New", monospace';
+  // Slogan & Domain (Merkezde)
+  ctx.font = '15px "Courier New", monospace';
   ctx.fillStyle = mutedColor;
-  ctx.fillText('PRATFALL.COM.TR · KUSURLU KALMA ÇABASI', w - m - 35, h - m - 40);
+  ctx.fillText('PRATFALL.COM.TR · KUSURLU KALMA ÇABASI', w / 2, footDivY + 58);
 
   // 7. Orta Başlık Alanı (Dinamik Font ve Satır Sarma)
   const rawTitle = document.getElementById('coverGenTitle').value.trim() || 'Kusurlu Kalma Çabası';
@@ -1528,7 +1527,7 @@ function drawCoverImage() {
     const words = text.split(/\s+/);
     let lines = [];
     let curLine = '';
-    const maxW = w - (m * 2) - 160;
+    const maxW = w - (m * 2) - 180;
 
     for (let n = 0; n < words.length; n++) {
       const test = curLine + words[n] + ' ';
@@ -1543,14 +1542,14 @@ function drawCoverImage() {
     return lines;
   }
 
-  let titleSize = 58;
+  let titleSize = 56;
   let titleLines = wrapTitle(rawTitle, titleSize);
   let lineHeight = titleSize * 1.35;
   let totalTitleH = titleLines.length * lineHeight;
-  const maxTitleH = footDivY - headDivY - 80;
+  const maxTitleH = footDivY - headDivY - 70;
 
   // Başlık uzunsa dinamik küçült
-  while (totalTitleH > maxTitleH && titleSize > 32) {
+  while (totalTitleH > maxTitleH && titleSize > 30) {
     titleSize -= 3;
     lineHeight = titleSize * 1.35;
     titleLines = wrapTitle(rawTitle, titleSize);
