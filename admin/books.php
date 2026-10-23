@@ -17,6 +17,34 @@ $action = $_GET['action'] ?? 'list';
 $msg = '';
 $err = '';
 
+// 0. AJAX ile Kitap Sıralamasını Güncelleme (Drag & Drop Reorder)
+if ( $action === 'ajax_reorder' && $_SERVER['REQUEST_METHOD'] === 'POST' ) {
+    header( 'Content-Type: application/json; charset=UTF-8' );
+    if ( ! Auth::verify_csrf( $_POST['csrf_token'] ?? '' ) ) {
+        echo json_encode( [ 'success' => false, 'message' => 'Güvenlik doğrulaması başarısız oldu (CSRF).' ] );
+        exit;
+    }
+
+    $raw_order = $_POST['order'] ?? [];
+    if ( is_string( $raw_order ) ) {
+        $raw_order = json_decode( $raw_order, true );
+    }
+
+    if ( is_array( $raw_order ) && ! empty( $raw_order ) ) {
+        $stmt = $db->prepare( "UPDATE books SET order_num = ? WHERE id = ?" );
+        $idx = 1;
+        foreach ( $raw_order as $book_id ) {
+            $stmt->execute( [ $idx, (int) $book_id ] );
+            $idx++;
+        }
+        echo json_encode( [ 'success' => true, 'message' => 'Kitap sıralaması başarıyla kaydedildi.' ] );
+        exit;
+    }
+
+    echo json_encode( [ 'success' => false, 'message' => 'Geçersiz sıralama verisi gönderildi.' ] );
+    exit;
+}
+
 // 1. Silme İşlemi
 if ( $action === 'delete' && isset( $_GET['id'] ) ) {
     $id = (int) $_GET['id'];
@@ -181,7 +209,7 @@ require PATH_ADMIN . '/layout/header.php';
           <div class="form-group">
             <label class="form-label" for="order_num">Vitrin Sırası</label>
             <input type="number" name="order_num" id="order_num" class="form-control" style="width:120px;" value="<?= (int) $book['order_num']; ?>" />
-            <div style="font-size:0.75rem; color:var(--adm-muted); margin-top:0.3rem;">Küçük sayılar yatay vitrinde en başta görünür (1, 2, 3...).</div>
+            <div style="font-size:0.75rem; color:var(--adm-muted); margin-top:0.3rem;">(İsteğe bağlı) Sayı girmek zorunda değilsiniz; kitap listesinden fareyle sürükleyip bırakarak veya oklarla da anında sıralayabilirsiniz.</div>
           </div>
 
         </div>
@@ -260,25 +288,43 @@ require PATH_ADMIN . '/layout/header.php';
   $books = $db->query( "SELECT * FROM books ORDER BY order_num ASC, id DESC" )->fetchAll();
   ?>
 
+  <div style="background:#f8fafc; border:1px dashed var(--adm-border); border-radius:var(--adm-radius-sm); padding:0.75rem 1rem; margin-bottom:1.25rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.75rem; font-size:0.84rem; color:var(--adm-muted);">
+    <div style="display:flex; align-items:center; gap:0.6rem;">
+      <span style="font-size:1.2rem; color:var(--adm-accent);">⠿</span>
+      <span><strong>Taşıyarak Sıralama:</strong> Kitapların vitrin sırasını değiştirmek için solundaki <strong>⠿</strong> simgesinden tutup yukarı/aşağı sürükleyin veya <strong>▲ / ▼</strong> oklarını kullanın. Sıralama anında otomatik kaydedilir.</span>
+    </div>
+    <div id="reorder-status-badge" style="display:none; font-size:0.78rem; font-weight:600; padding:0.3rem 0.75rem; border-radius:999px; transition:all 0.2s ease;"></div>
+  </div>
+
   <div class="card">
     <div style="overflow-x:auto;">
-      <table class="admin-table">
+      <table class="admin-table" id="books-sortable-table">
         <thead>
           <tr>
+            <th style="width:52px; text-align:center;">Taşı</th>
             <th style="width:60px;">Kapak</th>
             <th>Kitap Adı</th>
             <th>Yazar</th>
             <th>Baskı / Yıl</th>
             <th>Fiyat</th>
             <th>Yönlendirme Linki</th>
-            <th>Sıra</th>
+            <th style="width:70px; text-align:center;">Sıra</th>
             <th style="text-align:right;">İşlemler</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody id="books-sortable-body">
           <?php if ( ! empty( $books ) ) : ?>
             <?php foreach ( $books as $b ) : ?>
-              <tr>
+              <tr class="sortable-book-row" draggable="true" data-id="<?= $b['id']; ?>" style="transition:background-color 0.15s ease;">
+                <td style="text-align:center; vertical-align:middle; padding:0.4rem 0.25rem;">
+                  <div style="display:inline-flex; align-items:center; justify-content:center; gap:0.35rem;">
+                    <span class="drag-handle" style="cursor:grab; color:var(--adm-muted); user-select:none; font-size:1.25rem; line-height:1; padding:0.25rem; border-radius:3px;" title="Sürükleyip sırasını değiştirin">⠿</span>
+                    <div style="display:inline-flex; flex-direction:column; gap:2px;">
+                      <button type="button" class="btn-move-row btn-move-up" title="Yukarı taşı" style="border:none; background:transparent; cursor:pointer; padding:2px; line-height:1; font-size:0.68rem; color:var(--adm-muted); border-radius:2px;" onmouseover="this.style.color='var(--adm-accent)'" onmouseout="this.style.color='var(--adm-muted)'">▲</button>
+                      <button type="button" class="btn-move-row btn-move-down" title="Aşağı taşı" style="border:none; background:transparent; cursor:pointer; padding:2px; line-height:1; font-size:0.68rem; color:var(--adm-muted); border-radius:2px;" onmouseover="this.style.color='var(--adm-accent)'" onmouseout="this.style.color='var(--adm-muted)'">▼</button>
+                    </div>
+                  </div>
+                </td>
                 <td>
                   <?php if ( ! empty( $b['cover_image'] ) ) : ?>
                     <img src="<?= htmlspecialchars( $b['cover_image'] ); ?>" alt="Kapak" style="width:40px; height:56px; object-fit:cover; border-radius:3px; box-shadow:0 2px 5px rgba(0,0,0,0.15);" />
@@ -318,8 +364,8 @@ require PATH_ADMIN . '/layout/header.php';
                     <span style="color:var(--adm-muted); font-size:0.78rem;">Tanımsız (#)</span>
                   <?php endif; ?>
                 </td>
-                <td>
-                  <span class="pill-badge pill-gray" style="font-size:0.75rem;">
+                <td style="text-align:center;">
+                  <span class="pill-badge pill-gray book-order-badge" style="font-size:0.75rem; min-width:32px; display:inline-block;">
                     #<?= (int) $b['order_num']; ?>
                   </span>
                 </td>
@@ -335,7 +381,7 @@ require PATH_ADMIN . '/layout/header.php';
             <?php endforeach; ?>
           <?php else : ?>
             <tr>
-              <td colspan="8" style="text-align:center; padding:3rem; color:var(--adm-muted);">
+              <td colspan="9" style="text-align:center; padding:3rem; color:var(--adm-muted);">
                 Kitaplıkta henüz kayıtlı bir kitap bulunmuyor. Yeni bir kitap eklemek için yukarıdaki butonu kullanabilirsiniz.
               </td>
             </tr>
@@ -344,6 +390,159 @@ require PATH_ADMIN . '/layout/header.php';
       </table>
     </div>
   </div>
+
+  <style>
+    .sortable-book-row.is-dragging {
+      opacity: 0.45;
+      background: #f1f5f9 !important;
+      outline: 2px dashed var(--adm-accent);
+    }
+    .sortable-book-row.drag-over-top {
+      border-top: 3px solid var(--adm-accent) !important;
+    }
+    .sortable-book-row.drag-over-bottom {
+      border-bottom: 3px solid var(--adm-accent) !important;
+    }
+    .drag-handle:active {
+      cursor: grabbing !important;
+    }
+  </style>
+
+  <script>
+  (function() {
+    const tableBody = document.getElementById('books-sortable-body');
+    const statusBadge = document.getElementById('reorder-status-badge');
+    const csrfToken = <?= json_encode( Auth::csrf_token() ); ?>;
+    const reorderUrl = <?= json_encode( SITE_URL . '/admin/books.php?action=ajax_reorder' ); ?>;
+    let draggedRow = null;
+    let saveTimeout = null;
+
+    if (!tableBody) return;
+
+    function showStatus(text, type) {
+      if (!statusBadge) return;
+      statusBadge.style.display = 'inline-block';
+      statusBadge.textContent = text;
+      if (type === 'loading') {
+        statusBadge.style.background = '#e0f2fe';
+        statusBadge.style.color = '#0369a1';
+        statusBadge.style.border = '1px solid #bae6fd';
+      } else if (type === 'success') {
+        statusBadge.style.background = '#ecfdf5';
+        statusBadge.style.color = '#047857';
+        statusBadge.style.border = '1px solid #a7f3d0';
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => {
+          statusBadge.style.display = 'none';
+        }, 2500);
+      } else if (type === 'error') {
+        statusBadge.style.background = '#fef2f2';
+        statusBadge.style.color = '#b91c1c';
+        statusBadge.style.border = '1px solid #fecaca';
+      }
+    }
+
+    function updateVisualOrderBadges() {
+      const rows = tableBody.querySelectorAll('.sortable-book-row');
+      rows.forEach((row, idx) => {
+        const badge = row.querySelector('.book-order-badge');
+        if (badge) {
+          badge.textContent = '#' + (idx + 1);
+        }
+      });
+    }
+
+    function saveOrder() {
+      updateVisualOrderBadges();
+      const rows = tableBody.querySelectorAll('.sortable-book-row');
+      const orderIds = Array.from(rows).map(row => row.getAttribute('data-id'));
+
+      showStatus('⏳ Sıralama kaydediliyor...', 'loading');
+
+      const formData = new FormData();
+      formData.append('csrf_token', csrfToken);
+      orderIds.forEach(id => formData.append('order[]', id));
+
+      fetch(reorderUrl, {
+        method: 'POST',
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          showStatus('✓ Sıralama kaydedildi', 'success');
+        } else {
+          showStatus('✕ ' + (data.message || 'Hata oluştu'), 'error');
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        showStatus('✕ Bağlantı hatası', 'error');
+      });
+    }
+
+    // Drag and Drop Olayları
+    tableBody.addEventListener('dragstart', function(e) {
+      const row = e.target.closest('.sortable-book-row');
+      if (!row) return;
+      draggedRow = row;
+      row.classList.add('is-dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', row.getAttribute('data-id'));
+    });
+
+    tableBody.addEventListener('dragend', function(e) {
+      if (draggedRow) {
+        draggedRow.classList.remove('is-dragging');
+        draggedRow = null;
+      }
+      tableBody.querySelectorAll('.sortable-book-row').forEach(r => {
+        r.classList.remove('drag-over-top', 'drag-over-bottom');
+      });
+      saveOrder();
+    });
+
+    tableBody.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      const targetRow = e.target.closest('.sortable-book-row');
+      if (!targetRow || targetRow === draggedRow) return;
+
+      const rect = targetRow.getBoundingClientRect();
+      const isAfter = (e.clientY - rect.top) > (rect.height / 2);
+
+      if (isAfter) {
+        targetRow.after(draggedRow);
+      } else {
+        targetRow.before(draggedRow);
+      }
+    });
+
+    // Yukarı / Aşağı Ok Butonları ile Taşıma
+    tableBody.addEventListener('click', function(e) {
+      const btnUp = e.target.closest('.btn-move-up');
+      const btnDown = e.target.closest('.btn-move-down');
+
+      if (btnUp) {
+        e.preventDefault();
+        const row = btnUp.closest('.sortable-book-row');
+        const prev = row.previousElementSibling;
+        if (prev && prev.classList.contains('sortable-book-row')) {
+          prev.before(row);
+          saveOrder();
+        }
+      } else if (btnDown) {
+        e.preventDefault();
+        const row = btnDown.closest('.sortable-book-row');
+        const next = row.nextElementSibling;
+        if (next && next.classList.contains('sortable-book-row')) {
+          next.after(row);
+          saveOrder();
+        }
+      }
+    });
+
+  })();
+  </script>
 
 <?php endif; ?>
 
