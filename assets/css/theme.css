@@ -1436,6 +1436,21 @@ html.dark .author-polaroid-wrap {
   color: var(--accent-primary);
 }
 
+/* Şiir Kategorisinde veya no-dropcap Sınıfında İlk Harf Büyütmeyi İptal Et */
+.is-poem .single-content > p:first-of-type::first-letter,
+.single-content.is-poem > p:first-of-type::first-letter,
+.single-content.no-dropcap > p:first-of-type::first-letter {
+  float: none !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  color: inherit !important;
+  font-weight: inherit !important;
+  text-shadow: none !important;
+}
+
 /* Edebi Alıntı Blokları (Pull Quotes) */
 .single-content blockquote {
   font-style: italic;
@@ -1941,6 +1956,16 @@ html.dark .author-polaroid-wrap {
     padding-top: 2px;
     padding-right: 8px;
     padding-bottom: 2px;
+  }
+
+  .is-poem .single-content > p:first-of-type::first-letter,
+  .single-content.is-poem > p:first-of-type::first-letter,
+  .single-content.no-dropcap > p:first-of-type::first-letter {
+    float: none !important;
+    font-size: inherit !important;
+    line-height: inherit !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
 
   .single-content blockquote {
