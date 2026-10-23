@@ -1,0 +1,1815 @@
+/* ==========================================================================
+   PRATFALL THEME - ANA CSS DOSYASI
+   Kusurlu-Estetik (Neo-Brutalist & Zine Collage) Mimari Stilleri
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. KUSURLU-ESTETİK BİLEŞENLER (Bantlar, Pullar, Damgalar, Eğiklikler)
+   -------------------------------------------------------------------------- */
+
+/* Maskeleme / Koli Bandı Efekti */
+.tape-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background-color: var(--bg-tape);
+  color: #713f12;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.25rem 0.75rem;
+  box-shadow: 1px 2px 4px rgba(0,0,0,0.12);
+  position: relative;
+  border-left: 2px dashed rgba(0,0,0,0.15);
+  border-right: 2px dashed rgba(0,0,0,0.15);
+  z-index: 2;
+  transition: transform 0.2s ease;
+}
+
+html.dark .tape-badge {
+  background-color: var(--bg-tape);
+  color: #fef08a;
+}
+
+.tape-badge.tape-peach {
+  background-color: var(--bg-tape-accent);
+  color: #7c2d12;
+}
+
+html.dark .tape-badge.tape-peach {
+  background-color: var(--bg-tape-accent);
+  color: #fed7aa;
+}
+
+/* Posta / Matbaa Damgası (Stamp Tag) */
+.stamp-tag {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.2rem 0.6rem;
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-surface);
+  color: var(--text-main);
+  box-shadow: 2px 2px 0px var(--border-color);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.stamp-tag:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+/* Canlı Organik Eğiklikler (Kusurluluk) */
+.rot-n1 { transform: rotate(-1.2deg); }
+.rot-p1 { transform: rotate(1.1deg); }
+.rot-n2 { transform: rotate(-2deg); }
+.rot-p2 { transform: rotate(1.8deg); }
+.rot-n05 { transform: rotate(-0.6deg); }
+.rot-p05 { transform: rotate(0.6deg); }
+
+/* Hover'da Hafif Doğrulma / Canlanma */
+.rot-hover-straight {
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.rot-hover-straight:hover {
+  transform: rotate(0deg) scale(1.015);
+}
+
+/* Sert Brutalist Kart */
+.brutal-card {
+  background-color: var(--bg-card);
+  border: 2px solid var(--border-color);
+  box-shadow: var(--shadow-solid);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), 
+              box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.brutal-card:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: var(--shadow-hover);
+  border-color: var(--border-color);
+}
+
+/* Çift Katmanlı Matbaa Çizgisi */
+.newspaper-divider {
+  border: 0;
+  height: 3px;
+  border-top: 1px solid var(--border-color);
+  border-bottom: 2px solid var(--border-color);
+  margin: 2.5rem 0;
+  opacity: 0.9;
+}
+
+.dashed-divider {
+  border: 0;
+  border-top: 2px dashed var(--border-subtle);
+  margin: 2rem 0;
+}
+
+/* --------------------------------------------------------------------------
+   2. ÜST DUYURU BANDI (TICKER & MARQUEE)
+   -------------------------------------------------------------------------- */
+.pratfall-ticker-wrapper {
+  background-color: var(--text-main);
+  color: var(--bg-page);
+  padding: 0.4rem 0;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  overflow: hidden;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.pratfall-ticker-track {
+  display: inline-flex;
+  animation: pratfallTickerScroll 35s linear infinite;
+  white-space: nowrap;
+}
+
+.pratfall-ticker-wrapper:hover .pratfall-ticker-track {
+  animation-play-state: paused;
+}
+
+.pratfall-ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 1.5rem;
+}
+
+.pratfall-ticker-item .ticker-dot {
+  color: var(--accent-primary);
+  font-weight: bold;
+}
+
+@keyframes pratfallTickerScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* --------------------------------------------------------------------------
+   3. MASTHEAD / EDİTORYAL GAZETE LOGOSU & HEADER
+   -------------------------------------------------------------------------- */
+.pratfall-header {
+  border-bottom: 2px solid var(--border-color);
+  background-color: var(--bg-surface);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  transition: background-color 0.25s ease;
+}
+
+.masthead-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--border-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.masthead-info-left,
+.masthead-info-right {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.masthead-badge {
+  background: var(--bg-page);
+  border: 1px solid var(--border-color);
+  padding: 0.15rem 0.5rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.masthead-main {
+  text-align: center;
+  padding: 1.5rem 0 1rem 0;
+  position: relative;
+}
+
+.masthead-logo {
+  font-family: var(--font-serif);
+  font-size: clamp(2.5rem, 7vw, 5.2rem);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+  color: var(--text-main);
+  text-transform: uppercase;
+  margin: 0;
+  display: inline-block;
+  position: relative;
+  text-shadow: 2px 2px 0px rgba(0,0,0,0.06);
+}
+
+.masthead-logo a {
+  color: inherit;
+}
+
+.masthead-tagline {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.masthead-tagline::before,
+.masthead-tagline::after {
+  content: "";
+  display: inline-block;
+  width: 40px;
+  height: 1px;
+  background-color: var(--border-color);
+}
+
+/* Navigasyon Çubuğu */
+.pratfall-nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* Mobil Menü Butonu (Varsayılan Masaüstünde Gizli) */
+.mobile-menu-toggle {
+  display: none;
+  background-color: var(--bg-card);
+  border: 1.5px solid var(--border-color);
+  color: var(--text-main);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+  box-shadow: 2px 2px 0px var(--border-color);
+  align-items: center;
+  gap: 0.45rem;
+  user-select: none;
+  min-height: 38px;
+  transition: all 0.15s ease;
+}
+
+.mobile-menu-toggle:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px var(--accent-primary);
+  border-color: var(--accent-primary);
+}
+
+.pratfall-menu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 1.75rem;
+  flex-wrap: wrap;
+}
+
+.pratfall-menu li a {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-main);
+  padding: 0.35rem 0;
+  position: relative;
+}
+
+.pratfall-menu li a::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: var(--accent-primary);
+  transition: width 0.2s ease;
+}
+
+.pratfall-menu li a:hover::after,
+.pratfall-menu li.current-menu-item a::after {
+  width: 100%;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Gece/Gündüz Modu Butonu */
+.theme-toggle-btn {
+  background-color: var(--bg-card);
+  border: 1.5px solid var(--border-color);
+  color: var(--text-main);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+  box-shadow: 2px 2px 0px var(--border-color);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+}
+
+.theme-toggle-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px var(--border-color);
+  background-color: var(--bg-surface);
+}
+
+.theme-toggle-btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0px var(--border-color);
+}
+
+/* --------------------------------------------------------------------------
+   4. MANŞET & ASİMETRİK KOLAJ BÖLÜMÜ (LEAD EDITORIAL)
+   -------------------------------------------------------------------------- */
+.editorial-hero-grid {
+  display: grid;
+  grid-template-columns: 1.7fr 1fr;
+  gap: 2rem;
+  margin-top: 2rem;
+  margin-bottom: 3.5rem;
+  align-items: stretch;
+}
+
+@media (max-width: 900px) {
+  .editorial-hero-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Büyük Manşet Kartı */
+.lead-card {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.lead-image-wrap {
+  position: relative;
+  overflow: hidden;
+  border: 2px solid var(--border-color);
+  background-color: #000;
+  aspect-ratio: 16 / 10;
+  margin-bottom: 1.25rem;
+}
+
+.lead-image-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), filter 0.5s ease;
+}
+
+.lead-card:hover .lead-image-wrap img {
+  transform: scale(1.03);
+}
+
+.lead-tape-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  transform: rotate(-2deg);
+}
+
+.lead-content {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.lead-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.lead-title {
+  font-size: clamp(1.8rem, 3.2vw, 2.7rem);
+  font-weight: 800;
+  line-height: 1.15;
+  margin-bottom: 0.75rem;
+  letter-spacing: -0.02em;
+}
+
+.lead-excerpt {
+  font-size: 1.05rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.lead-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+/* Yan Kolaj Kartları */
+.hero-side-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.curator-note-card {
+  padding: 1.5rem;
+  background-color: var(--bg-surface);
+  position: relative;
+}
+
+.curator-note-card::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  right: 24px;
+  width: 70px;
+  height: 20px;
+  background-color: var(--bg-tape);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  transform: rotate(3deg);
+}
+
+.curator-title {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-primary);
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.curator-quote {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 1.15rem;
+  line-height: 1.55;
+  margin: 0 0 1rem 0;
+  color: var(--text-main);
+}
+
+.curator-sign {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+.secondary-feature-card {
+  padding: 1.25rem;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.secondary-feature-thumb {
+  width: 110px;
+  height: 110px;
+  flex-shrink: 0;
+  border: 1.5px solid var(--border-color);
+  overflow: hidden;
+}
+
+.secondary-feature-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.secondary-feature-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+  line-height: 1.3;
+}
+
+/* --------------------------------------------------------------------------
+   5. YAZARLAR MASASI & KADRO VİTRİNİ (AUTHORS SPOTLIGHT)
+   -------------------------------------------------------------------------- */
+.author-spotlight-section {
+  margin: 3.5rem 0;
+  padding: 2rem;
+  background-color: var(--bg-surface);
+  border: 2px solid var(--border-color);
+  box-shadow: var(--shadow-solid);
+  position: relative;
+}
+
+.author-spotlight-section::after {
+  content: "KİMLER YAZMIŞ?";
+  position: absolute;
+  top: -14px;
+  right: 28px;
+  background-color: var(--accent-secondary);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.2rem 0.75rem;
+  letter-spacing: 0.1em;
+  border: 1.5px solid var(--border-color);
+  transform: rotate(-1.5deg);
+}
+
+.author-spotlight-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 1.75rem;
+  border-bottom: 1px dashed var(--border-subtle);
+  padding-bottom: 1rem;
+}
+
+.author-spotlight-title {
+  font-size: 1.6rem;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.author-spotlight-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.5rem;
+}
+
+.author-pill-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--bg-card);
+  border: 1.5px solid var(--border-color);
+  box-shadow: 2px 2px 0px var(--border-color);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.author-pill-card:hover {
+  transform: translate(-2px, -2px) rotate(0.8deg);
+  box-shadow: 4px 4px 0px var(--accent-primary);
+  border-color: var(--accent-primary);
+}
+
+.author-pill-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-color);
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--bg-page);
+}
+
+.author-pill-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(40%);
+  transition: filter 0.2s ease;
+}
+
+.author-pill-card:hover .author-pill-avatar img {
+  filter: grayscale(0%);
+}
+
+/* Tipografik Monogram Damgası (Fotoğrafı Olmayan Yazarlar İçin) */
+.author-monogram-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--text-main);
+  color: var(--bg-page);
+  font-family: var(--font-serif);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  user-select: none;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-color);
+  box-shadow: 1px 1px 0px rgba(0,0,0,0.15);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.author-pill-card:hover .author-monogram-avatar {
+  background-color: var(--accent-primary);
+  color: #fff;
+}
+
+.author-monogram-large {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: var(--text-main);
+  border: 2px solid var(--border-color);
+}
+
+.author-monogram-large .author-monogram-avatar {
+  border-radius: 2px;
+  background: transparent;
+  color: var(--bg-page);
+  box-shadow: none;
+  border: none;
+  font-size: 3.2rem !important;
+}
+
+.author-desk-hero.has-monogram {
+  border-left: 6px solid var(--accent-primary);
+}
+
+.author-pill-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.author-pill-name {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 0.15rem;
+}
+
+.author-pill-role {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.author-pill-count {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--accent-primary);
+  margin-top: 0.2rem;
+  font-weight: 600;
+}
+
+/* --------------------------------------------------------------------------
+   6. ASİMETRİK ESER & YAZI AKIŞI (WORKS FEED)
+   -------------------------------------------------------------------------- */
+.section-headline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+
+.section-headline-title {
+  font-size: 2rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.asymmetric-feed-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 2.25rem;
+}
+
+@media (max-width: 640px) {
+  .asymmetric-feed-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.post-card {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* Her karta kendine has bir kusur/açı verme */
+.asymmetric-feed-grid > .post-card:nth-child(4n+1) {
+  transform: rotate(-0.6deg);
+}
+.asymmetric-feed-grid > .post-card:nth-child(4n+2) {
+  transform: rotate(0.8deg);
+}
+.asymmetric-feed-grid > .post-card:nth-child(4n+3) {
+  transform: rotate(-0.9deg);
+}
+.asymmetric-feed-grid > .post-card:nth-child(4n+4) {
+  transform: rotate(0.5deg);
+}
+
+.asymmetric-feed-grid > .post-card:hover {
+  transform: rotate(0deg) translate(-3px, -3px) !important;
+  box-shadow: var(--shadow-hover);
+}
+
+.post-card-thumb {
+  position: relative;
+  overflow: hidden;
+  border: 1.5px solid var(--border-color);
+  aspect-ratio: 16 / 10;
+  margin-bottom: 1rem;
+  background-color: #141416;
+}
+
+.post-card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.post-card:hover .post-card-thumb img {
+  transform: scale(1.04);
+}
+
+.post-card-tag {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+}
+
+.post-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 0.6rem;
+}
+
+.post-card-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1.25;
+  margin-bottom: 0.6rem;
+}
+
+.post-card-excerpt {
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin-bottom: 1.25rem;
+  flex-grow: 1;
+}
+
+.post-card-author {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding-top: 0.85rem;
+  border-top: 1px dashed var(--border-subtle);
+  margin-top: auto;
+}
+
+.post-card-author-img {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+}
+
+.post-card-author-name {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+/* Sayfalama (Pagination) */
+.pratfall-pagination {
+  margin: 4rem 0;
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.pratfall-pagination .page-numbers {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.5rem 1rem;
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-main);
+  box-shadow: 2px 2px 0px var(--border-color);
+  transition: all 0.2s ease;
+}
+
+.pratfall-pagination .page-numbers.current,
+.pratfall-pagination .page-numbers:hover {
+  background-color: var(--text-main);
+  color: var(--bg-page);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px var(--accent-primary);
+}
+
+/* --------------------------------------------------------------------------
+   7. YAZAR ESER SAYFASI (AUTHOR.PHP - YAZAR MASASI)
+   -------------------------------------------------------------------------- */
+.author-desk-hero {
+  margin: 2.5rem 0 3.5rem 0;
+  padding: 2.5rem;
+  background-color: var(--bg-surface);
+  border: 2px solid var(--border-color);
+  box-shadow: var(--shadow-solid);
+  position: relative;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 2.5rem;
+  align-items: start;
+}
+
+@media (max-width: 800px) {
+  .author-desk-hero {
+    grid-template-columns: 1fr;
+    padding: 1.5rem;
+  }
+}
+
+/* Polaroid/Pul Tarzı Yazar Portresi */
+.author-polaroid-wrap {
+  background: #fff;
+  padding: 12px 12px 24px 12px;
+  border: 1.5px solid var(--border-color);
+  box-shadow: 3px 3px 0px rgba(0,0,0,0.15);
+  transform: rotate(-1.8deg);
+  position: relative;
+}
+
+html.dark .author-polaroid-wrap {
+  background: #1e1e24;
+}
+
+.author-polaroid-wrap::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: 30%;
+  width: 60px;
+  height: 20px;
+  background-color: var(--bg-tape);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  transform: rotate(2deg);
+}
+
+.author-polaroid-img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border: 1px solid var(--border-subtle);
+}
+
+.author-polaroid-caption {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: #78716c;
+  text-align: center;
+  margin-top: 10px;
+  font-style: italic;
+}
+
+.author-desk-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.author-desk-badge {
+  display: inline-block;
+  align-self: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.author-desk-name {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 0.35rem;
+}
+
+.author-desk-title {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  color: var(--accent-primary);
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+}
+
+.author-desk-bio {
+  font-size: 1.05rem;
+  line-height: 1.65;
+  color: var(--text-muted);
+  margin-bottom: 1.75rem;
+}
+
+.author-desk-quote {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 1.15rem;
+  border-left: 3px solid var(--accent-secondary);
+  padding-left: 1.25rem;
+  margin: 0 0 1.75rem 0;
+  color: var(--text-main);
+}
+
+/* Yazar İstatistikleri */
+.author-stats-row {
+  display: flex;
+  gap: 2rem;
+  border-top: 1px dashed var(--border-subtle);
+  border-bottom: 1px dashed var(--border-subtle);
+  padding: 1rem 0;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.author-stat-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.author-stat-number {
+  font-family: var(--font-serif);
+  font-size: 1.8rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--text-main);
+}
+
+.author-stat-label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 0.25rem;
+}
+
+/* Yazar Sosyal Linkleri */
+.author-social-links {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.author-social-btn {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.3rem 0.75rem;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  box-shadow: 2px 2px 0px var(--border-color);
+  transition: all 0.2s ease;
+}
+
+.author-social-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px var(--accent-primary);
+  border-color: var(--accent-primary);
+}
+
+/* Yazar Eser Filtre Sekmeleri */
+.author-filter-tabs {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  border-bottom: 2px solid var(--border-color);
+  padding-bottom: 0.75rem;
+}
+
+.author-filter-btn {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.45rem 1rem;
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-main);
+  cursor: pointer;
+  box-shadow: 2px 2px 0px var(--border-color);
+  transition: all 0.15s ease;
+}
+
+.author-filter-btn.active,
+.author-filter-btn:hover {
+  background-color: var(--text-main);
+  color: var(--bg-page);
+  box-shadow: 2px 2px 0px var(--accent-primary);
+}
+
+/* --------------------------------------------------------------------------
+   8. YAZI DETAY SAYFASI (SINGLE.PHP - ESER OKUMA DENEYİMİ)
+   -------------------------------------------------------------------------- */
+/* Okuma İlerleme Çubuğu */
+.reading-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 4px;
+  background-color: var(--accent-primary);
+  width: 0%;
+  z-index: 9999;
+  transition: width 0.1s ease;
+}
+
+.single-article-header {
+  margin: 3rem 0 2.5rem 0;
+  text-align: center;
+}
+
+.single-article-badge-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.single-article-title {
+  font-size: clamp(2.4rem, 5vw, 4rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  margin-bottom: 1.25rem;
+}
+
+.single-article-subtitle {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 1.35rem;
+  color: var(--text-muted);
+  max-width: 720px;
+  margin: 0 auto 2rem auto;
+  line-height: 1.5;
+}
+
+.single-article-byline {
+  display: inline-flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 0.6rem 1.5rem;
+  border: 1.5px solid var(--border-color);
+  background-color: var(--bg-card);
+  box-shadow: 3px 3px 0px var(--border-color);
+  transform: rotate(-0.5deg);
+}
+
+.single-byline-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+}
+
+.single-byline-info {
+  text-align: left;
+  font-family: var(--font-mono);
+}
+
+.single-byline-author {
+  font-size: 0.9rem;
+  font-weight: 700;
+  display: block;
+}
+
+.single-byline-date {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+/* Öne Çıkan Eser Görseli */
+.single-featured-image {
+  margin: 2.5rem 0 3.5rem 0;
+  border: 2px solid var(--border-color);
+  box-shadow: var(--shadow-solid);
+  overflow: hidden;
+  position: relative;
+}
+
+.single-featured-image img {
+  width: 100%;
+  max-height: 560px;
+  object-fit: cover;
+}
+
+.single-featured-caption {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  padding: 0.6rem 1rem;
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border-subtle);
+  text-align: right;
+  font-style: italic;
+}
+
+/* Eser Gövde Tipografisi (Body) */
+.single-content {
+  font-family: var(--font-serif);
+  font-size: 1.22rem;
+  line-height: 1.8;
+  color: var(--text-main);
+}
+
+.single-content p {
+  margin-bottom: 1.75rem;
+}
+
+/* İlk Harf Büyütme (Drop Cap) */
+.single-content > p:first-of-type::first-letter {
+  float: left;
+  font-size: 4.8rem;
+  line-height: 0.8;
+  padding-top: 4px;
+  padding-right: 12px;
+  padding-bottom: 4px;
+  font-family: var(--font-serif);
+  font-weight: 900;
+  color: var(--accent-primary);
+}
+
+/* Edebi Alıntı Blokları (Pull Quotes) */
+.single-content blockquote {
+  font-style: italic;
+  font-size: 1.5rem;
+  line-height: 1.45;
+  margin: 2.5rem 0;
+  padding: 1.5rem 2rem;
+  background-color: var(--bg-surface);
+  border: 2px solid var(--border-color);
+  border-left: 6px solid var(--accent-primary);
+  box-shadow: 3px 3px 0px var(--border-color);
+  position: relative;
+  transform: rotate(-0.5deg);
+}
+
+.single-content blockquote::before {
+  content: "“";
+  font-family: var(--font-serif);
+  font-size: 4rem;
+  position: absolute;
+  top: -15px;
+  left: 10px;
+  color: var(--accent-primary);
+  opacity: 0.3;
+  line-height: 1;
+}
+
+/* Yazı Sonu Yazar Kutusu (Article Author Box) */
+.article-author-box {
+  margin: 4rem 0;
+  padding: 2rem;
+  background-color: var(--bg-surface);
+  border: 2px solid var(--border-color);
+  box-shadow: var(--shadow-solid);
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+}
+
+@media (max-width: 640px) {
+  .article-author-box {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+.article-author-box-avatar {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  border: 2px solid var(--border-color);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.article-author-box-name {
+  font-size: 1.4rem;
+  margin: 0 0 0.35rem 0;
+}
+
+.article-author-box-bio {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin-bottom: 1rem;
+}
+
+/* --------------------------------------------------------------------------
+   9. EDİTORYAL FOOTER
+   -------------------------------------------------------------------------- */
+.pratfall-footer {
+  margin-top: 6rem;
+  border-top: 3px double var(--border-color);
+  background-color: var(--bg-surface);
+  padding: 4rem 0 2rem 0;
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 3rem;
+  margin-bottom: 3.5rem;
+}
+
+@media (max-width: 850px) {
+  .footer-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}
+
+.footer-manifesto-title {
+  font-size: 1.6rem;
+  margin-bottom: 0.75rem;
+}
+
+.footer-manifesto-text {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  line-height: 1.65;
+}
+
+.footer-col-title {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-main);
+  margin-bottom: 1.25rem;
+  border-bottom: 2px solid var(--border-color);
+  padding-bottom: 0.4rem;
+  display: inline-block;
+}
+
+.footer-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+}
+
+.footer-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 2rem;
+  border-top: 1px dashed var(--border-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+/* --------------------------------------------------------------------------
+   YAZARLAR DİZİNİ & YORUMLAR (GENEL FORM STİLLERİ)
+   -------------------------------------------------------------------------- */
+.authors-directory-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 2.25rem;
+  margin-bottom: 5rem;
+}
+
+.author-directory-card {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.comment-form input[type="text"],
+.comment-form input[type="email"],
+.comment-form input[type="url"],
+.comment-form textarea {
+  width: 100%;
+  max-width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: var(--bg-card);
+  border: 1.5px solid var(--border-color);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+  margin-bottom: 1rem;
+}
+
+/* ==========================================================================
+   10. TAM KAPSAMLI MOBİL & TABLET UYUMLULUK SİSTEMİ (RESPONSIVE)
+   ========================================================================== */
+
+@keyframes pratfallSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   A. TABLET VE KÜÇÜK EKRANLAR (<= 768px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  /* Konteyner Dolguları */
+  .pratfall-container,
+  .pratfall-container-narrow {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  /* Gazete Üst Barı */
+  .masthead-top-bar {
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+    padding: 0.5rem 0;
+  }
+
+  .masthead-info-left,
+  .masthead-info-right {
+    justify-content: center;
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  /* Masthead Logo & Tagline */
+  .masthead-main {
+    padding: 1.25rem 0 0.85rem 0;
+  }
+
+  .masthead-logo {
+    font-size: clamp(2.2rem, 9vw, 3.8rem);
+    letter-spacing: -0.03em;
+  }
+
+  .masthead-tagline {
+    font-size: 0.75rem;
+    gap: 0.5rem;
+    letter-spacing: 0.08em;
+  }
+
+  .masthead-tagline::before,
+  .masthead-tagline::after {
+    width: 20px;
+  }
+
+  /* Mobil Navigasyon & Hamburger Menü */
+  .pratfall-nav-bar {
+    position: relative;
+    flex-wrap: wrap;
+    padding: 0.6rem 0;
+  }
+
+  .mobile-menu-toggle {
+    display: inline-flex;
+    order: 1;
+  }
+
+  .header-actions {
+    order: 2;
+    margin-left: auto;
+  }
+
+  .pratfall-nav {
+    display: none;
+    width: 100%;
+    order: 3;
+    margin-top: 0.65rem;
+  }
+
+  .pratfall-nav-bar.is-open .pratfall-nav {
+    display: block;
+    animation: pratfallSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .pratfall-menu {
+    flex-direction: column;
+    width: 100%;
+    align-items: stretch;
+    gap: 0;
+    background-color: var(--bg-card);
+    border: 2px solid var(--border-color);
+    box-shadow: var(--shadow-solid);
+    padding: 0.4rem 0;
+  }
+
+  .pratfall-menu li {
+    width: 100%;
+  }
+
+  .pratfall-menu li a {
+    display: block;
+    width: 100%;
+    padding: 0.85rem 1.25rem;
+    font-size: 0.95rem;
+    border-bottom: 1px dashed var(--border-subtle);
+    min-height: 44px;
+    box-sizing: border-box;
+  }
+
+  .pratfall-menu li:last-child a {
+    border-bottom: none;
+  }
+
+  .pratfall-menu li a::after {
+    display: none;
+  }
+
+  /* Gece Modu Butonu Dokunma Boyutu */
+  .theme-toggle-btn {
+    min-height: 38px;
+    padding: 0.4rem 0.75rem;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   B. AKILLI TELEFONLAR (<= 640px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 640px) {
+  /* Ticker Bandı Mobilde Pürüzsüz */
+  .pratfall-ticker-wrapper {
+    font-size: 0.7rem;
+    padding: 0.35rem 0;
+  }
+
+  /* Manşet Bölümü */
+  .editorial-hero-grid {
+    margin-top: 1.25rem;
+    margin-bottom: 2.25rem;
+    gap: 1.5rem;
+  }
+
+  .lead-card {
+    padding: 1rem;
+  }
+
+  .lead-image-wrap {
+    margin-bottom: 1rem;
+    aspect-ratio: 16 / 10;
+  }
+
+  .lead-title {
+    font-size: 1.5rem;
+    line-height: 1.22;
+    margin-bottom: 0.6rem;
+  }
+
+  .lead-excerpt {
+    font-size: 0.92rem;
+    line-height: 1.55;
+    margin-bottom: 1.25rem;
+  }
+
+  .lead-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.85rem;
+    padding-top: 0.85rem;
+  }
+
+  .lead-footer .stamp-tag {
+    align-self: flex-start;
+    width: 100%;
+    text-align: center;
+    box-sizing: border-box;
+    padding: 0.5rem;
+  }
+
+  .secondary-feature-card {
+    padding: 1rem;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .secondary-feature-thumb {
+    width: 100%;
+    height: 160px;
+  }
+
+  /* Yazarlar Masası (Yoklama Listesi) */
+  .author-spotlight-section {
+    margin: 2.25rem 0;
+    padding: 1.25rem 0.85rem;
+  }
+
+  .author-spotlight-section::after {
+    right: 12px;
+    top: -11px;
+    font-size: 0.65rem;
+    padding: 0.15rem 0.55rem;
+  }
+
+  .author-spotlight-header {
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+  }
+
+  .author-spotlight-title {
+    font-size: 1.35rem;
+  }
+
+  .author-spotlight-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.65rem;
+  }
+
+  .author-pill-card {
+    padding: 0.6rem 0.65rem;
+    gap: 0.6rem;
+  }
+
+  .author-pill-avatar {
+    width: 38px;
+    height: 38px;
+  }
+
+  .author-pill-name {
+    font-size: 0.85rem;
+  }
+
+  .author-pill-role {
+    font-size: 0.62rem;
+  }
+
+  .author-pill-count {
+    font-size: 0.58rem;
+  }
+
+  /* Asimetrik Eser Akışı (Mobil Tek Sütun) */
+  .section-headline {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.65rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .section-headline-title {
+    font-size: 1.5rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .asymmetric-feed-grid {
+    grid-template-columns: 1fr;
+    gap: 1.75rem;
+  }
+
+  /* Mobilde Kartların Eğimlerini Yatıştırma (Taşmaları ve Titremeyi Önler) */
+  .asymmetric-feed-grid > .post-card:nth-child(n) {
+    transform: none !important;
+  }
+
+  .post-card {
+    padding: 1rem;
+  }
+
+  .post-card-title {
+    font-size: 1.25rem;
+    line-height: 1.3;
+  }
+
+  .post-card-excerpt {
+    font-size: 0.88rem;
+    line-height: 1.55;
+    margin-bottom: 1rem;
+  }
+
+  /* Tekil Eser Okuma Sayfası (single.php) */
+  .single-article-header {
+    margin: 2rem 0 1.5rem 0;
+  }
+
+  .single-article-title {
+    font-size: clamp(1.75rem, 6vw, 2.5rem);
+    line-height: 1.2;
+    margin-bottom: 1rem;
+  }
+
+  .single-article-subtitle {
+    font-size: 1.05rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .single-article-byline {
+    width: 100%;
+    justify-content: center;
+    transform: none;
+    padding: 0.6rem 1rem;
+    box-sizing: border-box;
+  }
+
+  .single-featured-image {
+    margin: 1.5rem 0 2rem 0;
+    max-height: 320px;
+  }
+
+  .single-content {
+    font-size: 1.08rem;
+    line-height: 1.7;
+  }
+
+  .single-content > p:first-of-type::first-letter {
+    font-size: 3.2rem;
+    line-height: 0.85;
+    padding-top: 2px;
+    padding-right: 8px;
+    padding-bottom: 2px;
+  }
+
+  .single-content blockquote {
+    font-size: 1.15rem;
+    padding: 1rem 1.25rem;
+    margin: 1.75rem 0;
+    transform: none;
+  }
+
+  .article-author-box {
+    margin: 3rem 0;
+    padding: 1.25rem;
+    flex-direction: column;
+    text-align: center;
+    transform: none;
+  }
+
+  .article-author-box-avatar {
+    margin: 0 auto;
+    width: 76px;
+    height: 76px;
+  }
+
+  /* Yazar Masası Portfolyo Sayfası (author.php) */
+  .author-desk-hero {
+    margin: 1.5rem 0 2.25rem 0;
+    padding: 1.25rem 1rem;
+    gap: 1.5rem;
+  }
+
+  .author-polaroid-wrap {
+    max-width: 180px;
+    margin: 0 auto 0.5rem auto;
+    transform: none;
+    padding: 8px 8px 18px 8px;
+  }
+
+  .author-desk-name {
+    font-size: 1.85rem;
+    text-align: center;
+  }
+
+  .author-desk-title {
+    text-align: center;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+  }
+
+  .author-desk-quote {
+    font-size: 1.05rem;
+    padding-left: 0.85rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .author-stats-row {
+    gap: 1rem;
+    justify-content: space-around;
+    padding: 0.75rem 0;
+  }
+
+  .author-stat-number {
+    font-size: 1.5rem;
+  }
+
+  .author-social-links {
+    justify-content: center;
+  }
+
+  /* Yazar Eser Sekmeleri Mobilde Yatay Kaydırılabilir (App-Like) */
+  .author-filter-tabs {
+    display: flex;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .author-filter-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .author-filter-btn {
+    flex-shrink: 0;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.75rem;
+    min-height: 38px;
+  }
+
+  /* Altbilgi (Footer) */
+  .pratfall-footer {
+    margin-top: 3.5rem;
+    padding: 2.75rem 0 1.5rem 0;
+  }
+
+  .footer-grid {
+    gap: 2rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .footer-manifesto-title {
+    font-size: 1.35rem;
+  }
+
+  .footer-bottom {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.85rem;
+  }
+
+  .footer-col input[type="email"],
+  .footer-col button[type="submit"] {
+    min-height: 44px;
+    box-sizing: border-box;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   C. ÇOK KÜÇÜK CİHAZLAR (<= 380px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 380px) {
+  .masthead-logo {
+    font-size: 1.95rem;
+  }
+
+  .masthead-tagline::before,
+  .masthead-tagline::after {
+    display: none;
+  }
+
+  .author-spotlight-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .lead-title {
+    font-size: 1.35rem;
+  }
+
+  .pratfall-dergiler-title {
+    font-size: 1.25rem;
+  }
+}

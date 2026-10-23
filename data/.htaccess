@@ -1,0 +1,8 @@
+# Pratfall Standalone - Veritabanı Dizin Koruması (Apache 2.4 ve 2.2 Uyumlu)
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+</IfModule>

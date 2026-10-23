@@ -1,0 +1,19 @@
+# Pratfall Standalone - Git Yoksayma Dosyası
+# Kullanıcı içeriklerinin ve veritabanının güncellemelerde ezilmesini önler!
+
+# 1. Veritabanı Dosyaları
+/data/*.sqlite
+/data/*.sqlite-wal
+/data/*.sqlite-shm
+/data/*.db
+
+# 2. Kullanıcı Tarafından Yüklenen Resimler
+/uploads/*
+!/uploads/.gitkeep
+!/uploads/docx-images/.gitkeep
+
+# 3. Sistem ve Geçici Dosyalar
+.DS_Store
+Thumbs.db
+*.log
+*.zip
