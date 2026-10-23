@@ -113,6 +113,14 @@ $current_user = Auth::user();
       <div class="sidebar-group-title">Yönetim</div>
       <ul class="sidebar-menu">
         <li>
+          <a href="<?= SITE_URL; ?>/admin/subscribers.php" class="sidebar-link <?= $active_tab === 'subscribers' ? 'active' : ''; ?>">
+            <span class="sidebar-link-content">
+              <span class="sidebar-link-icon">📬</span>
+              <span>E-Posta Bülteni & Aboneler</span>
+            </span>
+          </a>
+        </li>
+        <li>
           <a href="<?= SITE_URL; ?>/admin/authors.php" class="sidebar-link <?= $active_tab === 'authors' ? 'active' : ''; ?>">
             <span class="sidebar-link-content">
               <span class="sidebar-link-icon">👥</span>

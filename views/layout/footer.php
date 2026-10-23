@@ -79,12 +79,72 @@ $copyright_text   = str_ireplace( 'mecmuaya', 'platforma', Database::get_setting
         <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem; line-height:1.5;">
           <?= htmlspecialchars( $newsletter_desc, ENT_QUOTES, 'UTF-8' ); ?>
         </p>
-        <form style="display:flex; flex-direction:column; gap:0.5rem;" onsubmit="event.preventDefault(); alert('Bültene kaydınız alındı.');">
-          <input type="email" placeholder="E-posta adresiniz..." required style="padding:0.6rem 0.8rem; border:1.5px solid var(--border-color); background:var(--bg-card); color:var(--text-main); font-family:var(--font-mono); font-size:0.8rem;" />
-          <button type="submit" class="stamp-tag" style="background:var(--accent-primary); color:#fff; cursor:pointer; text-align:center; padding:0.5rem;">
+        <form id="footer-bulten-form" style="display:flex; flex-direction:column; gap:0.5rem;">
+          <!-- Bot Tuzağı (Honeypot) - İnsanlar görmez, botlar doldurur -->
+          <input type="text" name="b_hp_check" value="" style="display:none !important; position:absolute; left:-9999px;" tabindex="-1" autocomplete="off" />
+          
+          <input type="email" name="email" id="bulten-email-input" placeholder="E-posta adresiniz..." required style="padding:0.6rem 0.8rem; border:1.5px solid var(--border-color); background:var(--bg-card); color:var(--text-main); font-family:var(--font-mono); font-size:0.8rem;" />
+          
+          <button type="submit" id="bulten-submit-btn" class="stamp-tag" style="background:var(--accent-primary); color:#fff; cursor:pointer; text-align:center; padding:0.55rem; font-weight:600; border:none; transition:opacity 0.2s;">
             Bültene Abone Ol ↗
           </button>
+          
+          <div id="bulten-status-msg" style="display:none; font-size:0.8rem; font-family:var(--font-mono); line-height:1.4; padding:0.5rem 0.75rem; margin-top:0.35rem; border:1px solid currentColor;"></div>
         </form>
+
+        <script>
+        (function() {
+          var form = document.getElementById('footer-bulten-form');
+          if (!form) return;
+          var btn = document.getElementById('bulten-submit-btn');
+          var msg = document.getElementById('bulten-status-msg');
+          var emailInput = document.getElementById('bulten-email-input');
+
+          form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            var origText = btn.innerHTML;
+            btn.innerHTML = 'Kaydediliyor...';
+            btn.style.opacity = '0.7';
+            btn.disabled = true;
+            msg.style.display = 'none';
+
+            var formData = new FormData(form);
+
+            fetch('<?= SITE_URL; ?>/bulten/abone-ol', {
+              method: 'POST',
+              body: formData
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+              msg.style.display = 'block';
+              if (data.success) {
+                msg.style.background = '#e6f4ea';
+                msg.style.color = '#137333';
+                msg.style.borderColor = '#137333';
+                msg.innerHTML = data.message;
+                emailInput.value = '';
+              } else {
+                msg.style.background = '#fce8e6';
+                msg.style.color = '#c5221f';
+                msg.style.borderColor = '#c5221f';
+                msg.innerHTML = data.message || 'Bir hata oluştu.';
+              }
+            })
+            .catch(function(err) {
+              msg.style.display = 'block';
+              msg.style.background = '#fce8e6';
+              msg.style.color = '#c5221f';
+              msg.style.borderColor = '#c5221f';
+              msg.innerHTML = 'Bağlantı hatası oluştu. Lütfen tekrar deneyin.';
+            })
+            .finally(function() {
+              btn.innerHTML = origText;
+              btn.style.opacity = '1';
+              btn.disabled = false;
+            });
+          });
+        })();
+        </script>
       </div>
 
     </div>

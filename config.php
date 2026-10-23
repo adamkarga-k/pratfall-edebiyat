@@ -43,6 +43,9 @@ define( 'PATH_APP', PRATFALL_ROOT . '/app' );
 // SQLite Veritabanı Dosya Yolu
 define( 'DB_FILE', PATH_DATA . '/database.sqlite' );
 
+// E-posta ve Hassas Veri Şifreleme Anahtarı (AES-256-CBC ve HMAC-SHA256 Korumalı Kasa)
+define( 'PRATFALL_CRYPTO_KEY', '7f9c8d3e2b1a4f5e6d7c8b9a0f1e2d3c4b5a6f7e8d9c0b1a2f3e4d5c6b7a8f90' );
+
 // Dinamik Site URL Algılama (HTTPS ve Proxy Korumalı)
 function pratfall_base_url() {
     $is_https = ( ( isset( $_SERVER['HTTPS'] ) && ( $_SERVER['HTTPS'] === 'on' || $_SERVER['HTTPS'] === '1' || $_SERVER['HTTPS'] === 1 ) )

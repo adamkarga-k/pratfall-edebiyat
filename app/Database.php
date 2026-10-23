@@ -41,6 +41,7 @@ class Database {
             self::ensure_categories();
             self::ensure_columns();
             self::ensure_books();
+            self::ensure_subscribers();
             self::clean_mecmua_settings();
         }
         return self::$pdo;
@@ -263,6 +264,28 @@ class Database {
                     $stmt->execute( $b );
                 }
             }
+        } catch ( Throwable $e ) {}
+    }
+
+    public static function ensure_subscribers(): void {
+        try {
+            $db = self::$pdo;
+            $db->exec( "
+                CREATE TABLE IF NOT EXISTS subscribers (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    email_encrypted TEXT NOT NULL,
+                    email_hash TEXT UNIQUE NOT NULL,
+                    status TEXT DEFAULT 'active',
+                    source TEXT DEFAULT 'site_footer',
+                    unsubscribe_token TEXT UNIQUE NOT NULL,
+                    ip_address TEXT,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    unsubscribed_at DATETIME
+                );
+                CREATE INDEX IF NOT EXISTS idx_subscribers_hash ON subscribers(email_hash);
+                CREATE INDEX IF NOT EXISTS idx_subscribers_token ON subscribers(unsubscribe_token);
+                CREATE INDEX IF NOT EXISTS idx_subscribers_status ON subscribers(status);
+            " );
         } catch ( Throwable $e ) {}
     }
 

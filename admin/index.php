@@ -21,6 +21,7 @@ $total_authors     = (int) $db->query( "SELECT COUNT(*) FROM authors" )->fetchCo
 $total_magazines   = (int) $db->query( "SELECT COUNT(*) FROM magazines" )->fetchColumn();
 $total_books       = (int) $db->query( "SELECT COUNT(*) FROM books" )->fetchColumn();
 $total_categories  = (int) $db->query( "SELECT COUNT(*) FROM categories" )->fetchColumn();
+$total_subscribers = (int) $db->query( "SELECT COUNT(*) FROM subscribers WHERE status = 'active'" )->fetchColumn();
 
 // Son Yazılar (Son Etkinlik için)
 $recent_posts = $db->query( "
@@ -62,6 +63,14 @@ $db_size = file_exists( DB_FILE ) ? round( filesize( DB_FILE ) / 1024, 1 ) . ' K
     <div class="stat-card-value"><?= $total_authors; ?></div>
     <div style="font-size:0.75rem; color:var(--adm-muted); margin-top:0.4rem;">
       Kayıtlı edebi yazar profili
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-card-label">Bülten Aboneleri</div>
+    <div class="stat-card-value" style="color:var(--adm-green);"><?= $total_subscribers; ?></div>
+    <div style="font-size:0.75rem; color:var(--adm-muted); margin-top:0.4rem;">
+      <a href="<?= SITE_URL; ?>/admin/subscribers.php" style="color:inherit; text-decoration:none;">🔒 AES-256 Şifreli Kasa →</a>
     </div>
   </div>
 
