@@ -23,7 +23,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 
         if ( $action_type === 'settings' ) {
             $settings_keys = [
-                'site_name', 'site_slogan', 'site_location_badge', 'site_issue_badge', 'site_press_badge',
+                'site_name', 'site_slogan', 'site_location_badge', 'site_instagram_url',
                 'ticker_1', 'ticker_2', 'ticker_3', 'ticker_4',
                 'authors_badge', 'authors_title', 'authors_desc',
                 'feed_badge', 'feed_title',
@@ -170,12 +170,12 @@ require PATH_ADMIN . '/layout/header.php';
         <input type="text" name="site_slogan" class="form-control" value="<?= htmlspecialchars( Database::get_setting('site_slogan', 'Kusurlu Kalma Çabası'), ENT_QUOTES, 'UTF-8' ); ?>" />
       </div>
       <div class="form-group">
-        <label class="form-label">Konum / Matbaa Rozeti</label>
-        <input type="text" name="site_location_badge" class="form-control" value="<?= htmlspecialchars( Database::get_setting('site_location_badge', '✦ İSTANBUL · KÜLTÜR & MATBAA'), ENT_QUOTES, 'UTF-8' ); ?>" />
+        <label class="form-label">Tarih Yanı Künye / Rozet</label>
+        <input type="text" name="site_location_badge" class="form-control" value="<?= htmlspecialchars( Database::get_setting('site_location_badge', 'Edebiyat & Fikir & Kültür & Sanat'), ENT_QUOTES, 'UTF-8' ); ?>" />
       </div>
       <div class="form-group">
-        <label class="form-label">Cilt / Sayı Rozeti</label>
-        <input type="text" name="site_issue_badge" class="form-control" value="<?= htmlspecialchars( Database::get_setting('site_issue_badge', 'CİLT I · SAYI 18'), ENT_QUOTES, 'UTF-8' ); ?>" />
+        <label class="form-label">Sağ Üst Instagram Bağlantısı</label>
+        <input type="text" name="site_instagram_url" class="form-control" value="<?= htmlspecialchars( Database::get_setting('site_instagram_url', 'https://www.instagram.com/pratfalldergi/'), ENT_QUOTES, 'UTF-8' ); ?>" />
       </div>
     </div>
   </div>

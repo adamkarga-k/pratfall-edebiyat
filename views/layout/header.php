@@ -5,9 +5,11 @@
 
 $site_name     = Database::get_setting( 'site_name', 'PRATFALL' );
 $site_slogan   = Database::get_setting( 'site_slogan', 'Kusurlu Kalma Çabası' );
-$location_badge= Database::get_setting( 'site_location_badge', '✦ İSTANBUL · KÜLTÜR & MATBAA' );
-$issue_badge   = Database::get_setting( 'site_issue_badge', 'CİLT I · SAYI 18' );
-$press_badge   = Database::get_setting( 'site_press_badge', 'BAĞIMSIZ BASIN' );
+$location_badge= Database::get_setting( 'site_location_badge', 'Edebiyat & Fikir & Kültür & Sanat' );
+if ( empty( $location_badge ) || strpos( $location_badge, 'İSTANBUL' ) !== false ) {
+    $location_badge = 'Edebiyat & Fikir & Kültür & Sanat';
+}
+$instagram_url = Database::get_setting( 'site_instagram_url', 'https://www.instagram.com/pratfalldergi/' );
 
 $ticker_items = [
     Database::get_setting( 'ticker_1' ),
@@ -67,15 +69,16 @@ $ticker_items = array_filter( $ticker_items );
 <header class="pratfall-header">
   <div class="pratfall-container">
     
-    <!-- Gazete Üst Künye Çubuğu (Tarih, Cilt, Lokasyon) -->
+    <!-- Gazete Üst Künye Çubuğu (Tarih, Kültür/Edebiyat, Instagram) -->
     <div class="masthead-top-bar">
       <div class="masthead-info-left">
         <span class="masthead-badge"><?= Helpers::format_date( date('Y-m-d') ); ?></span>
-        <span><?= htmlspecialchars( $location_badge, ENT_QUOTES, 'UTF-8' ); ?></span>
+        <span>✦ <?= htmlspecialchars( $location_badge, ENT_QUOTES, 'UTF-8' ); ?></span>
       </div>
       <div class="masthead-info-right">
-        <span><?= htmlspecialchars( $issue_badge, ENT_QUOTES, 'UTF-8' ); ?></span>
-        <span class="tape-badge rot-p1" style="font-size:0.65rem; padding:0.15rem 0.5rem;"><?= htmlspecialchars( $press_badge, ENT_QUOTES, 'UTF-8' ); ?></span>
+        <a href="<?= htmlspecialchars( $instagram_url, ENT_QUOTES, 'UTF-8' ); ?>" target="_blank" rel="noopener" class="tape-badge rot-p1" style="font-size:0.72rem; padding:0.2rem 0.65rem; text-decoration:none; color:inherit; display:inline-flex; align-items:center; gap:0.35rem;" title="Pratfall Instagram">
+          <span>📷</span> Instagram ↗
+        </a>
       </div>
     </div>
 
