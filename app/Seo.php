@@ -170,6 +170,16 @@ class Seo {
         echo "    <priority>0.8</priority>\n";
         echo "  </url>\n";
 
+        // Kategoriler
+        $cats = $db->query( "SELECT slug FROM categories" )->fetchAll( PDO::FETCH_COLUMN );
+        foreach ( $cats as $c_slug ) {
+            echo "  <url>\n";
+            echo "    <loc>" . htmlspecialchars( SITE_URL . '/kategori/' . $c_slug, ENT_XML1 ) . "</loc>\n";
+            echo "    <changefreq>weekly</changefreq>\n";
+            echo "    <priority>0.7</priority>\n";
+            echo "  </url>\n";
+        }
+
         // Yazılar
         foreach ( $posts as $p ) {
             $loc = SITE_URL . '/eser/' . $p['slug'];

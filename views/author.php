@@ -136,7 +136,9 @@ require PATH_VIEWS . '/layout/header.php';
       <?php foreach ( $posts as $post ) : ?>
         <article class="brutal-card post-card rot-hover-straight">
           <div class="post-card-thumb">
-            <span class="tape-badge post-card-tag rot-n1"><?= htmlspecialchars( $post['category'], ENT_QUOTES, 'UTF-8' ); ?></span>
+            <a href="<?= SITE_URL; ?>/kategori/<?= Database::slugify( $post['category'] ?? 'yazi' ); ?>" class="tape-badge post-card-tag rot-n1" style="text-decoration:none; color:inherit;">
+              <?= htmlspecialchars( $post['category'], ENT_QUOTES, 'UTF-8' ); ?>
+            </a>
             <a href="<?= SITE_URL; ?>/eser/<?= $post['slug']; ?>">
               <?php if ( ! empty( $post['featured_image'] ) ) : ?>
                 <img src="<?= $post['featured_image']; ?>" alt="<?= htmlspecialchars( $post['title'], ENT_QUOTES, 'UTF-8' ); ?>" loading="lazy" />
@@ -150,7 +152,6 @@ require PATH_VIEWS . '/layout/header.php';
 
           <div class="post-card-meta">
             <time><?= Helpers::format_date( $post['published_at'] ); ?></time>
-            <span>✦ <?= Helpers::literary_reading_rhythm( (int) $post['reading_time'], $post['category'] ); ?></span>
           </div>
 
           <h3 class="post-card-title">

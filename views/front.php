@@ -202,9 +202,10 @@ require PATH_VIEWS . '/layout/header.php';
             </div>
             <div class="lead-content">
               <div class="lead-meta">
-                <span class="stamp-tag"><?= htmlspecialchars( $lead_post['category'] ?? 'DENEME' ); ?></span>
+                <a href="<?= SITE_URL; ?>/kategori/<?= Database::slugify( $lead_post['category'] ?? 'deneme' ); ?>" class="stamp-tag" style="text-decoration:none; color:inherit;">
+                  <?= htmlspecialchars( $lead_post['category'] ?? 'DENEME' ); ?>
+                </a>
                 <time><?= Helpers::format_date( $lead_post['published_at'] ); ?></time>
-                <span>✦ <?= Helpers::literary_reading_rhythm( (int) ( $lead_post['reading_time'] ?? 5 ), $lead_post['category'] ?? '' ); ?></span>
               </div>
               <h2 class="lead-title">
                 <a href="<?= SITE_URL; ?>/eser/<?= $lead_post['slug']; ?>">
@@ -376,14 +377,15 @@ require PATH_VIEWS . '/layout/header.php';
         <?php foreach ( $feed_posts as $post ) : ?>
         <article class="brutal-card post-card rot-hover-straight">
           <div class="post-card-thumb">
-            <span class="tape-badge post-card-tag rot-n1"><?= htmlspecialchars( $post['category'] ?? 'YAZI' ); ?></span>
+            <a href="<?= SITE_URL; ?>/kategori/<?= Database::slugify( $post['category'] ?? 'yazi' ); ?>" class="tape-badge post-card-tag rot-n1" style="text-decoration:none; color:inherit;">
+              <?= htmlspecialchars( $post['category'] ?? 'YAZI' ); ?>
+            </a>
             <a href="<?= SITE_URL; ?>/eser/<?= $post['slug']; ?>">
               <img src="<?= ! empty( $post['featured_image'] ) ? htmlspecialchars( $post['featured_image'] ) : 'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=600&q=80'; ?>" alt="<?= htmlspecialchars( $post['title'] ); ?>" loading="lazy" />
             </a>
           </div>
           <div class="post-card-meta">
             <time><?= Helpers::format_date( $post['published_at'] ); ?></time>
-            <span>✦ <?= Helpers::literary_reading_rhythm( (int) ( $post['reading_time'] ?? 5 ), $post['category'] ?? '' ); ?></span>
           </div>
           <h3 class="post-card-title">
             <a href="<?= SITE_URL; ?>/eser/<?= $post['slug']; ?>"><?= htmlspecialchars( $post['title'] ); ?></a>

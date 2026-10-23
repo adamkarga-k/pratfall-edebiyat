@@ -61,7 +61,9 @@ require PATH_VIEWS . '/layout/header.php';
     <!-- Başlık Alanı -->
     <header class="single-article-header">
       <div class="single-article-badge-row">
-        <span class="stamp-tag"><?= htmlspecialchars( $post['category'], ENT_QUOTES, 'UTF-8' ); ?></span>
+        <a href="<?= SITE_URL; ?>/kategori/<?= Database::slugify( $post['category'] ?? 'deneme' ); ?>" class="stamp-tag" style="text-decoration:none; color:inherit;">
+          <?= htmlspecialchars( $post['category'], ENT_QUOTES, 'UTF-8' ); ?>
+        </a>
         <span class="tape-badge rot-n1">✦ <?= Helpers::literary_reading_rhythm( $post['reading_time'], $post['category'] ); ?></span>
       </div>
 
