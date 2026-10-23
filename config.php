@@ -24,7 +24,10 @@ define( 'PRATFALL_APP_VERSION', '1.0.0' );
 if ( session_status() === PHP_SESSION_NONE ) {
     ini_set( 'session.cookie_httponly', 1 );
     ini_set( 'session.use_only_cookies', 1 );
-    if ( isset( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] === 'on' ) {
+    $is_ssl = ( ( isset( $_SERVER['HTTPS'] ) && ( $_SERVER['HTTPS'] === 'on' || $_SERVER['HTTPS'] === '1' || $_SERVER['HTTPS'] === 1 ) )
+             || ( isset( $_SERVER['HTTP_X_FORWARDED_PROTO'] ) && strtolower( $_SERVER['HTTP_X_FORWARDED_PROTO'] ) === 'https' )
+             || ( isset( $_SERVER['SERVER_PORT'] ) && (int) $_SERVER['SERVER_PORT'] === 443 ) );
+    if ( $is_ssl ) {
         ini_set( 'session.cookie_secure', 1 );
     }
     session_start();
