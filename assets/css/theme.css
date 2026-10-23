@@ -1365,6 +1365,18 @@ html.dark .author-polaroid-wrap {
 
 .single-content p {
   margin-bottom: 1.75rem;
+  text-align: justify;
+  text-align-last: left;
+  text-justify: inter-word;
+  hyphens: auto;
+}
+
+/* Yapıştırma veya harici editörden kalan varsayılan sol hizalamaları kitap dizgisine dönüştür */
+.single-content p[style*="text-align: left"],
+.single-content p[style*="text-align:left"],
+.single-content p[align="left"] {
+  text-align: justify !important;
+  text-align-last: left !important;
 }
 
 /* İlk Harf Büyütme (Drop Cap) */

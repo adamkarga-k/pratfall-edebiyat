@@ -647,6 +647,10 @@ require PATH_ADMIN . '/layout/header.php';
       }
     }
 
+    try {
+      document.execCommand('defaultParagraphSeparator', false, 'p');
+    } catch(e) {}
+
     document.getElementById('editorVisual')?.addEventListener('input', syncContent);
     document.getElementById('editorVisual')?.addEventListener('blur', syncContent);
 

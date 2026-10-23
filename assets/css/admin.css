@@ -636,12 +636,17 @@ html, body {
   line-height: 1.8;
   color: var(--adm-text);
   outline: none;
+  text-align: justify;
+  text-align-last: left;
+  text-justify: inter-word;
 }
 
 .editor-content-area:empty::before {
   content: "Metninizi buraya yazın veya Word'den yapıştırın...";
   color: var(--adm-subtle);
   font-style: italic;
+  text-align: left;
+  text-align-last: left;
 }
 
 /* Editör İçi Tipografi */
@@ -650,6 +655,7 @@ html, body {
   font-weight: 700;
   margin: 1.5rem 0 0.75rem 0;
   color: var(--adm-text);
+  text-align: left;
 }
 
 .editor-content-area h3 {
@@ -657,10 +663,21 @@ html, body {
   font-weight: 600;
   margin: 1.25rem 0 0.5rem 0;
   color: var(--adm-text);
+  text-align: left;
 }
 
 .editor-content-area p {
   margin: 0 0 1.25rem 0;
+  text-align: justify;
+  text-align-last: left;
+  text-justify: inter-word;
+}
+
+.editor-content-area p[style*="text-align: left"],
+.editor-content-area p[style*="text-align:left"],
+.editor-content-area p[align="left"] {
+  text-align: justify !important;
+  text-align-last: left !important;
 }
 
 .editor-content-area blockquote {

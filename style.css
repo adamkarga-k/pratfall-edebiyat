@@ -232,6 +232,23 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ==========================================================================
+   OTOMATİK METİN DİZGİSİ: İKİ YANA YASLI, SON SATIR SOLA YASLI (EDİTORYAL KİTAP DİZGİSİ)
+   ========================================================================== */
+.single-content p {
+  text-align: justify;
+  text-align-last: left;
+  text-justify: inter-word;
+  hyphens: auto;
+}
+
+.single-content p[style*="text-align: left"],
+.single-content p[style*="text-align:left"],
+.single-content p[align="left"] {
+  text-align: justify !important;
+  text-align-last: left !important;
+}
+
+/* ==========================================================================
    CANLI BAŞLANGIÇ HARFİ (DROP CAPS) - KLASİK EDİTORYAL DİZGİ
    ========================================================================== */
 .single-content > p:first-of-type::first-letter {
