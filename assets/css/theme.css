@@ -413,7 +413,7 @@ html.dark .tape-badge.tape-peach {
   font-family: var(--font-serif);
   font-size: clamp(2.5rem, 7vw, 5.2rem);
   font-weight: 900;
-  letter-spacing: -0.04em;
+  letter-spacing: 0.12em;
   line-height: 0.95;
   color: var(--text-main);
   text-transform: uppercase;
@@ -1576,20 +1576,31 @@ html.dark .author-polaroid-wrap {
     padding-right: 1rem;
   }
 
-  /* Gazete Üst Barı */
+  /* Gazete Üst Barı - Mobilde Kesinlikle Yan Yana (Tarih ve Instagram Sticker) */
   .masthead-top-bar {
-    flex-direction: column;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
     gap: 0.5rem;
-    text-align: center;
     padding: 0.5rem 0;
+    width: 100%;
   }
 
-  .masthead-info-left,
+  .masthead-info-left {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    width: auto;
+    flex-shrink: 0;
+  }
+
   .masthead-info-right {
-    justify-content: center;
-    width: 100%;
-    flex-wrap: wrap;
-    gap: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    width: auto;
+    flex-shrink: 0;
   }
 
   /* Masthead Logo & Tagline */
@@ -1599,7 +1610,7 @@ html.dark .author-polaroid-wrap {
 
   .masthead-logo {
     font-size: clamp(2.2rem, 9vw, 3.8rem);
-    letter-spacing: -0.03em;
+    letter-spacing: 0.1em;
   }
 
   .masthead-tagline {
@@ -1999,6 +2010,7 @@ html.dark .author-polaroid-wrap {
 @media (max-width: 380px) {
   .masthead-logo {
     font-size: 1.95rem;
+    letter-spacing: 0.08em;
   }
 
   .masthead-tagline::before,

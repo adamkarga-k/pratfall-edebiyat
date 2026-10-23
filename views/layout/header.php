@@ -72,15 +72,14 @@ $ticker_items = array_filter( $ticker_items );
 <header class="pratfall-header">
   <div class="pratfall-container">
     
-    <!-- Gazete Üst Künye Çubuğu (Tarih, Kültür/Edebiyat, Instagram) -->
+    <!-- Gazete Üst Künye Çubuğu (Tarih ve Instagram Yan Yana) -->
     <div class="masthead-top-bar">
       <div class="masthead-info-left">
         <span class="masthead-badge"><?= Helpers::format_date( date('Y-m-d') ); ?></span>
-        <span>✦ <?= htmlspecialchars( $location_badge, ENT_QUOTES, 'UTF-8' ); ?></span>
       </div>
       <div class="masthead-info-right">
-        <a href="<?= htmlspecialchars( $instagram_url, ENT_QUOTES, 'UTF-8' ); ?>" target="_blank" rel="noopener" class="tape-badge rot-p1" style="font-size:0.72rem; padding:0.2rem 0.65rem; text-decoration:none; color:inherit; display:inline-flex; align-items:center; gap:0.35rem;" title="Pratfall Instagram">
-          <span>📷</span> Instagram ↗
+        <a href="<?= htmlspecialchars( $instagram_url, ENT_QUOTES, 'UTF-8' ); ?>" target="_blank" rel="noopener" class="tape-badge rot-p1" style="font-size:0.75rem; padding:0.22rem 0.7rem; text-decoration:none; color:inherit; display:inline-flex; align-items:center;" title="Pratfall Instagram">
+          Instagram
         </a>
       </div>
     </div>
