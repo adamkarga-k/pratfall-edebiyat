@@ -48,4 +48,32 @@ class Helpers {
         $yil = date( 'Y', $timestamp );
         return "{$gun} {$ay} {$yil}";
     }
+
+    /**
+     * URL Uyumlu Slug Üret
+     */
+    public static function slugify( string $text ): string {
+        return Database::slugify( $text );
+    }
+
+    /**
+     * Metinden Kısa Özet Çıkar
+     */
+    public static function excerpt( string $content, int $limit = 180 ): string {
+        $text = strip_tags( $content );
+        $text = preg_replace( '/\s+/u', ' ', $text );
+        $text = trim( $text );
+        if ( mb_strlen( $text, 'UTF-8' ) <= $limit ) {
+            return $text;
+        }
+        return mb_substr( $text, 0, $limit, 'UTF-8' ) . '...';
+    }
+
+    /**
+     * Tahmini Okuma Süresi (Dakika)
+     */
+    public static function reading_time( string $content ): int {
+        $word_count = count( preg_split( '/\s+/u', strip_tags( $content ), -1, PREG_SPLIT_NO_EMPTY ) );
+        return max( 1, (int) ceil( $word_count / 180 ) );
+    }
 }

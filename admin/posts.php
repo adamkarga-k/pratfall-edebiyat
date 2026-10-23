@@ -31,10 +31,11 @@ if ( $action === 'delete' && isset( $_GET['id'] ) ) {
 
 // 2. Kaydet / Güncelle İşlemi
 if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
+    $id = isset( $_POST['id'] ) ? (int) $_POST['id'] : 0;
     if ( ! Auth::verify_csrf( $_POST['csrf_token'] ?? '' ) ) {
         $err = 'Güvenlik doğrulaması başarısız oldu. Lütfen formu tekrar gönderin.';
+        $action = $id > 0 ? 'edit' : 'new';
     } else {
-        $id              = isset( $_POST['id'] ) ? (int) $_POST['id'] : 0;
         $title           = trim( $_POST['title'] ?? '' );
         $author_id       = (int) ( $_POST['author_id'] ?? 0 );
         $category        = trim( $_POST['category'] ?? 'Deneme' );
@@ -45,68 +46,74 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 
         if ( empty( $title ) ) {
             $err = 'Lütfen eser başlığını yazınız.';
+            $action = $id > 0 ? 'edit' : 'new';
         } else {
-            // Slug üret
-            $slug = Helpers::slugify( $title );
-            
-            // Slug çakışma kontrolü
-            $stmt = $db->prepare( "SELECT id FROM posts WHERE slug = ? AND id != ?" );
-            $stmt->execute( [ $slug, $id ] );
-            if ( $stmt->fetch() ) {
-                $slug .= '-' . time();
-            }
-
-            // Kısa özet otomatik oluşturma
-            if ( empty( $excerpt ) ) {
-                $excerpt = Helpers::excerpt( $content, 180 );
-            }
-
-            // Okuma süresi hesapla
-            $reading_time = Helpers::reading_time( $content );
-
-            // Öne çıkan görsel yükleme (Varsa)
-            if ( isset( $_FILES['image_file'] ) && $_FILES['image_file']['error'] === UPLOAD_ERR_OK ) {
-                $upload_dir = PATH_UPLOADS . '/covers';
-                if ( ! is_dir( $upload_dir ) ) {
-                    @mkdir( $upload_dir, 0755, true );
+            try {
+                // Slug üret
+                $slug = Helpers::slugify( $title );
+                
+                // Slug çakışma kontrolü
+                $stmt = $db->prepare( "SELECT id FROM posts WHERE slug = ? AND id != ?" );
+                $stmt->execute( [ $slug, $id ] );
+                if ( $stmt->fetch() ) {
+                    $slug .= '-' . time();
                 }
-                $ext = strtolower( pathinfo( $_FILES['image_file']['name'], PATHINFO_EXTENSION ) );
-                if ( in_array( $ext, [ 'jpg', 'jpeg', 'png', 'webp', 'gif' ] ) ) {
-                    $new_name = 'post-' . time() . '-' . uniqid() . '.' . $ext;
-                    $dest = $upload_dir . '/' . $new_name;
-                    if ( move_uploaded_file( $_FILES['image_file']['tmp_name'], $dest ) ) {
-                        $featured_image = SITE_URL . '/uploads/covers/' . $new_name;
+
+                // Kısa özet otomatik oluşturma
+                if ( empty( $excerpt ) ) {
+                    $excerpt = Helpers::excerpt( $content, 180 );
+                }
+
+                // Okuma süresi hesapla
+                $reading_time = Helpers::reading_time( $content );
+
+                // Öne çıkan görsel yükleme (Varsa)
+                if ( isset( $_FILES['image_file'] ) && $_FILES['image_file']['error'] === UPLOAD_ERR_OK ) {
+                    $upload_dir = PATH_UPLOADS . '/covers';
+                    if ( ! is_dir( $upload_dir ) ) {
+                        @mkdir( $upload_dir, 0755, true );
+                    }
+                    $ext = strtolower( pathinfo( $_FILES['image_file']['name'], PATHINFO_EXTENSION ) );
+                    if ( in_array( $ext, [ 'jpg', 'jpeg', 'png', 'webp', 'gif' ] ) ) {
+                        $new_name = 'post-' . time() . '-' . uniqid() . '.' . $ext;
+                        $dest = $upload_dir . '/' . $new_name;
+                        if ( move_uploaded_file( $_FILES['image_file']['tmp_name'], $dest ) ) {
+                            $featured_image = SITE_URL . '/uploads/covers/' . $new_name;
+                        }
                     }
                 }
-            }
 
-            if ( $id > 0 ) {
-                // Güncelle
-                $stmt = $db->prepare( "
-                    UPDATE posts 
-                    SET title = ?, slug = ?, author_id = ?, category = ?, excerpt = ?, content = ?, featured_image = ?, reading_time = ?, status = ?, updated_at = CURRENT_TIMESTAMP
-                    WHERE id = ?
-                " );
-                $stmt->execute( [
-                    $title, $slug, ( $author_id > 0 ? $author_id : null ), $category, $excerpt, $content, $featured_image, $reading_time, $status, $id
-                ] );
-                $msg = 'Eser başarıyla güncellendi.';
-            } else {
-                // Yeni Ekle
-                $stmt = $db->prepare( "
-                    INSERT INTO posts (title, slug, author_id, category, excerpt, content, featured_image, reading_time, status)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                " );
-                $stmt->execute( [
-                    $title, $slug, ( $author_id > 0 ? $author_id : null ), $category, $excerpt, $content, $featured_image, $reading_time, $status
-                ] );
-                $id = (int) $db->lastInsertId();
-                $msg = 'Yeni eser başarıyla yayınlandı.';
-            }
+                if ( $id > 0 ) {
+                    // Güncelle
+                    $stmt = $db->prepare( "
+                        UPDATE posts 
+                        SET title = ?, slug = ?, author_id = ?, category = ?, excerpt = ?, content = ?, featured_image = ?, reading_time = ?, status = ?, updated_at = CURRENT_TIMESTAMP
+                        WHERE id = ?
+                    " );
+                    $stmt->execute( [
+                        $title, $slug, ( $author_id > 0 ? $author_id : null ), $category, $excerpt, $content, $featured_image, $reading_time, $status, $id
+                    ] );
+                    $msg = 'Eser başarıyla güncellendi.';
+                } else {
+                    // Yeni Ekle
+                    $stmt = $db->prepare( "
+                        INSERT INTO posts (title, slug, author_id, category, excerpt, content, featured_image, reading_time, status)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    " );
+                    $stmt->execute( [
+                        $title, $slug, ( $author_id > 0 ? $author_id : null ), $category, $excerpt, $content, $featured_image, $reading_time, $status
+                    ] );
+                    $id = (int) $db->lastInsertId();
+                    $msg = 'Yeni eser başarıyla yayınlandı.';
+                }
 
-            // Kaydettikten sonra listeye dön veya sayfada kal
-            header( 'Location: ' . SITE_URL . '/admin/posts.php?msg=' . urlencode( $msg ) );
-            exit;
+                // Düzenleme ekranında kal ve yeşil başarı mesajını göster
+                header( 'Location: ' . SITE_URL . '/admin/posts.php?action=edit&id=' . $id . '&msg=' . urlencode( $msg ) );
+                exit;
+            } catch ( Throwable $e ) {
+                $err = 'Kayıt sırasında bir hata oluştu: ' . $e->getMessage();
+                $action = $id > 0 ? 'edit' : 'new';
+            }
         }
     }
 }
@@ -161,7 +168,7 @@ require PATH_ADMIN . '/layout/header.php';
     <div class="alert alert-danger">✕ <?= htmlspecialchars( $err, ENT_QUOTES, 'UTF-8' ); ?></div>
   <?php endif; ?>
 
-  <form method="POST" action="<?= SITE_URL; ?>/admin/posts" enctype="multipart/form-data" id="postForm">
+  <form method="POST" action="<?= SITE_URL; ?>/admin/posts.php" enctype="multipart/form-data" id="postForm">
     <input type="hidden" name="csrf_token" value="<?= Auth::csrf_token(); ?>" />
     <input type="hidden" name="id" value="<?= $post['id']; ?>" />
 
@@ -185,7 +192,7 @@ require PATH_ADMIN . '/layout/header.php';
 
             <!-- ZENGİN METİN EDİTÖRÜ (WYSIWYG TOOLBAR) -->
             <div class="form-group" style="margin-bottom:0;">
-              <label class="form-label">Eser Gövde Metni (Zengin Biçimlendirme)</label>
+              <label class="form-label">Eser Gövde Metni (Zengin Biçimlendirme & Tipografi)</label>
               
               <div class="editor-wrapper">
                 
@@ -221,7 +228,35 @@ require PATH_ADMIN . '/layout/header.php';
                     </button>
                   </div>
 
-                  <!-- 3. Grup: Edebi Alıntı & Listeler -->
+                  <!-- 3. Grup: Edebi Hizalama & Dizgi (Ortala, Sağa, Sola, İki Yana, Son Satır) -->
+                  <div class="editor-btn-group">
+                    <button type="button" class="editor-btn" onclick="applyAlignment('left')" title="Sola Yasla">
+                      ⬅ Sola
+                    </button>
+                    <button type="button" class="editor-btn" onclick="applyAlignment('center')" title="Ortala">
+                      ⬌ Ortala
+                    </button>
+                    <button type="button" class="editor-btn" onclick="applyAlignment('right')" title="Sağa Yasla">
+                      ➡ Sağa
+                    </button>
+                    <button type="button" class="editor-btn" onclick="applyAlignment('justify')" title="İki Kenara Yasla (Justify)">
+                      ☰ İki Yana
+                    </button>
+                    <button type="button" class="editor-btn" onclick="applyAlignment('justify', 'left')" title="İki Kenara Yaslı, Son Satır Solda (Kitap/Dergi Dizgisi)">
+                      ☵ Son Sol
+                    </button>
+                    <button type="button" class="editor-btn" onclick="applyAlignment('justify', 'right')" title="İki Kenara Yaslı, Son Satır Sağda">
+                      ☴ Son Sağ
+                    </button>
+                    <button type="button" class="editor-btn" onclick="applyAlignment('justify', 'center')" title="İki Kenara Yaslı, Son Satır Ortada">
+                      ☶ Son Orta
+                    </button>
+                    <button type="button" class="editor-btn" onclick="toggleIndent()" title="Paragraf Başı Girintisi (İlk Satır 2.5rem İçeriden)">
+                      ⇥ Girinti
+                    </button>
+                  </div>
+
+                  <!-- 4. Grup: Edebi Alıntı & Listeler -->
                   <div class="editor-btn-group">
                     <button type="button" class="editor-btn" onclick="execCmd('formatBlock', '<blockquote>')" title="Alıntı / Manifesto Bloğu">
                       “ Alıntı
@@ -237,7 +272,7 @@ require PATH_ADMIN . '/layout/header.php';
                     </button>
                   </div>
 
-                  <!-- 4. Grup: Bağlantı & Temizle -->
+                  <!-- 5. Grup: Bağlantı & Temizle -->
                   <div class="editor-btn-group">
                     <button type="button" class="editor-btn" onclick="insertLink()" title="Bağlantı (Link) Ekle">
                       🔗 Link
@@ -246,11 +281,11 @@ require PATH_ADMIN . '/layout/header.php';
                       ✕ Link Sil
                     </button>
                     <button type="button" class="editor-btn" onclick="execCmd('removeFormat')" title="Tüm Biçimlendirmeyi Temizle">
-                      🧹
+                      🧹 Temizle
                     </button>
                   </div>
 
-                  <!-- 5. Grup: HTML / Görsel Mod Değiştirici -->
+                  <!-- 6. Grup: HTML / Görsel Mod Değiştirici -->
                   <div style="margin-left:auto;">
                     <button type="button" class="editor-btn" id="toggleCodeBtn" onclick="toggleHtmlMode()" title="Doğrudan HTML kaynak kodunu göster/düzenle">
                       &lt;/&gt; HTML Modu
@@ -359,6 +394,82 @@ require PATH_ADMIN . '/layout/header.php';
       syncContent();
     }
 
+    function applyAlignment(textAlign, textAlignLast = 'auto') {
+      const visual = document.getElementById('editorVisual');
+      visual.focus();
+      const selection = window.getSelection();
+      if (!selection.rangeCount) return;
+
+      let node = selection.anchorNode;
+      if (node.nodeType === 3) node = node.parentNode;
+
+      let target = null;
+      while (node && node !== visual) {
+        if (/^(P|DIV|H1|H2|H3|H4|BLOCKQUOTE|LI)$/i.test(node.tagName)) {
+          target = node;
+          break;
+        }
+        node = node.parentNode;
+      }
+
+      if (!target) {
+        document.execCommand('formatBlock', false, '<p>');
+        node = window.getSelection().anchorNode;
+        if (node.nodeType === 3) node = node.parentNode;
+        while (node && node !== visual) {
+          if (/^(P|DIV|H1|H2|H3|H4|BLOCKQUOTE|LI)$/i.test(node.tagName)) {
+            target = node;
+            break;
+          }
+          node = node.parentNode;
+        }
+      }
+
+      if (target) {
+        target.style.textAlign = textAlign;
+        if (textAlignLast && textAlignLast !== 'auto') {
+          target.style.textAlignLast = textAlignLast;
+        } else {
+          target.style.removeProperty('text-align-last');
+        }
+      }
+      syncContent();
+    }
+
+    function toggleIndent() {
+      const visual = document.getElementById('editorVisual');
+      visual.focus();
+      const selection = window.getSelection();
+      if (!selection.rangeCount) return;
+
+      let node = selection.anchorNode;
+      if (node.nodeType === 3) node = node.parentNode;
+
+      let target = null;
+      while (node && node !== visual) {
+        if (/^(P|DIV|BLOCKQUOTE)$/i.test(node.tagName)) {
+          target = node;
+          break;
+        }
+        node = node.parentNode;
+      }
+
+      if (target) {
+        if (target.style.textIndent === '2.5rem') {
+          target.style.removeProperty('text-indent');
+        } else {
+          target.style.textIndent = '2.5rem';
+        }
+      } else {
+        document.execCommand('formatBlock', false, '<p>');
+        const p = window.getSelection().anchorNode.parentNode;
+        if (p && p.style) {
+          p.style.textIndent = '2.5rem';
+        }
+      }
+      syncContent();
+    }
+
     function insertLink() {
       const url = prompt('Bağlantı adresini giriniz (örn: https://...):', 'https://');
       if (url && url !== 'https://') {
@@ -419,10 +530,10 @@ require PATH_ADMIN . '/layout/header.php';
       </p>
     </div>
     <div style="display:flex; gap:0.5rem;">
-      <a href="<?= SITE_URL; ?>/admin/import-docx" class="btn btn-accent btn-sm">
+      <a href="<?= SITE_URL; ?>/admin/import-docx.php" class="btn btn-accent btn-sm">
         <span>📥</span> Word İçe Aktar
       </a>
-      <a href="<?= SITE_URL; ?>/admin/posts?action=new" class="btn btn-primary btn-sm">
+      <a href="<?= SITE_URL; ?>/admin/posts.php?action=new" class="btn btn-primary btn-sm">
         <span>+</span> Yeni Eser Ekle
       </a>
     </div>
@@ -470,7 +581,7 @@ require PATH_ADMIN . '/layout/header.php';
                   <?php endif; ?>
                 </td>
                 <td>
-                  <a href="<?= SITE_URL; ?>/admin/posts?action=edit&id=<?= $p['id']; ?>" style="color:var(--adm-text); font-weight:600; text-decoration:none;">
+                  <a href="<?= SITE_URL; ?>/admin/posts.php?action=edit&id=<?= $p['id']; ?>" style="color:var(--adm-text); font-weight:600; text-decoration:none;">
                     <?= htmlspecialchars( $p['title'], ENT_QUOTES, 'UTF-8' ); ?>
                   </a>
                 </td>
@@ -491,10 +602,10 @@ require PATH_ADMIN . '/layout/header.php';
                   <a href="<?= SITE_URL; ?>/eser/<?= $p['slug']; ?>" target="_blank" class="btn btn-sm" style="padding:0.2rem 0.5rem; font-size:0.75rem;" title="Sitede İncele">
                     ↗ Gör
                   </a>
-                  <a href="<?= SITE_URL; ?>/admin/posts?action=edit&id=<?= $p['id']; ?>" class="btn btn-sm" style="padding:0.2rem 0.5rem; font-size:0.75rem;">
+                  <a href="<?= SITE_URL; ?>/admin/posts.php?action=edit&id=<?= $p['id']; ?>" class="btn btn-sm" style="padding:0.2rem 0.5rem; font-size:0.75rem;">
                     Düzenle
                   </a>
-                  <a href="<?= SITE_URL; ?>/admin/posts?action=delete&id=<?= $p['id']; ?>" onclick="return confirm('Bu eseri silmek istediğinize emin misiniz?')" class="btn btn-sm" style="padding:0.2rem 0.5rem; font-size:0.75rem; color:#ef4444;">
+                  <a href="<?= SITE_URL; ?>/admin/posts.php?action=delete&id=<?= $p['id']; ?>" onclick="return confirm('Bu eseri silmek istediğinize emin misiniz?')" class="btn btn-sm" style="padding:0.2rem 0.5rem; font-size:0.75rem; color:#ef4444;">
                     Sil
                   </a>
                 </td>

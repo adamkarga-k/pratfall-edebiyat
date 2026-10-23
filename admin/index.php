@@ -118,7 +118,7 @@ $db_size = file_exists( DB_FILE ) ? round( filesize( DB_FILE ) / 1024, 1 ) . ' K
   <div class="card">
     <div class="card-header">
       <h2 class="card-title">Son Etkinlik & Eserler</h2>
-      <a href="<?= SITE_URL; ?>/admin/posts" class="btn btn-sm" style="font-size:0.75rem;">Tümünü Gör (<?= $total_posts; ?>) →</a>
+      <a href="<?= SITE_URL; ?>/admin/posts.php" class="btn btn-sm" style="font-size:0.75rem;">Tümünü Gör (<?= $total_posts; ?>) →</a>
     </div>
     <div class="card-body" style="padding-top:0.5rem; padding-bottom:0.5rem;">
       
@@ -133,7 +133,7 @@ $db_size = file_exists( DB_FILE ) ? round( filesize( DB_FILE ) / 1024, 1 ) . ' K
                 </svg>
                 
                 <div>
-                  <a href="<?= SITE_URL; ?>/admin/posts?action=edit&id=<?= $post['id']; ?>" class="activity-title" title="<?= htmlspecialchars( $post['title'], ENT_QUOTES, 'UTF-8' ); ?>">
+                  <a href="<?= SITE_URL; ?>/admin/posts.php?action=edit&id=<?= $post['id']; ?>" class="activity-title" title="<?= htmlspecialchars( $post['title'], ENT_QUOTES, 'UTF-8' ); ?>">
                     <?= htmlspecialchars( $post['title'], ENT_QUOTES, 'UTF-8' ); ?>
                   </a>
                   <span class="activity-tag">· <?= htmlspecialchars( $post['category'], ENT_QUOTES, 'UTF-8' ); ?></span>
@@ -148,7 +148,7 @@ $db_size = file_exists( DB_FILE ) ? round( filesize( DB_FILE ) / 1024, 1 ) . ' K
                   <?= $post['status'] === 'published' ? 'Yayında' : 'Taslak'; ?>
                 </span>
                 <span class="activity-time"><?= date( 'd.m.Y', strtotime( $post['published_at'] ) ); ?></span>
-                <a href="<?= SITE_URL; ?>/admin/posts?action=edit&id=<?= $post['id']; ?>" class="btn btn-sm" style="padding:0.2rem 0.5rem; font-size:0.72rem;">
+                <a href="<?= SITE_URL; ?>/admin/posts.php?action=edit&id=<?= $post['id']; ?>" class="btn btn-sm" style="padding:0.2rem 0.5rem; font-size:0.72rem;">
                   Düzenle
                 </a>
               </div>
