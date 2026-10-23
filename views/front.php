@@ -114,9 +114,10 @@ if ( empty( $magazines ) ) {
     ];
 }
 
-// SEO Bilgileri
+// SEO Bilgileri (Önce Dergi Adı, Sonra Slogan)
 $seo_data = [
-    'title'       => Database::get_setting( 'site_slogan', 'Kusurlu Kalma Çabası' ),
+    'is_home'     => true,
+    'title'       => '',
     'description' => Database::get_setting( 'footer_desc' ),
     'url'         => SITE_URL,
     'type'        => 'website',

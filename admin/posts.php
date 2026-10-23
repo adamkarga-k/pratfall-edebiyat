@@ -1295,7 +1295,7 @@ function openCoverGeneratorModal() {
   document.getElementById('coverGenTitle').value = postTitle || 'Eserin Başlığı';
   document.getElementById('coverGenAuthor').value = authorName;
   document.getElementById('coverGenCategory').value = categoryName || 'Edebiyat';
-  document.getElementById('coverGenBadge').value = 'PRATFALL · EDEBİYAT & FİKİR PLATFORMU';
+  document.getElementById('coverGenBadge').value = 'PRATFALL · EDEBİYAT & FİKİR & KÜLTÜR & SANAT PLATFORMU';
   document.getElementById('coverSaveStatus').innerHTML = '';
 
   document.getElementById('coverGeneratorModal').style.display = 'flex';
@@ -1457,10 +1457,10 @@ function drawCoverImage() {
   drawCross(w - m - 22, h - m - 22);
 
   // 5. Üst Bilgi Başlığı (Sol: Platform, Sağ: Kategori Pulu)
-  const badgeTitle = document.getElementById('coverGenBadge').value.trim() || 'PRATFALL · EDEBİYAT & FİKİR PLATFORMU';
+  const badgeTitle = document.getElementById('coverGenBadge').value.trim() || 'PRATFALL · EDEBİYAT & FİKİR & KÜLTÜR & SANAT PLATFORMU';
   const category = document.getElementById('coverGenCategory').value.trim() || 'Edebiyat';
 
-  ctx.font = 'bold 20px "Courier New", monospace';
+  ctx.font = 'bold 17px "Courier New", monospace';
   ctx.fillStyle = mutedColor;
   ctx.textAlign = 'left';
   ctx.fillText(badgeTitle.toUpperCase(), m + 35, m + 52);
@@ -1691,7 +1691,7 @@ function downloadCoverImage() {
 
         <div>
           <label class="form-label" style="font-weight:600; margin-bottom:0.25rem;">Üst Logo & Platform Başlığı:</label>
-          <input type="text" id="coverGenBadge" class="form-control" oninput="drawCoverImage()" value="PRATFALL · EDEBİYAT & FİKİR PLATFORMU" />
+          <input type="text" id="coverGenBadge" class="form-control" oninput="drawCoverImage()" value="PRATFALL · EDEBİYAT & FİKİR & KÜLTÜR & SANAT PLATFORMU" />
         </div>
 
         <div>

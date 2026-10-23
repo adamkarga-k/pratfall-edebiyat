@@ -20,9 +20,15 @@ class Seo {
             $site_name = 'PRATFALL';
         }
         $site_slogan = trim( str_ireplace( 'Mecmua', 'Edebiyat Dergisi & Platformu', Database::get_setting( 'site_slogan', 'Kusurlu Kalma Çabası' ) ) );
+        $raw_slogan  = trim( Database::get_setting( 'site_slogan', 'Kusurlu Kalma Çabası' ) );
 
         $type        = $page_data['type'] ?? 'website';
-        $title       = ! empty( $page_data['title'] ) ? $page_data['title'] . ' ✦ ' . $site_name : $site_name . ' — ' . $site_slogan;
+        if ( ! empty( $page_data['is_home'] ) || empty( $page_data['title'] ) || $page_data['title'] === $site_slogan || $page_data['title'] === $raw_slogan ) {
+            // Önce dergi adı, sonra slogan
+            $title = $site_name . ' ✦ ' . $site_slogan;
+        } else {
+            $title = $page_data['title'] . ' ✦ ' . $site_name;
+        }
         $description = $page_data['description'] ?? Database::get_setting( 'footer_desc', 'Kusursuzluk sanayileşmiş bir yanılsamadır; hakikat daima çatlaklarda gizlenir. Edebiyat dergisi ve yayınevinin bağımsız edebiyat platformu.' );
         $description = str_ireplace( [ 'kültür mecmuasıdır', 'Pratfall Mecmua', 'mecmua' ], [ 'edebiyat dergisi ve yayınevinin bağımsız edebiyat platformudur', 'Pratfall', 'edebiyat platformu' ], $description );
         $url         = $page_data['url'] ?? SITE_URL;
