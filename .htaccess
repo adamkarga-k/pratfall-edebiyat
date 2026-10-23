@@ -13,6 +13,7 @@ DirectoryIndex index.php index.html
     Header set X-Frame-Options "SAMEORIGIN"
     Header set X-XSS-Protection "1; mode=block"
     Header set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Content-Security-Policy "upgrade-insecure-requests"
 </IfModule>
 
 # 4. GZIP / Deflate Sıkıştırma (Ultra Hız)
@@ -64,11 +65,10 @@ DirectoryIndex index.php index.html
     RewriteBase /
 
     # Otomatik HTTPS Yönlendirmesi (SSL Sertifikası Koruması)
-    RewriteCond %{HTTPS} off
+    RewriteCond %{HTTPS} !on
     RewriteCond %{HTTP:X-Forwarded-Proto} !https [NC]
     RewriteCond %{HTTP:X-Forwarded-SSL} !on [NC]
-    RewriteCond %{SERVER_PORT} !443
-    RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
     # index.php için tekrar yönlendirmeyi durdur (Döngü 500 hatasını önler)
     RewriteRule ^index\.php$ - [L]
