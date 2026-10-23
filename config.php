@@ -40,31 +40,25 @@ define( 'PATH_APP', PRATFALL_ROOT . '/app' );
 // SQLite Veritabanı Dosya Yolu
 define( 'DB_FILE', PATH_DATA . '/database.sqlite' );
 
-// Dinamik Site URL Algılama (Admin ve Alt Dizin Uyumlu)
+// Dinamik Site URL Algılama
 function pratfall_base_url() {
     $protocol = ( ( isset( $_SERVER['HTTPS'] ) && ( $_SERVER['HTTPS'] === 'on' || $_SERVER['HTTPS'] === 1 ) )
                || ( isset( $_SERVER['HTTP_X_FORWARDED_PROTO'] ) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https' ) ) ? 'https://' : 'http://';
     $host = isset( $_SERVER['HTTP_HOST'] ) ? $_SERVER['HTTP_HOST'] : 'localhost';
     
-    // Belge kök dizini ile PRATFALL_ROOT arasındaki fark
-    $doc_root = str_replace( '\\', '/', $_SERVER['DOCUMENT_ROOT'] ?? '' );
-    $app_root = str_replace( '\\', '/', PRATFALL_ROOT );
-
-    $sub_dir = '';
-    if ( ! empty( $doc_root ) && strpos( $app_root, $doc_root ) === 0 ) {
-        $sub_dir = substr( $app_root, strlen( $doc_root ) );
-    } else {
-        // Fallback: SCRIPT_NAME üzerinden /admin kısmını ayıkla
-        $script_dir = str_replace( '\\', '/', dirname( $_SERVER['SCRIPT_NAME'] ?? '' ) );
-        $sub_dir = preg_replace( '#/admin(/.*)?$#i', '', $script_dir );
-    }
-    
-    $sub_dir = trim( $sub_dir, '/' );
-    if ( empty( $sub_dir ) ) {
+    // Canlı domainlerde (pratfall.com.tr vb.) doğrudan alan adını kullan
+    if ( strpos( $host, 'localhost' ) === false && strpos( $host, '127.0.0.1' ) === false ) {
         return $protocol . $host;
     }
-    
-    return $protocol . $host . '/' . $sub_dir;
+
+    // Localhost veya test ortamında alt klasörü algıla
+    $script_dir = str_replace( '\\', '/', dirname( $_SERVER['SCRIPT_NAME'] ?? '' ) );
+    $sub_dir = trim( preg_replace( '#/admin(/.*)?$#i', '', $script_dir ), '/' );
+    if ( ! empty( $sub_dir ) ) {
+        return $protocol . $host . '/' . $sub_dir;
+    }
+
+    return $protocol . $host;
 }
 
 define( 'SITE_URL', rtrim( pratfall_base_url(), '/' ) );

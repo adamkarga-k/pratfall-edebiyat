@@ -22,13 +22,22 @@ class Database {
             self::$pdo->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
             self::$pdo->setAttribute( PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC );
             
-            // SQLite Hız ve Bütünlük Optimizasyonları (WAL Modu)
-            self::$pdo->exec( 'PRAGMA journal_mode = WAL;' );
-            self::$pdo->exec( 'PRAGMA foreign_keys = ON;' );
+            // SQLite Hız ve Bütünlük Optimizasyonları (Güvenli Hata Yakalamayla)
+            try {
+                self::$pdo->exec( 'PRAGMA journal_mode = WAL;' );
+            } catch ( Throwable $e ) {
+                try { self::$pdo->exec( 'PRAGMA journal_mode = DELETE;' ); } catch ( Throwable $t ) {}
+            }
+            try {
+                self::$pdo->exec( 'PRAGMA foreign_keys = ON;' );
+            } catch ( Throwable $e ) {}
 
             if ( $is_new || self::needs_schema() ) {
                 self::init_schema();
             }
+
+            // Vitrinin boş kalmaması için ilk yazıları kontrol et
+            self::ensure_initial_posts();
         }
         return self::$pdo;
     }
@@ -126,6 +135,76 @@ class Database {
 
         // Başlangıç Verilerini Ekle
         self::seed_data();
+    }
+
+    /**
+     * Başlangıç / Demo Verilerini Yükle
+     */
+    public static function ensure_initial_posts(): void {
+        try {
+            $count = (int) self::$pdo->query( "SELECT COUNT(*) FROM posts" )->fetchColumn();
+            if ( $count === 0 ) {
+                self::seed_posts();
+            }
+        } catch ( Throwable $e ) {}
+    }
+
+    public static function seed_posts(): void {
+        $db = self::$pdo;
+        $posts = [
+            [
+                'author_id'      => 1,
+                'title'          => 'Kusursuzluğun İflası: Matbaanın ve Ham Edebiyatın Dirilişi',
+                'slug'           => 'kusursuzlugun-iflasi-matbaanin-ve-ham-edebiyatin-dirilisi',
+                'category'       => 'DENEME',
+                'excerpt'        => 'Mükemmel pürüzsüzlükte tasarlanmış dijital çağın karşısında, kağıdın kusurlu liflerini ve daktilonun atlayan tuşlarını savunuyoruz.',
+                'content'        => '<p>Mükemmel pürüzsüzlükte tasarlanmış dijital çağın karşısında, kağıdın kusurlu liflerini ve daktilonun atlayan tuşlarını savunuyoruz.</p><p>Kusursuzluk sanayileşmiş bir yanılsamadır; hakikat ve samimiyet daima çatlaklarda gizlenir. Pratfall, "Kusurlu Kalma Çabası" şiarıyla yola çıkan, matbaa mürekkebinin kokusunu, sokakların dağınıklığını ve kusurlu estetiğin cazibesini bir araya getiren bağımsız bir kültür mecmuasıdır.</p><p>Sözcüklerin kusuru, insanın hakiki yarasına denk gelir. Kusursuz bir dil, henüz acı çekmemiş bir zihnin ezberidir.</p>',
+                'featured_image' => 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=1200&q=80',
+                'reading_time'   => 7,
+            ],
+            [
+                'author_id'      => 3,
+                'title'          => 'Kelimelerin Tozu: Sahaflarda Unutulan Elyazmaları',
+                'slug'           => 'kelimelerin-tozu-sahaflarda-unutulan-elyazmalari',
+                'category'       => 'İNCELEME',
+                'excerpt'        => 'Eski bir kitabın kenarına kurşun kalemle düşülen şerh, bazen kitabın ana metninden daha derin bir insanlık gerçeğini fısıldar.',
+                'content'        => '<p>Eski bir kitabın kenarına kurşun kalemle düşülen şerh, bazen kitabın ana metninden daha derin bir insanlık gerçeğini fısıldar.</p><p>Sahafların tozlu raflarında unutulan her sayfa, geçmişin nefesini taşır. Matbaa mürekkebi kağıda değdiğinde zaman durur gibi olur.</p>',
+                'featured_image' => 'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=1200&q=80',
+                'reading_time'   => 5,
+            ],
+            [
+                'author_id'      => 2,
+                'title'          => 'Kırık Harflerin Şiiri ve Gece Nöbeti',
+                'slug'           => 'kirik-harflerin-siiri-ve-gece-nobeti',
+                'category'       => 'ŞİİR',
+                'excerpt'        => 'Daktiloda sıkışan "a" harfi, şairin boğazında düğümlenen o kelimenin en somut tanığıdır.',
+                'content'        => '<p>Daktiloda sıkışan "a" harfi, şairin boğazında düğümlenen o kelimenin en somut tanığıdır.</p><p>Cam kırıkları arasından gökyüzüne bakmak; bütün olanın yalanına karşılık parçalanmış olanın dürüstlüğüdür.</p>',
+                'featured_image' => 'https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=1200&q=80',
+                'reading_time'   => 4,
+            ],
+            [
+                'author_id'      => 4,
+                'title'          => 'Olric’e Mektuplar: Beceriksizliğimizin Estetiği',
+                'slug'           => 'olrice-mektuplar-beceriksizligimizin-estetigi',
+                'category'       => 'ANLATI',
+                'excerpt'        => 'Becerikli insanlar her şeyi hallederken ruhlarını da hallediverirler Olric. Biz sakar kalalım.',
+                'content'        => '<p>Becerikli insanlar her şeyi hallederken ruhlarını da hallediverirler Olric. Biz sakar kalalım.</p><p>Tutunamamak, düşmekten korkmayanların tek imtiyazıdır.</p>',
+                'featured_image' => 'https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?auto=format&fit=crop&w=1200&q=80',
+                'reading_time'   => 6,
+            ],
+        ];
+
+        $stmt = $db->prepare( "
+            INSERT OR IGNORE INTO posts (author_id, title, slug, category, excerpt, content, featured_image, reading_time)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        " );
+
+        foreach ( $posts as $p ) {
+            $stmt->execute( [
+                $p['author_id'], $p['title'], $p['slug'], $p['category'],
+                $p['excerpt'], $p['content'], $p['featured_image'], $p['reading_time']
+            ] );
+        }
     }
 
     /**
@@ -251,61 +330,8 @@ class Database {
             $stmt->execute( $m );
         }
 
-        // Demo Yazılar
-        $posts = [
-            [
-                'author_id'      => 1,
-                'title'          => 'Kusursuzluğun İflası: Matbaanın ve Ham Edebiyatın Dirilişi',
-                'slug'           => 'kusursuzlugun-iflasi-matbaanin-ve-ham-edebiyatin-dirilisi',
-                'category'       => 'DENEME',
-                'excerpt'        => 'Mükemmel pürüzsüzlükte tasarlanmış dijital çağın karşısında, kağıdın kusurlu liflerini ve daktilonun atlayan tuşlarını savunuyoruz.',
-                'content'        => '<p>Mükemmel pürüzsüzlükte tasarlanmış dijital çağın karşısında, kağıdın kusurlu liflerini ve daktilonun atlayan tuşlarını savunuyoruz.</p><p>Kusursuzluk sanayileşmiş bir yanılsamadır; hakikat ve samimiyet daima çatlaklarda gizlenir. Pratfall, "Kusurlu Kalma Çabası" şiarıyla yola çıkan, matbaa mürekkebinin kokusunu, sokakların dağınıklığını ve kusurlu estetiğin cazibesini bir araya getiren bağımsız bir kültür mecmuasıdır.</p><p>Sözcüklerin kusuru, insanın hakiki yarasına denk gelir. Kusursuz bir dil, henüz acı çekmemiş bir zihnin ezberidir.</p>',
-                'featured_image' => 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=1200&q=80',
-                'reading_time'   => 7,
-            ],
-            [
-                'author_id'      => 3,
-                'title'          => 'Kelimelerin Tozu: Sahaflarda Unutulan Elyazmaları',
-                'slug'           => 'kelimelerin-tozu-sahaflarda-unutulan-elyazmalari',
-                'category'       => 'İNCELEME',
-                'excerpt'        => 'Eski bir kitabın kenarına kurşun kalemle düşülen şerh, bazen kitabın ana metninden daha derin bir insanlık gerçeğini fısıldar.',
-                'content'        => '<p>Eski bir kitabın kenarına kurşun kalemle düşülen şerh, bazen kitabın ana metninden daha derin bir insanlık gerçeğini fısıldar.</p><p>Sahafların tozlu raflarında unutulan her sayfa, geçmişin nefesini taşır. Matbaa mürekkebi kağıda değdiğinde zaman durur gibi olur.</p>',
-                'featured_image' => 'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=1200&q=80',
-                'reading_time'   => 5,
-            ],
-            [
-                'author_id'      => 2,
-                'title'          => 'Kırık Harflerin Şiiri ve Gece Nöbeti',
-                'slug'           => 'kirik-harflerin-siiri-ve-gece-nobeti',
-                'category'       => 'ŞİİR',
-                'excerpt'        => 'Daktiloda sıkışan "a" harfi, şairin boğazında düğümlenen o kelimenin en somut tanığıdır.',
-                'content'        => '<p>Daktiloda sıkışan "a" harfi, şairin boğazında düğümlenen o kelimenin en somut tanığıdır.</p><p>Cam kırıkları arasından gökyüzüne bakmak; bütün olanın yalanına karşılık parçalanmış olanın dürüstlüğüdür.</p>',
-                'featured_image' => 'https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=1200&q=80',
-                'reading_time'   => 4,
-            ],
-            [
-                'author_id'      => 4,
-                'title'          => 'Olric’e Mektuplar: Beceriksizliğimizin Estetiği',
-                'slug'           => 'olrice-mektuplar-beceriksizligimizin-estetigi',
-                'category'       => 'ANLATI',
-                'excerpt'        => 'Becerikli insanlar her şeyi hallederken ruhlarını da hallediverirler Olric. Biz sakar kalalım.',
-                'content'        => '<p>Becerikli insanlar her şeyi hallederken ruhlarını da hallediverirler Olric. Biz sakar kalalım.</p><p>Tutunamamak, düşmekten korkmayanların tek imtiyazıdır.</p>',
-                'featured_image' => 'https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?auto=format&fit=crop&w=1200&q=80',
-                'reading_time'   => 6,
-            ],
-        ];
-
-        $stmt = $db->prepare( "
-            INSERT OR IGNORE INTO posts (author_id, title, slug, category, excerpt, content, featured_image, reading_time)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        " );
-
-        foreach ( $posts as $p ) {
-            $stmt->execute( [
-                $p['author_id'], $p['title'], $p['slug'], $p['category'],
-                $p['excerpt'], $p['content'], $p['featured_image'], $p['reading_time']
-            ] );
-        }
+        // Demo Yazıları Yükle
+        self::seed_posts();
     }
 
     /**

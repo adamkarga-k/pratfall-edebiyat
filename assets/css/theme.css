@@ -585,12 +585,16 @@ html.dark .tape-badge.tape-peach {
   box-shadow: 2px 2px 0px var(--border-color);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
+  text-decoration: none !important;
+  color: var(--text-main) !important;
 }
 
 .author-pill-card:hover {
   transform: translate(-2px, -2px) rotate(0.8deg);
   box-shadow: 4px 4px 0px var(--accent-primary);
   border-color: var(--accent-primary);
+  text-decoration: none !important;
+  color: var(--text-main) !important;
 }
 
 .author-pill-avatar {
@@ -671,20 +675,24 @@ html.dark .tape-badge.tape-peach {
   font-weight: 700;
   line-height: 1.2;
   margin-bottom: 0.15rem;
+  color: var(--text-main) !important;
+  text-decoration: none !important;
 }
 
 .author-pill-role {
   font-family: var(--font-mono);
   font-size: 0.7rem;
-  color: var(--text-muted);
+  color: var(--text-muted) !important;
+  text-decoration: none !important;
 }
 
 .author-pill-count {
   font-family: var(--font-mono);
   font-size: 0.65rem;
-  color: var(--accent-primary);
+  color: var(--accent-primary) !important;
   margin-top: 0.2rem;
   font-weight: 600;
+  text-decoration: none !important;
 }
 
 /* --------------------------------------------------------------------------

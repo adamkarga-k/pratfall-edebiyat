@@ -59,7 +59,7 @@ class Auth {
      */
     public static function require_login(): void {
         if ( ! self::check() ) {
-            header( 'Location: ' . SITE_URL . '/admin/login' );
+            header( 'Location: ' . SITE_URL . '/admin/login.php' );
             exit;
         }
     }

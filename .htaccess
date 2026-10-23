@@ -57,15 +57,16 @@ Options -Indexes
     </IfModule>
 </FilesMatch>
 
-# 7. URL Yeniden Yazma (Clean URL Routing)
+# 7. URL Yeniden Yazma (Clean URL Routing - Standart & Döngüsüz)
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteBase /
 
-    # Mevcut fiziksel dosya varsa doğrudan sun (css, js, resimler vb.)
-    RewriteCond %{REQUEST_FILENAME} -f
-    RewriteRule ^ - [L]
+    # index.php için tekrar yönlendirmeyi durdur (Döngü 500 hatasını önler)
+    RewriteRule ^index\.php$ - [L]
 
-    # Geri kalan tüm istekleri (admin dahil) index.php'ye yönlendir
-    RewriteRule ^(.*)$ index.php [QSA,L]
+    # Gerçek dosya veya dizin varsa doğrudan sun (css, js, resimler, admin dizini vb.)
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule . index.php [L]
 </IfModule>
