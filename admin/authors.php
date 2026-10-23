@@ -41,15 +41,11 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
         $instagram = trim( $_POST['instagram'] ?? '' );
         $website   = trim( $_POST['website'] ?? '' );
 
-        // Fotoğraf Yüklendiyse
+        // Fotoğraf Yüklendiyse (Otomatik WebP & Optimizasyon)
         if ( isset( $_FILES['photo_file'] ) && $_FILES['photo_file']['error'] === UPLOAD_ERR_OK ) {
-            $ext = strtolower( pathinfo( $_FILES['photo_file']['name'], PATHINFO_EXTENSION ) );
-            if ( in_array( $ext, [ 'jpg', 'jpeg', 'png', 'webp', 'gif' ] ) ) {
-                $file_name = 'author_' . uniqid() . '.' . $ext;
-                $save_path = PATH_UPLOADS . '/' . $file_name;
-                if ( move_uploaded_file( $_FILES['photo_file']['tmp_name'], $save_path ) ) {
-                    $photo = SITE_URL . '/uploads/' . $file_name;
-                }
+            $opt_name = ImageOptimizer::optimize_uploaded_file( $_FILES['photo_file'], PATH_UPLOADS, 'author' );
+            if ( $opt_name ) {
+                $photo = SITE_URL . '/uploads/' . $opt_name;
             }
         }
 

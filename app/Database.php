@@ -38,6 +38,7 @@ class Database {
 
             // Vitrinin boş kalmaması için ilk yazıları kontrol et
             self::ensure_initial_posts();
+            self::ensure_categories();
         }
         return self::$pdo;
     }
@@ -140,6 +141,39 @@ class Database {
     /**
      * Başlangıç / Demo Verilerini Yükle
      */
+    public static function ensure_categories(): void {
+        try {
+            $db = self::$pdo;
+            $db->exec( "
+                CREATE TABLE IF NOT EXISTS categories (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    slug TEXT UNIQUE NOT NULL,
+                    description TEXT,
+                    order_num INTEGER DEFAULT 0,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                );
+            " );
+            $count = (int) $db->query( "SELECT COUNT(*) FROM categories" )->fetchColumn();
+            if ( $count === 0 ) {
+                $defaults = [
+                    [ 'Deneme', 'deneme', 'Düşünce yazıları, edebi fragmanlar ve kişisel denemeler.', 1 ],
+                    [ 'Şiir', 'siir', 'Çağdaş şiir, poetik metinler ve mısralar.', 2 ],
+                    [ 'İnceleme', 'inceleme', 'Kitap incelemeleri, edebiyat tahlilleri ve eleştiriler.', 3 ],
+                    [ 'Eleştiri', 'elestiri', 'Kültür, sanat ve yayın dünyası üzerine eleştirel bakışlar.', 4 ],
+                    [ 'Röportaj', 'roportaj', 'Yazarlar ve şairlerle yapılan derinlikli söyleşiler.', 5 ],
+                    [ 'Felsefe', 'felsefe', 'Varoluş, etik ve estetik üzerine felsefi metinler.', 6 ],
+                    [ 'Fragmanlar', 'fragmanlar', 'Aforizmalar, kısa notlar ve daktilo pasajları.', 7 ],
+                    [ 'Manifesto', 'manifesto', 'Mecmuanın ilkeleri ve editoryal manifestolar.', 8 ],
+                ];
+                $stmt = $db->prepare( "INSERT OR IGNORE INTO categories (name, slug, description, order_num) VALUES (?, ?, ?, ?)" );
+                foreach ( $defaults as $cat ) {
+                    $stmt->execute( $cat );
+                }
+            }
+        } catch ( Throwable $e ) {}
+    }
+
     public static function ensure_initial_posts(): void {
         try {
             $count = (int) self::$pdo->query( "SELECT COUNT(*) FROM posts" )->fetchColumn();

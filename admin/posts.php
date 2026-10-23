@@ -20,6 +20,9 @@ $err = '';
 // Yazar Listesi
 $authors = $db->query( "SELECT id, name FROM authors ORDER BY name ASC" )->fetchAll();
 
+// Kategori Listesi
+$all_categories = $db->query( "SELECT * FROM categories ORDER BY order_num ASC, name ASC" )->fetchAll();
+
 // 1. Silme İşlemi
 if ( $action === 'delete' && isset( $_GET['id'] ) ) {
     $id = (int) $_GET['id'];
@@ -67,19 +70,11 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
                 // Okuma süresi hesapla
                 $reading_time = Helpers::reading_time( $content );
 
-                // Öne çıkan görsel yükleme (Varsa)
+                // Öne çıkan görsel yükleme (Otomatik WebP & 1600px Optimizasyon)
                 if ( isset( $_FILES['image_file'] ) && $_FILES['image_file']['error'] === UPLOAD_ERR_OK ) {
-                    $upload_dir = PATH_UPLOADS . '/covers';
-                    if ( ! is_dir( $upload_dir ) ) {
-                        @mkdir( $upload_dir, 0755, true );
-                    }
-                    $ext = strtolower( pathinfo( $_FILES['image_file']['name'], PATHINFO_EXTENSION ) );
-                    if ( in_array( $ext, [ 'jpg', 'jpeg', 'png', 'webp', 'gif' ] ) ) {
-                        $new_name = 'post-' . time() . '-' . uniqid() . '.' . $ext;
-                        $dest = $upload_dir . '/' . $new_name;
-                        if ( move_uploaded_file( $_FILES['image_file']['tmp_name'], $dest ) ) {
-                            $featured_image = SITE_URL . '/uploads/covers/' . $new_name;
-                        }
+                    $opt_file = ImageOptimizer::optimize_uploaded_file( $_FILES['image_file'], PATH_UPLOADS . '/covers', 'post' );
+                    if ( $opt_file ) {
+                        $featured_image = SITE_URL . '/uploads/covers/' . $opt_file;
                     }
                 }
 
@@ -342,8 +337,22 @@ require PATH_ADMIN . '/layout/header.php';
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="category">Edebi Tür / Kategori</label>
-              <input type="text" name="category" id="category" class="form-control" value="<?= htmlspecialchars( $post['category'], ENT_QUOTES, 'UTF-8' ); ?>" placeholder="Deneme, Şiir, Manifesto, İnceleme..." />
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
+                <label class="form-label" for="category" style="margin:0;">Edebi Tür / Kategori</label>
+                <a href="<?= SITE_URL; ?>/admin/categories.php" target="_blank" style="font-size:0.75rem; color:var(--adm-primary); text-decoration:none;">+ Yönet / Ekle ↗</a>
+              </div>
+              <select name="category" id="category" class="form-control">
+                <?php foreach ( $all_categories as $c ) : ?>
+                  <option value="<?= htmlspecialchars( $c['name'], ENT_QUOTES, 'UTF-8' ); ?>" <?= strtolower( $post['category'] ) === strtolower( $c['name'] ) ? 'selected' : ''; ?>>
+                    <?= htmlspecialchars( $c['name'], ENT_QUOTES, 'UTF-8' ); ?>
+                  </option>
+                <?php endforeach; ?>
+                <?php if ( ! empty( $post['category'] ) && ! in_array( strtolower( $post['category'] ), array_map( 'strtolower', array_column( $all_categories, 'name' ) ) ) ) : ?>
+                  <option value="<?= htmlspecialchars( $post['category'], ENT_QUOTES, 'UTF-8' ); ?>" selected>
+                    <?= htmlspecialchars( $post['category'], ENT_QUOTES, 'UTF-8' ); ?>
+                  </option>
+                <?php endif; ?>
+              </select>
             </div>
 
             <div style="margin-top:1.5rem;">
@@ -357,8 +366,9 @@ require PATH_ADMIN . '/layout/header.php';
 
         <!-- Öne Çıkan Görsel Kartı -->
         <div class="card">
-          <div class="card-header">
+          <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
             <h3 class="card-title">Öne Çıkan Görsel</h3>
+            <span class="pill-badge pill-green" style="font-size:0.65rem;">WebP Optimize</span>
           </div>
           <div class="card-body">
             
@@ -369,13 +379,19 @@ require PATH_ADMIN . '/layout/header.php';
             <?php endif; ?>
 
             <div class="form-group">
-              <label class="form-label">Bilgisayardan Yükle</label>
+              <label class="form-label">Bilgisayardan Yükle (Otomatik Sıkıştırılır)</label>
               <input type="file" name="image_file" accept="image/*" class="form-control" style="padding:0.35rem;" />
             </div>
 
-            <div class="form-group" style="margin-bottom:0;">
+            <div class="form-group" style="margin-bottom:0.75rem;">
               <label class="form-label">Veya Görsel URL'si</label>
-              <input type="text" name="featured_image" class="form-control" value="<?= htmlspecialchars( $post['featured_image'], ENT_QUOTES, 'UTF-8' ); ?>" placeholder="https://..." style="font-size:0.8rem;" />
+              <input type="text" name="featured_image" id="featured_image_input" class="form-control" value="<?= htmlspecialchars( $post['featured_image'], ENT_QUOTES, 'UTF-8' ); ?>" placeholder="https://..." style="font-size:0.8rem;" />
+            </div>
+
+            <div>
+              <a href="<?= SITE_URL; ?>/admin/media.php" target="_blank" class="btn btn-sm" style="width:100%; justify-content:center; font-size:0.76rem;">
+                🖼️ Medya Kütüphanesini Aç ↗
+              </a>
             </div>
 
           </div>

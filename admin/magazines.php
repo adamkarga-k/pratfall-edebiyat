@@ -40,15 +40,11 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
         $order_num   = (int) ( $_POST['order_num'] ?? 0 );
         $cover_image = trim( $_POST['cover_image'] ?? '' );
 
-        // Kapak Resmi Yüklendiyse
+        // Kapak Resmi Yüklendiyse (Otomatik WebP & 1600px Optimizasyon)
         if ( isset( $_FILES['cover_file'] ) && $_FILES['cover_file']['error'] === UPLOAD_ERR_OK ) {
-            $ext = strtolower( pathinfo( $_FILES['cover_file']['name'], PATHINFO_EXTENSION ) );
-            if ( in_array( $ext, [ 'jpg', 'jpeg', 'png', 'webp' ] ) ) {
-                $file_name = 'cover_' . uniqid() . '.' . $ext;
-                $save_path = PATH_UPLOADS . '/' . $file_name;
-                if ( move_uploaded_file( $_FILES['cover_file']['tmp_name'], $save_path ) ) {
-                    $cover_image = SITE_URL . '/uploads/' . $file_name;
-                }
+            $opt_name = ImageOptimizer::optimize_uploaded_file( $_FILES['cover_file'], PATH_UPLOADS, 'cover' );
+            if ( $opt_name ) {
+                $cover_image = SITE_URL . '/uploads/' . $opt_name;
             }
         }
 

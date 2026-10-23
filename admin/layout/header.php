@@ -68,6 +68,22 @@ $current_user = Auth::user();
           </a>
         </li>
         <li>
+          <a href="<?= SITE_URL; ?>/admin/categories.php" class="sidebar-link <?= $active_tab === 'categories' ? 'active' : ''; ?>">
+            <span class="sidebar-link-content">
+              <span class="sidebar-link-icon">🏷️</span>
+              <span>Kategoriler</span>
+            </span>
+          </a>
+        </li>
+        <li>
+          <a href="<?= SITE_URL; ?>/admin/media.php" class="sidebar-link <?= $active_tab === 'media' ? 'active' : ''; ?>">
+            <span class="sidebar-link-content">
+              <span class="sidebar-link-icon">🖼️</span>
+              <span>Medya Kütüphanesi</span>
+            </span>
+          </a>
+        </li>
+        <li>
           <a href="<?= SITE_URL; ?>/admin/import-docx.php" class="sidebar-link <?= $active_tab === 'import' ? 'active' : ''; ?>">
             <span class="sidebar-link-content">
               <span class="sidebar-link-icon">📥</span>
@@ -93,6 +109,14 @@ $current_user = Auth::user();
             <span class="sidebar-link-content">
               <span class="sidebar-link-icon">👥</span>
               <span>Kimler Yazmış? (Yazarlar)</span>
+            </span>
+          </a>
+        </li>
+        <li>
+          <a href="<?= SITE_URL; ?>/admin/backup.php" class="sidebar-link <?= $active_tab === 'backup' ? 'active' : ''; ?>">
+            <span class="sidebar-link-content">
+              <span class="sidebar-link-icon">💾</span>
+              <span>Veritabanı Yedeği İndir</span>
             </span>
           </a>
         </li>

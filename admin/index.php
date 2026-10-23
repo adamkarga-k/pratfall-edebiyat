@@ -19,6 +19,7 @@ $published_posts   = (int) $db->query( "SELECT COUNT(*) FROM posts WHERE status 
 $draft_posts       = (int) $db->query( "SELECT COUNT(*) FROM posts WHERE status = 'draft'" )->fetchColumn();
 $total_authors     = (int) $db->query( "SELECT COUNT(*) FROM authors" )->fetchColumn();
 $total_magazines   = (int) $db->query( "SELECT COUNT(*) FROM magazines" )->fetchColumn();
+$total_categories  = (int) $db->query( "SELECT COUNT(*) FROM categories" )->fetchColumn();
 
 // Son Yazılar (Son Etkinlik için)
 $recent_posts = $db->query( "
@@ -101,6 +102,11 @@ $db_size = file_exists( DB_FILE ) ? round( filesize( DB_FILE ) / 1024, 1 ) . ' K
         </li>
 
         <li class="content-summary-item">
+          <span>Yazı Kategorileri</span>
+          <span class="pill-badge pill-purple">@ <?= $total_categories; ?></span>
+        </li>
+
+        <li class="content-summary-item">
           <span>Dergilerimiz (Sayılar)</span>
           <span class="pill-badge pill-blue">@ <?= $total_magazines; ?></span>
         </li>
@@ -167,13 +173,13 @@ $db_size = file_exists( DB_FILE ) ? round( filesize( DB_FILE ) / 1024, 1 ) . ' K
 </div>
 
 <!-- 3. HIZLI ERİŞİM DİP BİLGİSİ -->
-<div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.25rem; margin-top:1.5rem;">
+<div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:1.25rem; margin-top:1.5rem;">
   
   <div class="card" style="margin-bottom:0; background:linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);">
     <div class="card-body" style="display:flex; justify-content:space-between; align-items:center;">
       <div>
-        <div style="font-weight:700; font-size:0.95rem; margin-bottom:0.25rem;">Word (.docx) Toplu İçe Aktarıcı</div>
-        <div style="font-size:0.82rem; color:var(--adm-muted);">Bilgisayarınızdan onlarca Word dosyasını tek tıkla içeri aktarın.</div>
+        <div style="font-weight:700; font-size:0.92rem; margin-bottom:0.25rem;">Word (.docx) Aktarımı</div>
+        <div style="font-size:0.78rem; color:var(--adm-muted);">Belgeleri tek tıkla yazıya dönüştürün.</div>
       </div>
       <a href="<?= SITE_URL; ?>/admin/import-docx" class="btn btn-accent btn-sm">
         İçe Aktar →
@@ -184,11 +190,23 @@ $db_size = file_exists( DB_FILE ) ? round( filesize( DB_FILE ) / 1024, 1 ) . ' K
   <div class="card" style="margin-bottom:0; background:linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);">
     <div class="card-body" style="display:flex; justify-content:space-between; align-items:center;">
       <div>
-        <div style="font-weight:700; font-size:0.95rem; margin-bottom:0.25rem;">cPanel Git Dağıtımı</div>
-        <div style="font-size:0.82rem; color:var(--adm-muted);">Kod güncellemelerini tek tıkla canlı sunucunuza aktarın.</div>
+        <div style="font-weight:700; font-size:0.92rem; margin-bottom:0.25rem;">Medya Galerisi</div>
+        <div style="font-size:0.78rem; color:var(--adm-muted);">Optimize görsellerinizi yönetin.</div>
       </div>
-      <a href="<?= SITE_URL; ?>/admin/git-sync" class="btn btn-sm">
-        Senkronizasyon →
+      <a href="<?= SITE_URL; ?>/admin/media" class="btn btn-sm">
+        Görseller →
+      </a>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:0; background:linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);">
+    <div class="card-body" style="display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <div style="font-weight:700; font-size:0.92rem; margin-bottom:0.25rem;">Tek Tık Veritabanı Yedeği</div>
+        <div style="font-size:0.78rem; color:var(--adm-muted);">Tüm sitenizi güvenle bilgisayarınıza indirin.</div>
+      </div>
+      <a href="<?= SITE_URL; ?>/admin/backup" class="btn btn-sm">
+        💾 İndir
       </a>
     </div>
   </div>

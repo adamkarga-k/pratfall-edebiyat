@@ -46,6 +46,15 @@ Router::get( '/admin/logout.php', function() {
 Router::any( '/admin/posts', PATH_ADMIN . '/posts.php' );
 Router::any( '/admin/posts.php', PATH_ADMIN . '/posts.php' );
 
+Router::any( '/admin/categories', PATH_ADMIN . '/categories.php' );
+Router::any( '/admin/categories.php', PATH_ADMIN . '/categories.php' );
+
+Router::any( '/admin/media', PATH_ADMIN . '/media.php' );
+Router::any( '/admin/media.php', PATH_ADMIN . '/media.php' );
+
+Router::any( '/admin/backup', PATH_ADMIN . '/backup.php' );
+Router::any( '/admin/backup.php', PATH_ADMIN . '/backup.php' );
+
 Router::any( '/admin/authors', PATH_ADMIN . '/authors.php' );
 Router::any( '/admin/authors.php', PATH_ADMIN . '/authors.php' );
 
