@@ -3,8 +3,9 @@
 # 1. UTF-8 Karakter Kodlaması
 AddDefaultCharset UTF-8
 
-# 2. Dizin Listelemeyi Kapat
+# 2. Dizin Listelemeyi Kapat ve index.php'yi Varsayılan Yap
 Options -Indexes
+DirectoryIndex index.php index.html
 
 # 3. Güvenlik Başlıkları
 <IfModule mod_headers.c>
@@ -69,7 +70,18 @@ Options -Indexes
     RewriteCond %{REQUEST_URI} \.(css|js|jpe?g|png|gif|webp|svg|ico|woff2?|ttf|eot)$ [NC]
     RewriteRule ^ - [L]
 
-    # Gerçek dosya veya dizin varsa doğrudan sun (css, js, resimler, admin dizini vb.)
+    # Yönetim Masası (Admin) Rotaları - Doğrudan ve Kusursuz Eşleşme
+    RewriteRule ^admin/?$ admin/index.php [L]
+    RewriteRule ^admin/login/?$ admin/login.php [L]
+    RewriteRule ^admin/logout/?$ admin/logout.php [L]
+    RewriteRule ^admin/posts/?$ admin/posts.php [L]
+    RewriteRule ^admin/authors/?$ admin/authors.php [L]
+    RewriteRule ^admin/magazines/?$ admin/magazines.php [L]
+    RewriteRule ^admin/import-docx/?$ admin/import-docx.php [L]
+    RewriteRule ^admin/settings/?$ admin/settings.php [L]
+    RewriteRule ^admin/git-sync/?$ admin/git-sync.php [L]
+
+    # Gerçek dosya veya dizin varsa doğrudan sun (css, js, resimler vb.)
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule . index.php [L]

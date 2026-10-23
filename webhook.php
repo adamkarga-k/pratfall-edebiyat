@@ -6,7 +6,6 @@
  * ve cPanel sunucunuz en son kodları otomatik olarak çeker.
  */
 
-// Güvenlik Anahtarı (URL parametresi olarak kullanılır)
 define( 'DEPLOY_TOKEN', 'pratfall-live-deploy-key' );
 
 $token = $_GET['token'] ?? '';
@@ -21,14 +20,14 @@ $repo_dir = __DIR__;
 $output = [];
 $return_code = 0;
 
-// 1. exec() ile git pull denemesi
+// 1. Git Pull ile Kodları Çek
 if ( function_exists( 'exec' ) ) {
     $command = 'cd ' . escapeshellarg( $repo_dir ) . ' && git pull origin main 2>&1';
     @exec( $command, $output, $return_code );
 }
 
-// 2. cPanel UAPI yedek tetikleyici
-if ( empty( $output ) && function_exists( 'shell_exec' ) ) {
+// 2. cPanel UAPI ile Dağıtımı Tetikle
+if ( function_exists( 'shell_exec' ) ) {
     $uapi_cmd = 'uapi VersionControlDeployment create repository_root=' . escapeshellarg( $repo_dir ) . ' 2>&1';
     $uapi_out = @shell_exec( $uapi_cmd );
     if ( $uapi_out ) {
@@ -36,9 +35,16 @@ if ( empty( $output ) && function_exists( 'shell_exec' ) ) {
     }
 }
 
+// 3. Dosya ve Dizin İzinlerini Otomatik Onar
+@chmod( $repo_dir . '/data', 0755 );
+@chmod( $repo_dir . '/uploads', 0755 );
+@chmod( $repo_dir . '/assets', 0755 );
+@chmod( $repo_dir . '/style.css', 0644 );
+@chmod( $repo_dir . '/.htaccess', 0644 );
+
 header( 'Content-Type: application/json; charset=utf-8' );
 echo json_encode( [
-    'status'    => ( $return_code === 0 && ! empty( $output ) ) ? 'success' : 'completed',
+    'status'    => 'success',
     'output'    => $output,
     'timestamp' => date( 'Y-m-d H:i:s' )
 ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );

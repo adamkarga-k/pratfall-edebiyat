@@ -8,7 +8,7 @@ if ( ! defined( 'PRATFALL_ROOT' ) ) {
 }
 
 if ( Auth::check() ) {
-    header( 'Location: ' . SITE_URL . '/admin/' );
+    header( 'Location: ' . SITE_URL . '/admin/index.php' );
     exit;
 }
 
@@ -18,7 +18,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
     $password = $_POST['password'] ?? '';
 
     if ( Auth::login( $username, $password ) ) {
-        header( 'Location: ' . SITE_URL . '/admin/' );
+        header( 'Location: ' . SITE_URL . '/admin/index.php' );
         exit;
     } else {
         $error = 'Kullanıcı adı veya şifre hatalı. Lütfen tekrar deneyin.';
