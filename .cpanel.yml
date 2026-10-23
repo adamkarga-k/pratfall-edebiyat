@@ -11,6 +11,7 @@ deployment:
     - /bin/chmod 755 $DEPLOYPATH/uploads
     
     # 2. Statik Dosyalar (CSS, JS, Resimler) Okuma İzinlerini Ver
+    - /bin/chmod 644 $DEPLOYPATH/style.css 2>/dev/null || true
     - /bin/chmod -R 755 $DEPLOYPATH/assets 2>/dev/null || true
     - /bin/chmod 644 $DEPLOYPATH/assets/css/* 2>/dev/null || true
     - /bin/chmod 644 $DEPLOYPATH/assets/js/* 2>/dev/null || true

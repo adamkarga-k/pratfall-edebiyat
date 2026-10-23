@@ -1,3 +1,208 @@
+/*
+Theme Name: Pratfall
+Theme URI: https://adamkarga.net
+Author: Ubeydullah Öz
+Author URI: https://adamkarga.net
+Description: Çok yazarlı, kusurlu-estetik (Wabi-Sabi & Neo-Brutalist Zine) ve canlı bir edebi kültür, sanat ve dergi teması. Slogan: "Kusurlu Kalma Çabası". Asimetrik ızgara, etkileşimli yatay dergi vitrini, yazar eser masaları ve zengin editoryal tipografi içerir.
+Version: 1.0.0
+Requires at least: 6.0
+Tested up to: 6.6
+Requires PHP: 7.4
+License: GNU General Public License v2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: pratfall
+Tags: blog, grid-layout, two-columns, custom-colors, custom-menu, featured-images, theme-options, threaded-comments, translation-ready, dark-mode, multi-author
+*/
+
+/* ==========================================================================
+   KÖK DEĞİŞKENLER & TEMA PALETİ (Kusurlu-Estetik & Neo-Brutalist)
+   ========================================================================== */
+:root {
+  /* Açık Mod - Matbaa Kağıdı, Mürekkep & Zine Renkleri */
+  --bg-page: #f6f3eb;           /* Sıcak ham kağıt / krem */
+  --bg-surface: #ffffff;        /* Zemin beyazı */
+  --bg-card: #fdfcf9;           /* Kart kağıt rengi */
+  --bg-tape: #fef08a;           /* Koli/maskeleme bandı sarısı */
+  --bg-tape-accent: #fed7aa;    /* Şeftali bant */
+  --bg-stamp: #ccfbf1;          /* Pul arka planı */
+  --text-main: #141416;         /* Koyu matbaa mürekkebi */
+  --text-muted: #57534e;        /* İkincil taş grisi */
+  --text-dim: #78716c;          /* Açık gri metin */
+  --border-color: #141416;      /* Sert brutalist kenarlık */
+  --border-subtle: #d6d3d1;     /* İnce matbaa ayraç çizgisi */
+  --accent-primary: #d94e34;    /* Terracotta / zine kırmızısı */
+  --accent-secondary: #0d9488;  /* Matbaa turkuazı / zümrüt */
+  --accent-amber: #d97706;      /* Kehribar */
+  --shadow-solid: 4px 4px 0px #141416;
+  --shadow-hover: 7px 7px 0px #141416;
+  --shadow-active: 2px 2px 0px #141416;
+
+  /* Tipografi Aileleri */
+  --font-serif: 'Newsreader', 'Playfair Display', Georgia, serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Space Mono', Consolas, monospace;
+
+  /* Boyutlar */
+  --container-max: 1240px;
+  --container-narrow: 780px;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+}
+
+/* Koyu Mod (Dark / Gece Mürekkebi) */
+html.dark {
+  --bg-page: #101012;           /* Koyu kömür / matbaa gecesi */
+  --bg-surface: #17171a;        /* Yüzey koyusu */
+  --bg-card: #1c1c20;           /* Kart zemin */
+  --bg-tape: #854d0e;           /* Gece maskeleme bandı */
+  --bg-tape-accent: #9a3412;    /* Gece kiremit bant */
+  --bg-stamp: #115e59;          /* Gece pul rengi */
+  --text-main: #f3efe6;         /* Sıcak kemik beyazı metin */
+  --text-muted: #a8a29e;        /* Açık taş grisi */
+  --text-dim: #78716c;          /* Soluk gri */
+  --border-color: #383842;      /* Koyu mod belirgin kenarlık */
+  --border-subtle: #27272a;     /* İnce ayraç */
+  --accent-primary: #f87171;    /* Canlı mercan kırmızısı */
+  --accent-secondary: #2dd4bf;  /* Parlak turkuaz */
+  --accent-amber: #fbbf24;      /* Altın kehribar */
+  --shadow-solid: 4px 4px 0px #050506;
+  --shadow-hover: 7px 7px 0px #050506;
+  --shadow-active: 2px 2px 0px #050506;
+}
+
+/* ==========================================================================
+   TEMEL SIFIRLAMA & GENEL STİLLER
+   ========================================================================== */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+}
+
+/* Dokunmatik Gecikmeyi Önleme & Şık Dokunma Efekti */
+a, button {
+  -webkit-tap-highlight-color: rgba(217, 78, 52, 0.2);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-page);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.65;
+  transition: background-color 0.25s ease, color 0.25s ease;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Kağıt Dokusu (Paper Noise Overlay) */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none;
+  opacity: 0.028;
+  z-index: 9999;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* Linkler */
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s ease, opacity 0.2s ease, border-color 0.2s ease;
+}
+
+a:hover {
+  color: var(--accent-primary);
+}
+
+/* Görseller */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Başlıklar */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-serif);
+  color: var(--text-main);
+  margin-top: 0;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+/* Kapsayıcı */
+.pratfall-container {
+  width: 100%;
+  max-width: var(--container-max);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+.pratfall-container-narrow {
+  width: 100%;
+  max-width: var(--container-narrow);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+/* ==========================================================================
+   ERİŞİLEBİLİRLİK (ACCESSIBILITY)
+   ========================================================================== */
+.screen-reader-text {
+  border: 0;
+  clip: rect(1px, 1px, 1px, 1px);
+  clip-path: inset(50%);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute !important;
+  width: 1px;
+  word-wrap: normal !important;
+}
+
+.screen-reader-text:focus {
+  background-color: var(--bg-surface);
+  border: 2px solid var(--accent-primary);
+  clip: auto !important;
+  clip-path: none;
+  color: var(--text-main);
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 700;
+  height: auto;
+  left: 1rem;
+  top: 1rem;
+  padding: 0.75rem 1.25rem;
+  text-decoration: none;
+  width: auto;
+  z-index: 100000;
+  box-shadow: var(--shadow-solid);
+}
+
+
 /* ==========================================================================
    PRATFALL THEME - ANA CSS DOSYASI
    Kusurlu-Estetik (Neo-Brutalist & Zine Collage) Mimari Stilleri
@@ -585,16 +790,12 @@ html.dark .tape-badge.tape-peach {
   box-shadow: 2px 2px 0px var(--border-color);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
-  text-decoration: none !important;
-  color: var(--text-main) !important;
 }
 
 .author-pill-card:hover {
   transform: translate(-2px, -2px) rotate(0.8deg);
   box-shadow: 4px 4px 0px var(--accent-primary);
   border-color: var(--accent-primary);
-  text-decoration: none !important;
-  color: var(--text-main) !important;
 }
 
 .author-pill-avatar {
@@ -675,24 +876,20 @@ html.dark .tape-badge.tape-peach {
   font-weight: 700;
   line-height: 1.2;
   margin-bottom: 0.15rem;
-  color: var(--text-main) !important;
-  text-decoration: none !important;
 }
 
 .author-pill-role {
   font-family: var(--font-mono);
   font-size: 0.7rem;
-  color: var(--text-muted) !important;
-  text-decoration: none !important;
+  color: var(--text-muted);
 }
 
 .author-pill-count {
   font-family: var(--font-mono);
   font-size: 0.65rem;
-  color: var(--accent-primary) !important;
+  color: var(--accent-primary);
   margin-top: 0.2rem;
   font-weight: 600;
-  text-decoration: none !important;
 }
 
 /* --------------------------------------------------------------------------

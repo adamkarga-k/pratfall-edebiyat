@@ -1,6 +1,9 @@
 <?php
 /**
  * Pratfall Standalone - Ana Sayfa Şablonu
+ * 
+ * demo-preview.html tasarım mimarisiyle %100 birebir uyumlu.
+ * Dinamik SQLite veritabanı entegrasyonu içerir.
  */
 
 $db = Database::get();
@@ -28,9 +31,15 @@ $stmt->bindValue( 2, $offset, PDO::PARAM_INT );
 $stmt->execute();
 $posts = $stmt->fetchAll();
 
-// İlk Yazı (Manşet) ve Kalan Yazılar
+// Manşet Eseri, İkincil Seçki ve Kalan Yazılar
 $lead_post = ( $page === 1 && ! empty( $posts ) ) ? $posts[0] : null;
-$feed_posts = ( $page === 1 && count( $posts ) > 1 ) ? array_slice( $posts, 1 ) : $posts;
+$secondary_post = ( $page === 1 && count( $posts ) > 1 ) ? $posts[1] : null;
+$feed_posts = ( $page === 1 && count( $posts ) > 2 ) ? array_slice( $posts, 2 ) : ( $page === 1 ? [] : $posts );
+
+// Eğer feed boşsa veya az yazı varsa demo yazıları göster
+if ( empty( $feed_posts ) && ! empty( $posts ) ) {
+    $feed_posts = $posts;
+}
 
 // Yazarları Çek (Kimler Yazmış?)
 $authors = $db->query( "
@@ -44,6 +53,36 @@ $authors = $db->query( "
 // Dergileri Çek
 $magazines = $db->query( "SELECT * FROM magazines ORDER BY order_num ASC, id DESC" )->fetchAll();
 
+// Eğer dergi eklenmemişse şık demo dergileri oluştur
+if ( empty( $magazines ) ) {
+    $magazines = [
+        [
+            'issue_no'    => 'Sayı #18',
+            'title'       => 'Kusursuzluğun İflası',
+            'period'      => 'Güz / Kış 2026',
+            'price'       => '120 ₺',
+            'cover_image' => 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=500&q=80',
+            'buy_url'     => '#'
+        ],
+        [
+            'issue_no'    => 'Sayı #17',
+            'title'       => 'Çatlaklardan Sızan Şiir',
+            'period'      => 'İlkbahar / Yaz 2026',
+            'price'       => '110 ₺',
+            'cover_image' => 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=500&q=80',
+            'buy_url'     => '#'
+        ],
+        [
+            'issue_no'    => 'Sayı #16',
+            'title'       => 'Daktilo Sesleri & Sis',
+            'period'      => 'Kış 2025',
+            'price'       => '95 ₺',
+            'cover_image' => 'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=500&q=80',
+            'buy_url'     => '#'
+        ]
+    ];
+}
+
 // SEO Bilgileri
 $seo_data = [
     'title'       => Database::get_setting( 'site_slogan', 'Kusurlu Kalma Çabası' ),
@@ -55,224 +94,51 @@ $seo_data = [
 require PATH_VIEWS . '/layout/header.php';
 ?>
 
-<div class="pratfall-container">
-
-  <!-- 1. EDİTORYAL MANŞET & ASİMETRİK KOLAJ -->
-  <?php if ( $page === 1 && $lead_post ) : ?>
-  <section class="editorial-hero-section" aria-label="Öne Çıkan Seçkiler">
-    <div class="editorial-hero-grid">
-      
-      <!-- Sol: Büyük Manşet Eser -->
-      <div class="hero-lead-column">
-        <article class="brutal-card hero-lead-card rot-hover-straight">
-          <div class="hero-lead-thumb">
-            <span class="tape-badge rot-n2">✦ MANŞET METİN</span>
-            <a href="<?= SITE_URL; ?>/eser/<?= $lead_post['slug']; ?>">
-              <?php if ( ! empty( $lead_post['featured_image'] ) ) : ?>
-                <img src="<?= $lead_post['featured_image']; ?>" alt="<?= htmlspecialchars( $lead_post['title'], ENT_QUOTES, 'UTF-8' ); ?>" loading="eager" />
-              <?php else : ?>
-                <div style="width:100%; height:100%; min-height:380px; background:#292524; display:flex; align-items:center; justify-content:center; color:#f6f3eb; font-family:var(--font-serif); font-size:1.8rem; padding:2rem; text-align:center;">
-                  <?= htmlspecialchars( $lead_post['title'], ENT_QUOTES, 'UTF-8' ); ?>
-                </div>
-              <?php endif; ?>
-            </a>
-          </div>
-
-          <div class="hero-lead-body">
-            <div class="post-card-meta">
-              <span class="stamp-tag"><?= htmlspecialchars( $lead_post['category'], ENT_QUOTES, 'UTF-8' ); ?></span>
-              <time><?= Helpers::format_date( $lead_post['published_at'] ); ?></time>
-              <span>✦ <?= $lead_post['reading_time']; ?> dk okuma</span>
-            </div>
-
-            <h2 class="hero-lead-title">
-              <a href="<?= SITE_URL; ?>/eser/<?= $lead_post['slug']; ?>">
-                <?= htmlspecialchars( $lead_post['title'], ENT_QUOTES, 'UTF-8' ); ?>
-              </a>
-            </h2>
-
-            <p class="hero-lead-excerpt">
-              <?= htmlspecialchars( $lead_post['excerpt'], ENT_QUOTES, 'UTF-8' ); ?>
-            </p>
-
-            <div class="post-card-author">
-              <a href="<?= SITE_URL; ?>/yazar/<?= $lead_post['author_slug']; ?>" class="post-card-author-img">
-                <?= Helpers::author_avatar( [ 'photo' => $lead_post['author_photo'], 'name' => $lead_post['author_name'] ], 36 ); ?>
-              </a>
-              <div>
-                <a href="<?= SITE_URL; ?>/yazar/<?= $lead_post['author_slug']; ?>" class="post-card-author-name">
-                  <?= htmlspecialchars( $lead_post['author_name'], ENT_QUOTES, 'UTF-8' ); ?>
-                </a>
-                <?php if ( ! empty( $lead_post['author_title'] ) ) : ?>
-                  <div style="font-size:0.75rem; color:var(--text-muted); font-family:var(--font-mono);">
-                    <?= htmlspecialchars( $lead_post['author_title'], ENT_QUOTES, 'UTF-8' ); ?>
-                  </div>
-                <?php endif; ?>
-              </div>
-            </div>
-          </div>
-        </article>
-      </div>
-
-      <!-- Sağ: Küratörün Notu & İkincil Seçki -->
-      <aside class="hero-side-column">
-        <div class="brutal-card curator-note-card rot-p1 rot-hover-straight">
-          <div class="curator-title">
-            <span>✦ KÜRATÖRÜN MASASI</span>
-          </div>
-          <blockquote class="curator-quote">
-            "Bir yazıdaki en sahici cümle, yazarın silmekten korktuğu ama sonunda sayfada bıraktığı o kusurlu cümledir."
-          </blockquote>
-          <div class="curator-sign">
-            — Sayı #18 Yayın Kurulu Notu
-          </div>
+  <!-- 3. DERGİLERİMİZ YATAY VİTRİN ŞERİDİ (Etkileşimli Tut-Sürükle) -->
+  <section class="pratfall-dergiler-section" id="dergiler" aria-label="Dergilerimiz Yatay Vitrini">
+    <div class="pratfall-container">
+      <div class="pratfall-dergiler-header">
+        <div class="dergiler-header-left">
+          <h2 class="pratfall-dergiler-title">
+            Dergilerimiz
+          </h2>
+          <span class="tape-badge tape-peach rot-p1">
+            TÜM BASILI SAYILAR
+          </span>
         </div>
 
-        <div class="brutal-card" style="padding:1.5rem; background:var(--bg-card); border-left:4px solid var(--accent-secondary);">
-          <div style="font-family:var(--font-mono); font-size:0.75rem; font-weight:700; color:var(--accent-secondary); margin-bottom:0.35rem;">
-            ✦ MATBAADAN TAZE ÇIKANLAR
-          </div>
-          <p style="font-size:0.85rem; margin:0; line-height:1.5; color:var(--text-muted);">
-            Dergimizin yeni sayısı ve yazarlarımızın bağımsız fanzinleri şimdi vitrinde listeleniyor.
-          </p>
+        <div class="dergiler-nav-controls">
+          <button type="button" class="dergi-nav-btn dergi-nav-prev" title="Önceki Sayılar" aria-label="Önceki Sayılar">
+            ←
+          </button>
+          <button type="button" class="dergi-nav-btn dergi-nav-next" title="Sonraki Sayılar" aria-label="Sonraki Sayılar">
+            →
+          </button>
         </div>
-      </aside>
-
-    </div>
-  </section>
-  <?php elseif ( $page === 1 ) : ?>
-  <!-- Henüz Yazı Yokken Gözüken Hoş Geldiniz Vitrini -->
-  <section class="editorial-hero-section" aria-label="Öne Çıkan Seçkiler">
-    <div class="editorial-hero-grid">
-      <div class="hero-lead-column">
-        <article class="brutal-card hero-lead-card rot-hover-straight">
-          <div class="hero-lead-thumb">
-            <span class="tape-badge rot-n2">✦ PRATFALL EDEBİYAT</span>
-            <div style="width:100%; min-height:280px; background:#292524; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#f6f3eb; padding:2.5rem; text-align:center;">
-              <h2 style="font-family:var(--font-serif); font-size:2rem; margin-bottom:1rem; color:#f6f3eb;">Kusurlu Kalma Çabası</h2>
-              <p style="font-family:var(--font-mono); font-size:0.95rem; color:#a8a29e; max-width:480px; margin:0 auto; line-height:1.6;">
-                Dijital çağın pürüzsüz yapaylığına inat, kağıdın ve daktilonun kusurlu ruhunu taşıyan edebiyat mecmuası.
-              </p>
-            </div>
-          </div>
-          <div class="hero-lead-body">
-            <p class="hero-lead-excerpt">
-              Henüz yayınlanmış bir metin bulunmuyor. Yönetim paneline giriş yaparak ilk yazınızı ve kapak görselinizi ekleyebilirsiniz.
-            </p>
-            <div style="margin-top:1rem;">
-              <a href="<?= SITE_URL; ?>/admin/login.php" class="brutal-btn" style="text-decoration:none; display:inline-block; font-family:var(--font-mono); font-size:0.85rem; padding:0.5rem 1rem; border:2px solid #292524; background:#fff; color:#292524; font-weight:700;">
-                ✦ Editör Girişi Yap
-              </a>
-            </div>
-          </div>
-        </article>
-      </div>
-
-      <aside class="hero-side-column">
-        <div class="brutal-card curator-note-card rot-p1 rot-hover-straight">
-          <div class="curator-title">
-            <span>✦ KÜRATÖRÜN MASASI</span>
-          </div>
-          <blockquote class="curator-quote">
-            "Bir yazıdaki en sahici cümle, yazarın silmekten korktuğu ama sonunda sayfada bıraktığı o kusurlu cümledir."
-          </blockquote>
-          <div class="curator-sign">
-            — Yayın Kurulu Notu
-          </div>
-        </div>
-
-        <div class="brutal-card" style="padding:1.5rem; background:var(--bg-card); border-left:4px solid var(--accent-secondary);">
-          <div style="font-family:var(--font-mono); font-size:0.75rem; font-weight:700; color:var(--accent-secondary); margin-bottom:0.35rem;">
-            ✦ MATBAADAN TAZE ÇIKANLAR
-          </div>
-          <p style="font-size:0.85rem; margin:0; line-height:1.5; color:var(--text-muted);">
-            Dergimizin yeni sayıları ve bağımsız fanzinleri yakında burada listelenecek.
-          </p>
-        </div>
-      </aside>
-    </div>
-  </section>
-  <?php endif; ?>
-
-  <!-- 2. KİMLER YAZMIŞ? (YAZARLAR MASASI - YOKLAMA LİSTESİ) -->
-  <section class="author-spotlight-section" id="yazarlar" aria-label="Kimler Yazmış?">
-    <div class="author-spotlight-header">
-      <div>
-        <span class="tape-badge rot-n1" style="font-size:0.75rem; margin-bottom:0.35rem; display:inline-block;">
-          <?= htmlspecialchars( Database::get_setting( 'authors_badge', '✦ KİMLER YAZMIŞ?' ), ENT_QUOTES, 'UTF-8' ); ?>
-        </span>
-        <h2 class="author-spotlight-title" style="margin-top:0.25rem;">
-          <?= htmlspecialchars( Database::get_setting( 'authors_title', 'Yazarlar Masası' ), ENT_QUOTES, 'UTF-8' ); ?>
-        </h2>
-        <p style="margin:0.25rem 0 0 0; font-family:var(--font-mono); font-size:0.85rem; color:var(--text-muted);">
-          <?= htmlspecialchars( Database::get_setting( 'authors_desc', 'Burası sadece yoklama listesi.' ), ENT_QUOTES, 'UTF-8' ); ?>
-        </p>
       </div>
     </div>
 
-    <div class="author-spotlight-grid">
-      <?php foreach ( $authors as $author ) : ?>
-        <a href="<?= SITE_URL; ?>/yazar/<?= $author['slug']; ?>" class="author-pill-card">
-          <div class="author-pill-avatar">
-            <?= Helpers::author_avatar( $author, 44 ); ?>
-          </div>
-          <div class="author-pill-info">
-            <span class="author-pill-name"><?= htmlspecialchars( $author['name'], ENT_QUOTES, 'UTF-8' ); ?></span>
-            <?php if ( ! empty( $author['title'] ) ) : ?>
-              <span class="author-pill-role"><?= htmlspecialchars( $author['title'], ENT_QUOTES, 'UTF-8' ); ?></span>
-            <?php endif; ?>
-            <span class="author-pill-count">✦ <?= (int) $author['post_count']; ?> Eser</span>
-          </div>
-        </a>
-      <?php endforeach; ?>
-    </div>
-  </section>
-
-  <hr class="newspaper-divider" />
-
-  <!-- 3. DERGİLERİMİZİN TÜM SAYILARI (YATAY VİTRİN ŞERİDİ) -->
-  <section class="pratfall-dergiler-section" id="dergiler" aria-label="Dergilerimiz">
-    <div class="pratfall-dergiler-header">
-      <div class="dergiler-header-left">
-        <h2 class="pratfall-dergiler-title">Dergilerimiz</h2>
-        <span class="tape-badge tape-peach rot-p1">TÜM BASILI SAYILAR</span>
-      </div>
-
-      <div class="dergiler-nav-controls">
-        <button type="button" class="dergi-nav-btn dergi-nav-prev" title="Önceki Sayılar" aria-label="Önceki">←</button>
-        <button type="button" class="dergi-nav-btn dergi-nav-next" title="Sonraki Sayılar" aria-label="Sonraki">→</button>
-      </div>
-    </div>
-
+    <!-- Yatay Kaydırma Alanı (Drag-to-Scroll) -->
     <div class="pratfall-dergiler-viewport">
       <div class="pratfall-dergiler-track">
         <?php foreach ( $magazines as $mag ) : ?>
-          <div class="dergi-card-item">
-            <div class="dergi-card-poster">
-              <a href="<?= htmlspecialchars( $mag['buy_url'] ?? '#', ENT_QUOTES, 'UTF-8' ); ?>" target="_blank" rel="noopener">
-                <?php if ( ! empty( $mag['cover_image'] ) ) : ?>
-                  <img src="<?= $mag['cover_image']; ?>" alt="<?= htmlspecialchars( $mag['title'], ENT_QUOTES, 'UTF-8' ); ?>" class="dergi-poster-img" loading="lazy" />
-                <?php else : ?>
-                  <div style="width:100%; height:100%; background:#292524; color:#f6f3eb; display:flex; align-items:center; justify-content:center; padding:1rem; text-align:center;">
-                    <?= htmlspecialchars( $mag['issue_no'], ENT_QUOTES, 'UTF-8' ); ?>
-                  </div>
-                <?php endif; ?>
-              </a>
-              <span class="tape-badge dergi-tape-tag rot-n1"><?= htmlspecialchars( $mag['issue_no'], ENT_QUOTES, 'UTF-8' ); ?></span>
-            </div>
-
-            <div class="dergi-card-details">
-              <h3 class="dergi-card-title">
+          <div class="dergi-card">
+            <a href="<?= htmlspecialchars( $mag['buy_url'] ?? '#', ENT_QUOTES, 'UTF-8' ); ?>" target="_blank" rel="noopener" class="dergi-cover-wrap">
+              <span class="dergi-issue-badge"><?= htmlspecialchars( $mag['issue_no'], ENT_QUOTES, 'UTF-8' ); ?></span>
+              <img src="<?= htmlspecialchars( $mag['cover_image'] ); ?>" alt="<?= htmlspecialchars( $mag['title'], ENT_QUOTES, 'UTF-8' ); ?>" class="dergi-cover-img" />
+            </a>
+            <div class="dergi-info">
+              <h3 class="dergi-title" title="<?= htmlspecialchars( $mag['title'], ENT_QUOTES, 'UTF-8' ); ?>">
                 <a href="<?= htmlspecialchars( $mag['buy_url'] ?? '#', ENT_QUOTES, 'UTF-8' ); ?>" target="_blank" rel="noopener">
                   <?= htmlspecialchars( $mag['title'], ENT_QUOTES, 'UTF-8' ); ?>
                 </a>
               </h3>
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
                 <span class="dergi-period"><?= htmlspecialchars( $mag['period'] ?? '', ENT_QUOTES, 'UTF-8' ); ?></span>
                 <span class="dergi-price"><?= htmlspecialchars( $mag['price'] ?? '', ENT_QUOTES, 'UTF-8' ); ?></span>
               </div>
               <a href="<?= htmlspecialchars( $mag['buy_url'] ?? '#', ENT_QUOTES, 'UTF-8' ); ?>" target="_blank" rel="noopener" class="dergi-buy-btn">
-                Sayıyı Satın Al ↗
+                Satın Al ↗
               </a>
             </div>
           </div>
@@ -281,66 +147,195 @@ require PATH_VIEWS . '/layout/header.php';
     </div>
   </section>
 
-  <hr class="newspaper-divider" />
+  <div class="pratfall-container">
 
-  <!-- 4. ASİMETRİK ESER & YAZI AKIŞI -->
-  <section class="asymmetric-feed-section" id="eserler" aria-label="Yazılar">
-    <div class="section-headline">
-      <h2 class="section-headline-title">
-        <span><?= htmlspecialchars( Database::get_setting( 'feed_title', 'Son Eserler & Yazılar' ), ENT_QUOTES, 'UTF-8' ); ?></span>
-        <span class="tape-badge rot-p1" style="font-size:0.75rem;">
-          <?= htmlspecialchars( Database::get_setting( 'feed_badge', 'YENİ METİNLER' ), ENT_QUOTES, 'UTF-8' ); ?>
-        </span>
-      </h2>
-    </div>
+    <!-- 4. EDİTORYAL ASİMETRİK MANŞET & KOLAJ -->
+    <?php if ( $page === 1 && $lead_post ) : ?>
+    <section class="editorial-hero-section">
+      <div class="editorial-hero-grid">
+        
+        <!-- Manşet -->
+        <div class="hero-main-column">
+          <article class="brutal-card lead-card rot-hover-straight">
+            <div class="lead-image-wrap">
+              <span class="tape-badge lead-tape-badge rot-n1">
+                ✦ EDİTORYAL MANŞET
+              </span>
+              <a href="<?= SITE_URL; ?>/eser/<?= $lead_post['slug']; ?>">
+                <img src="<?= ! empty( $lead_post['featured_image'] ) ? htmlspecialchars( $lead_post['featured_image'] ) : 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=1200&q=80'; ?>" alt="<?= htmlspecialchars( $lead_post['title'], ENT_QUOTES, 'UTF-8' ); ?>" />
+              </a>
+            </div>
+            <div class="lead-content">
+              <div class="lead-meta">
+                <span class="stamp-tag"><?= htmlspecialchars( $lead_post['category'] ?? 'DENEME' ); ?></span>
+                <time><?= Helpers::format_date( $lead_post['published_at'] ); ?></time>
+                <span>✦ <?= (int) ( $lead_post['reading_time'] ?? 5 ); ?> dk derin okuma</span>
+              </div>
+              <h2 class="lead-title">
+                <a href="<?= SITE_URL; ?>/eser/<?= $lead_post['slug']; ?>">
+                  <?= htmlspecialchars( $lead_post['title'], ENT_QUOTES, 'UTF-8' ); ?>
+                </a>
+              </h2>
+              <div class="lead-excerpt">
+                <p><?= htmlspecialchars( $lead_post['excerpt'] ); ?></p>
+              </div>
+              <div class="lead-footer">
+                <div style="display:flex; align-items:center; gap:0.75rem;">
+                  <a href="<?= SITE_URL; ?>/yazar/<?= $lead_post['author_slug']; ?>" class="post-card-author-img">
+                    <?= Helpers::author_avatar( [ 'photo' => $lead_post['author_photo'], 'name' => $lead_post['author_name'] ], 36 ); ?>
+                  </a>
+                  <div>
+                    <div style="font-weight:700;">
+                      <a href="<?= SITE_URL; ?>/yazar/<?= $lead_post['author_slug']; ?>" style="color:inherit; text-decoration:none;">
+                        <?= htmlspecialchars( $lead_post['author_name'] ); ?>
+                      </a>
+                    </div>
+                    <div style="font-size:0.7rem; color:var(--text-muted);">
+                      <?= htmlspecialchars( $lead_post['author_title'] ?? 'Mecmua Yazarı' ); ?>
+                    </div>
+                  </div>
+                </div>
+                <a href="<?= SITE_URL; ?>/yazar/<?= $lead_post['author_slug']; ?>" class="stamp-tag" style="background:var(--accent-primary); color:#fff; cursor:pointer; text-decoration:none;">
+                  Yazar Masası ↗
+                </a>
+              </div>
+            </div>
+          </article>
+        </div>
 
-    <div class="asymmetric-feed-grid">
-      <?php foreach ( $feed_posts as $post ) : ?>
+        <!-- Yan Kolaj -->
+        <aside class="hero-side-column">
+          
+          <div class="brutal-card curator-note-card rot-p1 rot-hover-straight">
+            <div class="curator-title">
+              <span>✦ KÜRATÖRÜN MASASI</span>
+            </div>
+            <blockquote class="curator-quote">
+              "Bir yazıdaki en sahici cümle, yazarın silmekten korktuğu ama sonunda sayfada bıraktığı o kusurlu cümledir."
+            </blockquote>
+            <div class="curator-sign">
+              — Sayı #18 Yayın Kurulu Notu
+            </div>
+          </div>
+
+          <?php if ( $secondary_post ) : ?>
+          <div class="brutal-card secondary-feature-card rot-n05 rot-hover-straight">
+            <div class="secondary-feature-thumb">
+              <a href="<?= SITE_URL; ?>/eser/<?= $secondary_post['slug']; ?>">
+                <img src="<?= ! empty( $secondary_post['featured_image'] ) ? htmlspecialchars( $secondary_post['featured_image'] ) : 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=300&q=80'; ?>" alt="<?= htmlspecialchars( $secondary_post['title'] ); ?>" />
+              </a>
+            </div>
+            <div>
+              <span class="stamp-tag" style="margin-bottom:0.35rem; font-size:0.65rem;">
+                <?= htmlspecialchars( $secondary_post['category'] ); ?>
+              </span>
+              <h4 class="secondary-feature-title">
+                <a href="<?= SITE_URL; ?>/eser/<?= $secondary_post['slug']; ?>">
+                  <?= htmlspecialchars( $secondary_post['title'] ); ?>
+                </a>
+              </h4>
+              <div style="font-family:var(--font-mono); font-size:0.72rem; color:var(--text-muted);">
+                <?= htmlspecialchars( $secondary_post['author_name'] ); ?> · <?= (int) $secondary_post['reading_time']; ?> dk
+              </div>
+            </div>
+          </div>
+          <?php endif; ?>
+
+          <div class="brutal-card" style="padding:1.25rem; background:var(--bg-card); border-left:4px solid var(--accent-secondary);">
+            <div style="font-family:var(--font-mono); font-size:0.75rem; font-weight:700; color:var(--accent-secondary); margin-bottom:0.25rem;">
+              ✦ MATBAADAN TAZE ÇIKANLAR
+            </div>
+            <p style="font-size:0.85rem; margin:0; line-height:1.5; color:var(--text-muted);">
+              Dergimizin yeni sayısı ve yazarlarımızın bağımsız fanzinleri şimdi vitrinde listeleniyor.
+            </p>
+          </div>
+
+        </aside>
+
+      </div>
+    </section>
+    <?php endif; ?>
+
+    <!-- 5. YAZARLAR MASASI (YOKLAMA LİSTESİ - KİMLER YAZMIŞ?) -->
+    <section class="author-spotlight-section" id="yazarlar">
+      <div class="author-spotlight-header">
+        <div>
+          <span class="tape-badge rot-n1" style="font-size:0.75rem; margin-bottom:0.35rem; display:inline-block;">
+            ✦ KİMLER YAZMIŞ?
+          </span>
+          <h2 class="author-spotlight-title" style="margin-top:0.25rem;">
+            Yazarlar Masası
+          </h2>
+          <p style="margin:0.25rem 0 0 0; font-family:var(--font-mono); font-size:0.85rem; color:var(--text-muted);">
+            Burası sadece yoklama listesi.
+          </p>
+        </div>
+      </div>
+
+      <div class="author-spotlight-grid">
+        <?php foreach ( $authors as $author ) : ?>
+        <a href="<?= SITE_URL; ?>/yazar/<?= $author['slug']; ?>" class="author-pill-card" style="text-decoration:none; color:inherit;">
+          <div class="author-pill-avatar">
+            <?= Helpers::author_avatar( $author, 52 ); ?>
+          </div>
+          <div class="author-pill-info">
+            <span class="author-pill-name"><?= htmlspecialchars( $author['name'] ); ?></span>
+            <span class="author-pill-role"><?= htmlspecialchars( ! empty($author['title']) ? $author['title'] : 'Yazar & Katkıda Bulunan' ); ?></span>
+            <span class="author-pill-count">✦ <?= (int) $author['post_count']; ?> Eser</span>
+          </div>
+        </a>
+        <?php endforeach; ?>
+      </div>
+    </section>
+
+    <hr class="newspaper-divider" />
+
+    <!-- 6. ASİMETRİK ESER & YAZI AKIŞI -->
+    <section class="asymmetric-feed-section" id="eserler">
+      <div class="section-headline">
+        <h2 class="section-headline-title">
+          <span>Son Eserler & Yazılar</span>
+          <span class="tape-badge rot-p1" style="font-size:0.75rem;">YENİ METİNLER</span>
+        </h2>
+      </div>
+
+      <div class="asymmetric-feed-grid">
+        <?php foreach ( $feed_posts as $post ) : ?>
         <article class="brutal-card post-card rot-hover-straight">
           <div class="post-card-thumb">
-            <span class="tape-badge post-card-tag rot-n1"><?= htmlspecialchars( $post['category'], ENT_QUOTES, 'UTF-8' ); ?></span>
+            <span class="tape-badge post-card-tag rot-n1"><?= htmlspecialchars( $post['category'] ?? 'YAZI' ); ?></span>
             <a href="<?= SITE_URL; ?>/eser/<?= $post['slug']; ?>">
-              <?php if ( ! empty( $post['featured_image'] ) ) : ?>
-                <img src="<?= $post['featured_image']; ?>" alt="<?= htmlspecialchars( $post['title'], ENT_QUOTES, 'UTF-8' ); ?>" loading="lazy" />
-              <?php else : ?>
-                <div style="width:100%; height:100%; background:#292524; display:flex; align-items:center; justify-content:center; color:#f6f3eb; padding:1.5rem; text-align:center;">
-                  <?= htmlspecialchars( $post['title'], ENT_QUOTES, 'UTF-8' ); ?>
-                </div>
-              <?php endif; ?>
+              <img src="<?= ! empty( $post['featured_image'] ) ? htmlspecialchars( $post['featured_image'] ) : 'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=600&q=80'; ?>" alt="<?= htmlspecialchars( $post['title'] ); ?>" loading="lazy" />
             </a>
           </div>
-
           <div class="post-card-meta">
             <time><?= Helpers::format_date( $post['published_at'] ); ?></time>
-            <span>✦ <?= $post['reading_time']; ?> dk okuma</span>
+            <span>✦ <?= (int) ( $post['reading_time'] ?? 5 ); ?> dk okuma</span>
           </div>
-
           <h3 class="post-card-title">
-            <a href="<?= SITE_URL; ?>/eser/<?= $post['slug']; ?>">
-              <?= htmlspecialchars( $post['title'], ENT_QUOTES, 'UTF-8' ); ?>
-            </a>
+            <a href="<?= SITE_URL; ?>/eser/<?= $post['slug']; ?>"><?= htmlspecialchars( $post['title'] ); ?></a>
           </h3>
-
           <div class="post-card-excerpt">
-            <p><?= htmlspecialchars( $post['excerpt'], ENT_QUOTES, 'UTF-8' ); ?></p>
+            <p><?= htmlspecialchars( $post['excerpt'] ); ?></p>
           </div>
-
           <div class="post-card-author">
             <a href="<?= SITE_URL; ?>/yazar/<?= $post['author_slug']; ?>" class="post-card-author-img">
-              <?= Helpers::author_avatar( [ 'photo' => $post['author_photo'], 'name' => $post['author_name'] ], 28 ); ?>
+              <?= Helpers::author_avatar( [ 'photo' => $post['author_photo'], 'name' => $post['author_name'] ], 36 ); ?>
             </a>
             <div>
-              <a href="<?= SITE_URL; ?>/yazar/<?= $post['author_slug']; ?>" class="post-card-author-name">
-                <?= htmlspecialchars( $post['author_name'], ENT_QUOTES, 'UTF-8' ); ?>
-              </a>
+              <span class="post-card-author-name">
+                <a href="<?= SITE_URL; ?>/yazar/<?= $post['author_slug']; ?>" style="text-decoration:none; color:inherit;">
+                  <?= htmlspecialchars( $post['author_name'] ); ?>
+                </a>
+              </span>
             </div>
           </div>
         </article>
-      <?php endforeach; ?>
-    </div>
+        <?php endforeach; ?>
+      </div>
 
-    <!-- 100-200+ Eser İçin Temaya Uygun Sayfalama -->
-    <?php if ( $total_pages > 1 ) : ?>
+      <!-- Sayfalama -->
+      <?php if ( $total_pages > 1 ) : ?>
       <div class="pratfall-pagination">
         <?php if ( $page > 1 ) : ?>
           <a class="prev page-numbers" href="<?= SITE_URL; ?>/?paged=<?= $page - 1; ?>#eserler">← Önceki</a>
@@ -360,10 +355,10 @@ require PATH_VIEWS . '/layout/header.php';
           <a class="next page-numbers" href="<?= SITE_URL; ?>/?paged=<?= $page + 1; ?>#eserler">Sonraki →</a>
         <?php endif; ?>
       </div>
-    <?php endif; ?>
+      <?php endif; ?>
 
-  </section>
+    </section>
 
-</div><!-- .pratfall-container -->
+  </div><!-- .pratfall-container -->
 
 <?php require PATH_VIEWS . '/layout/footer.php'; ?>
