@@ -1110,7 +1110,7 @@ require PATH_ADMIN . '/layout/header.php';
     ctx.font = 'bold 13px "JetBrains Mono", Consolas, monospace';
     ctx.fillStyle = mutedColor;
     ctx.textAlign = 'right';
-    ctx.fillText('PRATFALL.COM.TR · KUSURLU KALMA ÇABASI', w - 75, h - 60);
+    ctx.fillText('WWW.PRATFALL.COM.TR · KUSURLU KALMA ÇABASI', w - 75, h - 60);
 
     // Ortada Eser Başlığı
     const maxTitleWidth = w - 240;

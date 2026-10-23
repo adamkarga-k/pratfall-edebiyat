@@ -1385,22 +1385,27 @@ function drawQuoteCard() {
   // 3. Üst Logo & Slogan
   ctx.textAlign = 'center';
   ctx.fillStyle = accentColor;
-  ctx.font = (isTwitter ? 'bold 22px' : 'bold 26px') + ' "Courier New", monospace';
-  const headerY1 = margin + (isTwitter ? 45 : 60);
-  ctx.fillText('✦ PRATFALL · EDEBİYAT PLATFORMU ✦', w / 2, headerY1);
+  ctx.font = (isTwitter ? 'bold 24px' : 'bold 30px') + ' "Courier New", monospace';
+  const headerY1 = margin + (isTwitter ? 40 : 54);
+  ctx.fillText('✦ PRATFALL ✦', w / 2, headerY1);
+
+  ctx.fillStyle = textColor;
+  ctx.font = (isTwitter ? '600 15px' : '600 19px') + ' "Courier New", monospace';
+  const headerY2 = headerY1 + (isTwitter ? 26 : 34);
+  ctx.fillText('Edebiyat, Fikir, Kültür, Sanat', w / 2, headerY2);
 
   ctx.fillStyle = mutedColor;
-  ctx.font = (isTwitter ? '16px' : '20px') + ' "Courier New", monospace';
-  const headerY2 = headerY1 + (isTwitter ? 26 : 35);
-  ctx.fillText('KUSURLU KALMA ÇABASI', w / 2, headerY2);
+  ctx.font = (isTwitter ? 'italic 15px' : 'italic 19px') + ' Georgia, serif';
+  const headerY3 = headerY2 + (isTwitter ? 24 : 32);
+  ctx.fillText('Kusurlu Kalma Çabası', w / 2, headerY3);
 
   // Üst ayırıcı çizgi
-  const headerLineY = headerY2 + (isTwitter ? 20 : 28);
+  const headerLineY = headerY3 + (isTwitter ? 18 : 25);
   ctx.strokeStyle = frameColor;
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(w / 2 - (isTwitter ? 90 : 120), headerLineY);
-  ctx.lineTo(w / 2 + (isTwitter ? 90 : 120), headerLineY);
+  ctx.moveTo(w / 2 - (isTwitter ? 100 : 130), headerLineY);
+  ctx.lineTo(w / 2 + (isTwitter ? 100 : 130), headerLineY);
   ctx.stroke();
 
   // 4. Alt Bölüm (Yazar, Eser, Domain) Konumları
@@ -1500,7 +1505,7 @@ function drawQuoteCard() {
   // En alt domain
   ctx.font = (isTwitter ? '16px' : '20px') + ' "Courier New", monospace';
   ctx.fillStyle = mutedColor;
-  ctx.fillText('pratfall.com.tr', w / 2, h - margin - (isTwitter ? 16 : 26));
+  ctx.fillText('www.pratfall.com.tr', w / 2, h - margin - (isTwitter ? 16 : 26));
 }
 
 function downloadQuoteCard() {
@@ -1757,7 +1762,7 @@ function drawCoverImage() {
   // Slogan & Domain (Merkezde)
   ctx.font = '15px "Courier New", monospace';
   ctx.fillStyle = mutedColor;
-  ctx.fillText('PRATFALL.COM.TR · KUSURLU KALMA ÇABASI', w / 2, footDivY + 58);
+  ctx.fillText('WWW.PRATFALL.COM.TR · KUSURLU KALMA ÇABASI', w / 2, footDivY + 58);
 
   // 7. Orta Başlık Alanı (Dinamik Font ve Satır Sarma)
   const rawTitle = document.getElementById('coverGenTitle').value.trim() || 'Kusurlu Kalma Çabası';
