@@ -17,6 +17,51 @@ $action = $_GET['action'] ?? 'list';
 $msg = '';
 $err = '';
 
+// 0. Hızlı AJAX Yazar Ekleme (Yazı Ekleme Ekranından Doğrudan Çağrılır)
+if ( $action === 'ajax_create' && $_SERVER['REQUEST_METHOD'] === 'POST' ) {
+    header( 'Content-Type: application/json; charset=UTF-8' );
+    if ( ! Auth::verify_csrf( $_POST['csrf_token'] ?? '' ) ) {
+        echo json_encode( [ 'success' => false, 'message' => 'Güvenlik doğrulaması başarısız oldu.' ] );
+        exit;
+    }
+    $name  = trim( (string) ( $_POST['name'] ?? '' ) );
+    $title = trim( (string) ( $_POST['title'] ?? '' ) );
+
+    if ( empty( $name ) ) {
+        echo json_encode( [ 'success' => false, 'message' => 'Yazar adı boş bırakılamaz.' ] );
+        exit;
+    }
+
+    $slug = Database::slugify( $name );
+    $check = $db->prepare( "SELECT id FROM authors WHERE slug = ?" );
+    $check->execute( [ $slug ] );
+    if ( $check->fetch() ) {
+        $slug .= '-' . time();
+    }
+
+    try {
+        $stmt = $db->prepare( "
+            INSERT INTO authors (name, slug, title, quote, bio, photo, twitter, instagram, website)
+            VALUES (?, ?, ?, '', '', '', '', '', '')
+        " );
+        $stmt->execute( [ $name, $slug, $title ] );
+        $new_id = (int) $db->lastInsertId();
+
+        echo json_encode( [
+            'success' => true,
+            'id'      => $new_id,
+            'name'    => $name,
+            'title'   => $title,
+            'slug'    => $slug,
+            'message' => 'Yazar başarıyla oluşturuldu.'
+        ] );
+        exit;
+    } catch ( Throwable $e ) {
+        echo json_encode( [ 'success' => false, 'message' => 'Veritabanı hatası: ' . $e->getMessage() ] );
+        exit;
+    }
+}
+
 // 1. Silme
 if ( $action === 'delete' && isset( $_GET['id'] ) ) {
     $id = (int) $_GET['id'];

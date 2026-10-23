@@ -20,6 +20,11 @@ $copyright_text   = str_ireplace( 'mecmuaya', 'platforma', Database::get_setting
 <footer class="pratfall-footer" id="manifesto">
   <div class="pratfall-container">
     
+    <!-- Tırtıklı Perfore Ayraç: Manifesto -->
+    <div class="perforated-divider" style="margin-bottom: 2.5rem;">
+      <span class="perforated-badge">✂ · EDİTORYAL MANİFESTO · ✦</span>
+    </div>
+
     <!-- PRATFALL ETKİSİ VE MANİFESTO PANELİ ("PRATFALL NE DEMEK?") -->
     <section class="manifesto-box brutal-card rot-n05" style="margin-bottom:3.5rem; padding:2.5rem; background:var(--bg-card); border-left:6px solid var(--accent-primary);">
       <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; flex-wrap:wrap; gap:0.75rem;">

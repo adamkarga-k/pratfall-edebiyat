@@ -132,6 +132,22 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_FILES['docx_files'] ) ) {
                             break;
                         }
                     }
+
+                    // Eşleşen yazar bulunamadıysa veritabanına otomatik yeni yazar olarak kaydet
+                    if ( $author_id === 0 && mb_strlen( $parsed['author_name'], 'UTF-8' ) >= 3 ) {
+                        try {
+                            $new_slug = Database::slugify( $parsed['author_name'] );
+                            $check_slug = $db->prepare( "SELECT id FROM authors WHERE slug = ?" );
+                            $check_slug->execute( [ $new_slug ] );
+                            if ( $check_slug->fetch() ) {
+                                $new_slug .= '-' . time();
+                            }
+                            $ins_a = $db->prepare( "INSERT INTO authors (name, slug, title) VALUES (?, ?, 'Yazar')" );
+                            $ins_a->execute( [ $parsed['author_name'], $new_slug ] );
+                            $author_id = (int) $db->lastInsertId();
+                            $authors[] = [ 'id' => $author_id, 'name' => $parsed['author_name'] ];
+                        } catch ( Throwable $e ) {}
+                    }
                 }
                 $parsed['author_id'] = $author_id;
                 $parsed['status']    = $default_status;

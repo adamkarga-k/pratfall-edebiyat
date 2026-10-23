@@ -76,4 +76,25 @@ class Helpers {
         $word_count = count( preg_split( '/\s+/u', strip_tags( $content ), -1, PREG_SPLIT_NO_EMPTY ) );
         return max( 1, (int) ceil( $word_count / 180 ) );
     }
+
+    /**
+     * Edebi Okuma Süresi & Ritmi (Şiir, Kahve, Sessizlik Eşleşmesi)
+     */
+    public static function literary_reading_rhythm( int $minutes, string $category = '' ): string {
+        $cat = mb_strtolower( trim( $category ), 'UTF-8' );
+        if ( strpos( $cat, 'şiir' ) !== false || strpos( $cat, 'dize' ) !== false ) {
+            return "{$minutes} DAKİKALIK DİZE RİTMİ · KISA MOLA";
+        }
+        if ( $minutes <= 2 ) {
+            return "{$minutes} DAKİKA · BİR NEFESLİK METİN";
+        } elseif ( $minutes <= 5 ) {
+            return "{$minutes} DAKİKA OKUMA · 1 FİNCAN KAHVE";
+        } elseif ( $minutes <= 8 ) {
+            return "{$minutes} DAKİKA · BİR DENEME MOLASI";
+        } elseif ( $minutes <= 12 ) {
+            return "{$minutes} DAKİKA DERİN OKUMA · SESSİZLİK ARALIĞI";
+        } else {
+            return "{$minutes} DAKİKA GENİŞ OKUMA · MATBAA METNİ";
+        }
+    }
 }

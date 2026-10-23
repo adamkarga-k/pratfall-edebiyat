@@ -201,7 +201,7 @@ require PATH_VIEWS . '/layout/header.php';
               <div class="lead-meta">
                 <span class="stamp-tag"><?= htmlspecialchars( $lead_post['category'] ?? 'DENEME' ); ?></span>
                 <time><?= Helpers::format_date( $lead_post['published_at'] ); ?></time>
-                <span>✦ <?= (int) ( $lead_post['reading_time'] ?? 5 ); ?> dk derin okuma</span>
+                <span>✦ <?= Helpers::literary_reading_rhythm( (int) ( $lead_post['reading_time'] ?? 5 ), $lead_post['category'] ?? '' ); ?></span>
               </div>
               <h2 class="lead-title">
                 <a href="<?= SITE_URL; ?>/eser/<?= $lead_post['slug']; ?>">
@@ -267,7 +267,7 @@ require PATH_VIEWS . '/layout/header.php';
                 </a>
               </h4>
               <div style="font-family:var(--font-mono); font-size:0.72rem; color:var(--text-muted);">
-                <?= htmlspecialchars( $secondary_post['author_name'] ); ?> · <?= (int) $secondary_post['reading_time']; ?> dk
+                <?= htmlspecialchars( $secondary_post['author_name'] ); ?> · <?= Helpers::literary_reading_rhythm( (int) $secondary_post['reading_time'], $secondary_post['category'] ?? '' ); ?>
               </div>
             </div>
           </div>
@@ -287,6 +287,11 @@ require PATH_VIEWS . '/layout/header.php';
       </div>
     </section>
     <?php endif; ?>
+
+    <!-- Tırtıklı Perfore Ayraç: Yazarlar Masası -->
+    <div class="perforated-divider">
+      <span class="perforated-badge">✂ · KİMLER YAZMIŞ? · YOKLAMA LİSTESİ · ✦</span>
+    </div>
 
     <!-- 5. YAZARLAR MASASI (YOKLAMA LİSTESİ - KİMLER YAZMIŞ?) -->
     <section class="author-spotlight-section" id="yazarlar">
@@ -320,7 +325,10 @@ require PATH_VIEWS . '/layout/header.php';
       </div>
     </section>
 
-    <hr class="newspaper-divider" />
+    <!-- Tırtıklı Perfore Ayraç: Eserler Akışı -->
+    <div class="perforated-divider">
+      <span class="perforated-badge">✂ · YENİ METİNLER & ESERLER · ✦</span>
+    </div>
 
     <!-- 6. ASİMETRİK ESER & YAZI AKIŞI -->
     <section class="asymmetric-feed-section" id="eserler">
@@ -342,7 +350,7 @@ require PATH_VIEWS . '/layout/header.php';
           </div>
           <div class="post-card-meta">
             <time><?= Helpers::format_date( $post['published_at'] ); ?></time>
-            <span>✦ <?= (int) ( $post['reading_time'] ?? 5 ); ?> dk okuma</span>
+            <span>✦ <?= Helpers::literary_reading_rhythm( (int) ( $post['reading_time'] ?? 5 ), $post['category'] ?? '' ); ?></span>
           </div>
           <h3 class="post-card-title">
             <a href="<?= SITE_URL; ?>/eser/<?= $post['slug']; ?>"><?= htmlspecialchars( $post['title'] ); ?></a>
@@ -395,7 +403,12 @@ require PATH_VIEWS . '/layout/header.php';
 
   <!-- 7. PRATFALL KİTAPLIĞI YATAY VİTRİN ŞERİDİ (Son Eserlerin Altında) -->
   <?php if ( ! empty( $books ) ) : ?>
-  <section class="pratfall-dergiler-section" id="kitaplik-vitrin" aria-label="Pratfall Kitaplığı Yatay Vitrini" style="margin-top:2rem; margin-bottom:3rem; background:var(--bg-card); border-top:2px solid var(--border-color); border-bottom:2px solid var(--border-color); padding:2.5rem 0;">
+  <div class="pratfall-container">
+    <div class="perforated-divider" style="margin: 2.5rem 0 1rem 0;">
+      <span class="perforated-badge">✂ · YAYINEVİMİZDEN ÇIKAN KİTAPLAR · ✦</span>
+    </div>
+  </div>
+  <section class="pratfall-dergiler-section" id="kitaplik-vitrin" aria-label="Pratfall Kitaplığı Yatay Vitrini" style="margin-top:1rem; margin-bottom:3rem; background:var(--bg-card); border-top:2px solid var(--border-color); border-bottom:2px solid var(--border-color); padding:2.5rem 0;">
     <div class="pratfall-container">
       <div class="pratfall-dergiler-header">
         <div class="dergiler-header-left">

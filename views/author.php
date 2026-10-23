@@ -117,8 +117,13 @@ require PATH_VIEWS . '/layout/header.php';
 
   </header>
 
+  <!-- Tırtıklı Perfore Ayraç -->
+  <div class="perforated-divider" style="margin-top: 3.5rem; margin-bottom: 2rem;">
+    <span class="perforated-badge">✂ · YAZARIN MATBAA ÇIKTILARI · ✦</span>
+  </div>
+
   <!-- 2. BÖLÜM BAŞLIĞI -->
-  <div class="section-headline" style="margin-top:3rem; margin-bottom:2rem;">
+  <div class="section-headline" style="margin-bottom:2rem;">
     <h2 class="section-headline-title">
       <span><?= htmlspecialchars( $author['name'], ENT_QUOTES, 'UTF-8' ); ?> Tarafından Kaleme Alınan Eserler</span>
       <span class="tape-badge rot-p1" style="font-size:0.75rem;"><?= count( $posts ); ?> ESER</span>
@@ -145,7 +150,7 @@ require PATH_VIEWS . '/layout/header.php';
 
           <div class="post-card-meta">
             <time><?= Helpers::format_date( $post['published_at'] ); ?></time>
-            <span>✦ <?= $post['reading_time']; ?> dk okuma</span>
+            <span>✦ <?= Helpers::literary_reading_rhythm( (int) $post['reading_time'], $post['category'] ); ?></span>
           </div>
 
           <h3 class="post-card-title">

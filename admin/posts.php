@@ -357,8 +357,14 @@ require PATH_ADMIN . '/layout/header.php';
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="author_id">Yazar Seçin</label>
-              <select name="author_id" id="author_id" class="form-control">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
+                <label class="form-label" for="author_id" style="margin:0;">Yazar Seçin</label>
+                <button type="button" onclick="toggleQuickAuthorBox()" class="btn btn-sm" style="padding:0.15rem 0.5rem; font-size:0.72rem; color:var(--adm-primary); background:rgba(0,0,0,0.03); border:1px dashed var(--adm-primary); cursor:pointer;">
+                  + Yeni Yazar Ekle
+                </button>
+              </div>
+
+              <select name="author_id" id="author_id" class="form-control" onchange="updateAuthorEditLink()">
                 <option value="0">✦ Ortak Platform Metni</option>
                 <?php foreach ( $authors as $a ) : ?>
                   <option value="<?= $a['id']; ?>" <?= $post['author_id'] == $a['id'] ? 'selected' : ''; ?>>
@@ -366,6 +372,44 @@ require PATH_ADMIN . '/layout/header.php';
                   </option>
                 <?php endforeach; ?>
               </select>
+
+              <!-- Hızlı Yazar Ekleme Açılır Kutusu (Inline Quick Add) -->
+              <div id="quickAuthorBox" style="display:none; margin-top:0.75rem; padding:0.85rem; background:#f8fafc; border:1.5px solid var(--adm-border); border-radius:6px;">
+                <div style="font-size:0.8rem; font-weight:700; margin-bottom:0.5rem; display:flex; justify-content:space-between; align-items:center;">
+                  <span>👤 Hızlı Yeni Yazar Tanımla</span>
+                  <button type="button" onclick="toggleQuickAuthorBox()" style="background:none; border:none; cursor:pointer; color:var(--adm-muted); font-size:1.1rem; line-height:1;">&times;</button>
+                </div>
+                
+                <div style="margin-bottom:0.5rem;">
+                  <input type="text" id="quickAuthorName" placeholder="Yazar Adı Soyadı (Örn: Cemal Süreya)" class="form-control" style="font-size:0.82rem; padding:0.4rem 0.6rem;" />
+                </div>
+                <div style="margin-bottom:0.6rem;">
+                  <input type="text" id="quickAuthorTitle" placeholder="Ünvan / Alan (Örn: Şair & Deneme)" class="form-control" style="font-size:0.82rem; padding:0.4rem 0.6rem;" />
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span id="quickAuthorMsg" style="font-size:0.72rem; color:var(--adm-muted);"></span>
+                  <button type="button" onclick="saveQuickAuthor()" id="quickAuthorBtn" class="btn btn-primary btn-sm" style="padding:0.3rem 0.75rem; font-size:0.75rem;">
+                    Kaydet & Seç ↗
+                  </button>
+                </div>
+                <div style="font-size:0.7rem; color:var(--adm-muted); margin-top:0.4rem; line-height:1.3;">
+                  ✦ Eklediğiniz yazar anında seçilecek; fotoğraf ve biyografisini dilediğiniz zaman <strong>Yazarlar</strong> sayfasından detaylandırabilirsiniz.
+                </div>
+              </div>
+
+              <!-- Seçili Yazar Düzenleme Linki -->
+              <div id="authorEditLinkContainer" style="margin-top:0.35rem; font-size:0.75rem;">
+                <?php if ( ! empty( $post['author_id'] ) ) : ?>
+                  <a href="<?= SITE_URL; ?>/admin/authors.php?action=edit&id=<?= $post['author_id']; ?>" target="_blank" id="authorEditLink" style="color:var(--adm-muted); text-decoration:none;">
+                    ✎ Seçili yazarın detaylarını Yazarlar sayfasında düzenle ↗
+                  </a>
+                <?php else : ?>
+                  <a href="#" target="_blank" id="authorEditLink" style="display:none; color:var(--adm-muted); text-decoration:none;">
+                    ✎ Seçili yazarın detaylarını Yazarlar sayfasında düzenle ↗
+                  </a>
+                <?php endif; ?>
+              </div>
             </div>
 
             <div class="form-group">
@@ -611,6 +655,98 @@ require PATH_ADMIN . '/layout/header.php';
         syncContent();
       }
     });
+
+    // Hızlı Yazar Ekleme Fonksiyonları
+    function toggleQuickAuthorBox() {
+      var box = document.getElementById('quickAuthorBox');
+      if (box.style.display === 'none' || box.style.display === '') {
+        box.style.display = 'block';
+        document.getElementById('quickAuthorName').focus();
+      } else {
+        box.style.display = 'none';
+      }
+    }
+
+    function updateAuthorEditLink() {
+      var sel = document.getElementById('author_id');
+      var link = document.getElementById('authorEditLink');
+      if (!sel || !link) return;
+      var val = sel.value;
+      if (val && val !== '0') {
+        link.href = '<?= SITE_URL; ?>/admin/authors.php?action=edit&id=' + val;
+        link.style.display = 'inline-block';
+      } else {
+        link.style.display = 'none';
+      }
+    }
+
+    function saveQuickAuthor() {
+      var nameInput = document.getElementById('quickAuthorName');
+      var titleInput = document.getElementById('quickAuthorTitle');
+      var btn = document.getElementById('quickAuthorBtn');
+      var msg = document.getElementById('quickAuthorMsg');
+
+      var name = nameInput.value.trim();
+      var title = titleInput.value.trim();
+
+      if (!name) {
+        alert('Lütfen yazar adı ve soyadı giriniz.');
+        nameInput.focus();
+        return;
+      }
+
+      var origBtnText = btn.innerHTML;
+      btn.innerHTML = 'Ekleniyor...';
+      btn.disabled = true;
+      msg.innerText = '';
+
+      var formData = new FormData();
+      formData.append('csrf_token', '<?= Auth::csrf_token(); ?>');
+      formData.append('name', name);
+      formData.append('title', title);
+
+      fetch('<?= SITE_URL; ?>/admin/authors.php?action=ajax_create', {
+        method: 'POST',
+        body: formData
+      })
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        if (data.success) {
+          // 1. Yeni yazarı dropdown listesine ekle ve seç
+          var sel = document.getElementById('author_id');
+          var opt = document.createElement('option');
+          opt.value = data.id;
+          opt.textContent = data.name + (data.title ? ' (' + data.title + ')' : '');
+          opt.selected = true;
+          sel.appendChild(opt);
+
+          // 2. Düzenleme bağlantısını anında aktif et
+          updateAuthorEditLink();
+
+          // 3. Başarı bildirimi ver ve kutuyu kapat
+          msg.style.color = '#10b981';
+          msg.innerText = '✓ Yazar eklendi & seçildi!';
+          nameInput.value = '';
+          titleInput.value = '';
+
+          setTimeout(function() {
+            toggleQuickAuthorBox();
+            msg.innerText = '';
+          }, 900);
+        } else {
+          msg.style.color = '#ef4444';
+          msg.innerText = data.message || 'Hata oluştu.';
+        }
+      })
+      .catch(function(err) {
+        msg.style.color = '#ef4444';
+        msg.innerText = 'Bağlantı hatası oluştu.';
+      })
+      .finally(function() {
+        btn.innerHTML = origBtnText;
+        btn.disabled = false;
+      });
+    }
   </script>
 
 <?php else : ?>

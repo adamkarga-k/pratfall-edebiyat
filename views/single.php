@@ -49,6 +49,11 @@ $seo_data = [
 require PATH_VIEWS . '/layout/header.php';
 ?>
 
+<!-- İnce Mürekkep Okuma İlerleme Çubuğu (Fixed Reading Progress Bar) -->
+<div id="readingProgressBar" style="position:fixed; top:0; left:0; width:0%; height:3.5px; background:linear-gradient(90deg, var(--accent-primary, #8b1e0f), #d94e34); z-index:99999; transition:width 0.1s ease-out; box-shadow:0 1px 3px rgba(139,30,15,0.4);">
+  <div style="position:absolute; right:0; top:-2px; width:7px; height:7px; background:#141416; border-radius:50%; box-shadow:0 0 5px rgba(0,0,0,0.5);"></div>
+</div>
+
 <article class="single-article">
   <div class="pratfall-container-narrow">
     
@@ -56,7 +61,7 @@ require PATH_VIEWS . '/layout/header.php';
     <header class="single-article-header">
       <div class="single-article-badge-row">
         <span class="stamp-tag"><?= htmlspecialchars( $post['category'], ENT_QUOTES, 'UTF-8' ); ?></span>
-        <span class="tape-badge rot-n1">✦ <?= $post['reading_time']; ?> DAKİKA OKUMA</span>
+        <span class="tape-badge rot-n1">✦ <?= Helpers::literary_reading_rhythm( $post['reading_time'], $post['category'] ); ?></span>
       </div>
 
       <h1 class="single-article-title">
@@ -115,8 +120,13 @@ require PATH_VIEWS . '/layout/header.php';
       </div>
     <?php endif; ?>
 
+    <!-- Tırtıklı Perfore Ayraç -->
+    <div class="perforated-divider" style="margin: 3rem 0;">
+      <span class="perforated-badge">✂ · ESERİN SONU · ✦</span>
+    </div>
+
     <!-- Yazı Sonu Yazar Masası Kartı -->
-    <div class="article-author-box rot-hover-straight" style="margin-top:4rem;">
+    <div class="article-author-box rot-hover-straight">
       <div class="article-author-box-avatar">
         <?= Helpers::author_avatar( [ 'photo' => $post['author_photo'], 'name' => $post['author_name'] ], 90 ); ?>
       </div>
@@ -147,5 +157,24 @@ require PATH_VIEWS . '/layout/header.php';
 
   </div><!-- .pratfall-container-narrow -->
 </article>
+
+<script>
+(function() {
+  var bar = document.getElementById('readingProgressBar');
+  if (!bar) return;
+
+  function updateProgress() {
+    var winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+    var height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    if (height > 0) {
+      var scrolled = (winScroll / height) * 100;
+      bar.style.width = scrolled + '%';
+    }
+  }
+
+  window.addEventListener('scroll', updateProgress, { passive: true });
+  window.addEventListener('resize', updateProgress, { passive: true });
+})();
+</script>
 
 <?php require PATH_VIEWS . '/layout/footer.php'; ?>

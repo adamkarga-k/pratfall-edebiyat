@@ -230,3 +230,61 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 0.75em;
   margin-left: 2px;
 }
+
+/* ==========================================================================
+   CANLI BAŞLANGIÇ HARFİ (DROP CAPS) - KLASİK EDİTORYAL DİZGİ
+   ========================================================================== */
+.single-content > p:first-of-type::first-letter {
+  float: left;
+  font-family: var(--font-serif, 'Newsreader', Georgia, serif);
+  font-size: 4.2rem;
+  line-height: 0.78;
+  padding: 0.15rem 0.35rem 0 0;
+  margin-right: 0.65rem;
+  margin-top: 0.15rem;
+  color: var(--accent-primary, #8b1e0f);
+  font-weight: 700;
+  text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.08);
+}
+
+/* ==========================================================================
+   PERFORE / TIRTIKLI BİLET ÇİZGİLERİ (PERFORATED DIVIDERS)
+   ========================================================================== */
+.perforated-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 100%;
+  margin: 3.5rem 0;
+  border: none;
+  height: auto;
+  background: transparent;
+  overflow: visible;
+}
+
+.perforated-divider::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 0;
+  border-top: 2px dashed var(--border-color, #141416);
+  opacity: 0.45;
+}
+
+.perforated-badge {
+  position: relative;
+  background: var(--bg-card, #fdfcf9);
+  padding: 0.3rem 0.95rem;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--text-muted, #57534e);
+  border: 1.5px solid var(--border-color, #141416);
+  box-shadow: 2px 2px 0px var(--border-color, #141416);
+  text-transform: uppercase;
+  z-index: 1;
+}
