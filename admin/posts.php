@@ -26,6 +26,29 @@ $authors = $db->query( "SELECT id, name FROM authors ORDER BY name ASC" )->fetch
 // Kategori Listesi
 $all_categories = $db->query( "SELECT * FROM categories ORDER BY order_num ASC, name ASC" )->fetchAll();
 
+// 0. AJAX Otomatik Üretilen Kapak Görselini Kaydet
+if ( $action === 'ajax_save_cover' && $_SERVER['REQUEST_METHOD'] === 'POST' ) {
+    header( 'Content-Type: application/json; charset=UTF-8' );
+    if ( ! Auth::verify_csrf( $_POST['csrf_token'] ?? '' ) ) {
+        echo json_encode( [ 'success' => false, 'message' => 'Güvenlik doğrulaması (CSRF) başarısız.' ] );
+        exit;
+    }
+    $imageData = (string) ( $_POST['image_data'] ?? '' );
+    if ( empty( $imageData ) ) {
+        echo json_encode( [ 'success' => false, 'message' => 'Görsel verisi boş geldi.' ] );
+        exit;
+    }
+
+    $opt_file = ImageOptimizer::optimize_base64_image( $imageData, PATH_UPLOADS . '/covers', 'kapak' );
+    if ( $opt_file ) {
+        $url = SITE_URL . '/uploads/covers/' . $opt_file;
+        echo json_encode( [ 'success' => true, 'url' => $url, 'filename' => $opt_file ] );
+    } else {
+        echo json_encode( [ 'success' => false, 'message' => 'Görsel sunucuya kaydedilemedi.' ] );
+    }
+    exit;
+}
+
 // 1. Silme İşlemi
 if ( $action === 'delete' && isset( $_GET['id'] ) ) {
     $id = (int) $_GET['id'];
@@ -476,20 +499,30 @@ require PATH_ADMIN . '/layout/header.php';
           </div>
           <div class="card-body">
             
-            <?php if ( ! empty( $post['featured_image'] ) ) : ?>
-              <div style="margin-bottom:0.75rem; border-radius:var(--adm-radius-sm); overflow:hidden; border:1px solid var(--adm-border);">
-                <img src="<?= $post['featured_image']; ?>" alt="Kapak" style="width:100%; height:130px; object-fit:cover; display:block;" />
-              </div>
-            <?php endif; ?>
+            <div id="featured_image_preview_box" style="<?= empty( $post['featured_image'] ) ? 'display:none;' : ''; ?> margin-bottom:0.75rem; border-radius:var(--adm-radius-sm); overflow:hidden; border:1px solid var(--adm-border); position:relative;">
+              <img id="featured_image_preview_img" src="<?= $post['featured_image']; ?>" alt="Kapak" style="width:100%; height:130px; object-fit:cover; display:block;" />
+            </div>
 
+            <!-- 1. YOL: OTOMATİK KAPAK ÜRETİCİ BUTONU (YENİ) -->
+            <div style="margin-bottom:1rem; padding:0.85rem; background:rgba(217, 78, 52, 0.05); border:1.5px dashed var(--adm-primary); border-radius:6px; text-align:center;">
+              <button type="button" onclick="openCoverGeneratorModal()" class="btn btn-primary" style="width:100%; justify-content:center; padding:0.55rem; font-size:0.84rem; font-weight:700;">
+                🎨 Otomatik Kapak Görseli Üret
+              </button>
+              <div style="font-size:0.72rem; color:var(--adm-muted); margin-top:0.35rem; line-height:1.35;">
+                Başlık ve yazar bilgisinden siteye tam uyumlu (16:9) edebi kapak görseli tasarlar.
+              </div>
+            </div>
+
+            <!-- 2. YOL: BİLGİSAYARDAN DOSYA YÜKLEME -->
             <div class="form-group">
               <label class="form-label">Bilgisayardan Yükle (Otomatik Sıkıştırılır)</label>
               <input type="file" name="image_file" accept="image/*" class="form-control" style="padding:0.35rem;" />
             </div>
 
+            <!-- 3. YOL: GÖRSEL URL'Sİ GİRME -->
             <div class="form-group" style="margin-bottom:0.75rem;">
               <label class="form-label">Veya Görsel URL'si</label>
-              <input type="text" name="featured_image" id="featured_image_input" class="form-control" value="<?= htmlspecialchars( $post['featured_image'], ENT_QUOTES, 'UTF-8' ); ?>" placeholder="https://..." style="font-size:0.8rem;" />
+              <input type="text" name="featured_image" id="featured_image_input" class="form-control" value="<?= htmlspecialchars( $post['featured_image'], ENT_QUOTES, 'UTF-8' ); ?>" placeholder="https://..." style="font-size:0.8rem;" oninput="updateCoverPreview(this.value)" />
             </div>
 
             <div>
@@ -948,10 +981,12 @@ require PATH_ADMIN . '/layout/header.php';
       <div style="display:flex; flex-direction:column; gap:1rem;">
         
         <div>
-          <label style="display:block; font-size:0.8rem; font-weight:600; margin-bottom:0.35rem;">Kart Formatı:</label>
-          <div style="display:flex; gap:0.5rem;">
-            <button type="button" class="btn btn-sm" id="fmtStoryBtn" onclick="setCardFormat('story')" style="flex:1; justify-content:center; font-weight:bold; background:#1a1a1a; color:#fff;">Story (9:16)</button>
-            <button type="button" class="btn btn-sm btn-secondary" id="fmtSquareBtn" onclick="setCardFormat('square')" style="flex:1; justify-content:center;">Kare / Post (1:1)</button>
+          <label style="display:block; font-size:0.8rem; font-weight:600; margin-bottom:0.35rem;">Kart Formatı & Oranı:</label>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.45rem;">
+            <button type="button" class="btn btn-sm" id="fmtPortraitBtn" onclick="setCardFormat('portrait')" style="justify-content:center; font-weight:bold; background:#1a1a1a; color:#fff; font-size:0.78rem;">📷 Instagram (4:5)</button>
+            <button type="button" class="btn btn-sm btn-secondary" id="fmtTwitterBtn" onclick="setCardFormat('twitter')" style="justify-content:center; font-size:0.78rem;">🐦 Twitter/X (16:9)</button>
+            <button type="button" class="btn btn-sm btn-secondary" id="fmtStoryBtn" onclick="setCardFormat('story')" style="justify-content:center; font-size:0.78rem;">📱 Hikaye (9:16)</button>
+            <button type="button" class="btn btn-sm btn-secondary" id="fmtSquareBtn" onclick="setCardFormat('square')" style="justify-content:center; font-size:0.78rem;">⏹️ Kare (1:1)</button>
           </div>
         </div>
 
@@ -992,8 +1027,8 @@ require PATH_ADMIN . '/layout/header.php';
 </div>
 
 <script>
-let currentFormat = 'story'; // 'story' veya 'square'
-let currentTheme = 'paper';   // 'paper', 'dark', 'red'
+let currentFormat = 'portrait'; // 'portrait' (4:5), 'twitter' (16:9), 'story' (9:16), 'square' (1:1)
+let currentTheme = 'paper';     // 'paper', 'dark', 'red'
 
 function openStoryModal(data) {
   document.getElementById('cardQuoteText').value = data.excerpt || data.title || '';
@@ -1003,7 +1038,7 @@ function openStoryModal(data) {
   var modal = document.getElementById('storyModal');
   modal.style.display = 'flex';
   
-  setCardFormat('story');
+  setCardFormat('portrait');
 }
 
 function closeStoryModal() {
@@ -1013,23 +1048,48 @@ function closeStoryModal() {
 function setCardFormat(fmt) {
   currentFormat = fmt;
   const canvas = document.getElementById('quoteCanvas');
-  const btnStory = document.getElementById('fmtStoryBtn');
-  const btnSquare = document.getElementById('fmtSquareBtn');
+  const btnPortrait = document.getElementById('fmtPortraitBtn');
+  const btnTwitter  = document.getElementById('fmtTwitterBtn');
+  const btnStory    = document.getElementById('fmtStoryBtn');
+  const btnSquare   = document.getElementById('fmtSquareBtn');
 
-  if (fmt === 'story') {
+  [btnPortrait, btnTwitter, btnStory, btnSquare].forEach(btn => {
+    if (btn) {
+      btn.style.background = '';
+      btn.style.color = '';
+      btn.classList.add('btn-secondary');
+      btn.classList.remove('btn-primary');
+    }
+  });
+
+  if (fmt === 'portrait') {
+    canvas.width = 1080;
+    canvas.height = 1350;
+    if (btnPortrait) {
+      btnPortrait.style.background = '#1a1a1a';
+      btnPortrait.style.color = '#fff';
+    }
+  } else if (fmt === 'twitter') {
+    canvas.width = 1200;
+    canvas.height = 675;
+    if (btnTwitter) {
+      btnTwitter.style.background = '#1a1a1a';
+      btnTwitter.style.color = '#fff';
+    }
+  } else if (fmt === 'story') {
     canvas.width = 1080;
     canvas.height = 1920;
-    btnStory.style.background = '#1a1a1a';
-    btnStory.style.color = '#fff';
-    btnSquare.style.background = '';
-    btnSquare.style.color = '';
-  } else {
+    if (btnStory) {
+      btnStory.style.background = '#1a1a1a';
+      btnStory.style.color = '#fff';
+    }
+  } else if (fmt === 'square') {
     canvas.width = 1080;
     canvas.height = 1080;
-    btnSquare.style.background = '#1a1a1a';
-    btnSquare.style.color = '#fff';
-    btnStory.style.background = '';
-    btnStory.style.color = '';
+    if (btnSquare) {
+      btnSquare.style.background = '#1a1a1a';
+      btnSquare.style.color = '#fff';
+    }
   }
   drawQuoteCard();
 }
@@ -1052,6 +1112,7 @@ function drawQuoteCard() {
   let accentColor = '#8b1e0f';
   let frameColor = '#1a1a1a';
   let mutedColor = '#555555';
+  let watermarkColor = 'rgba(139, 30, 15, 0.05)';
 
   if (currentTheme === 'dark') {
     bgColor = '#141414';
@@ -1059,12 +1120,14 @@ function drawQuoteCard() {
     accentColor = '#d97706';
     frameColor = '#333333';
     mutedColor = '#888888';
+    watermarkColor = 'rgba(255, 255, 255, 0.035)';
   } else if (currentTheme === 'red') {
     bgColor = '#8b1e0f';
     textColor = '#fbf7ee';
     accentColor = '#fbf7ee';
     frameColor = '#fbf7ee';
-    mutedColor = 'rgba(251,247,238,0.7)';
+    mutedColor = 'rgba(251,247,238,0.75)';
+    watermarkColor = 'rgba(255, 255, 255, 0.07)';
   }
 
   // 1. Zemin Doldur
@@ -1072,100 +1135,131 @@ function drawQuoteCard() {
   ctx.fillRect(0, 0, w, h);
 
   // 2. Dış Çerçeve
-  const margin = 48;
+  const isTwitter = currentFormat === 'twitter';
+  const margin = isTwitter ? 36 : 48;
   ctx.strokeStyle = frameColor;
-  ctx.lineWidth = 6;
+  ctx.lineWidth = isTwitter ? 4 : 6;
   ctx.strokeRect(margin, margin, w - margin * 2, h - margin * 2);
 
   // 3. Üst Logo & Slogan
   ctx.textAlign = 'center';
   ctx.fillStyle = accentColor;
-  ctx.font = 'bold 28px "Courier New", monospace';
-  ctx.fillText('✦ PRATFALL · EDEBİYAT PLATFORMU ✦', w / 2, margin + 70);
+  ctx.font = (isTwitter ? 'bold 22px' : 'bold 26px') + ' "Courier New", monospace';
+  const headerY1 = margin + (isTwitter ? 45 : 60);
+  ctx.fillText('✦ PRATFALL · EDEBİYAT PLATFORMU ✦', w / 2, headerY1);
 
   ctx.fillStyle = mutedColor;
-  ctx.font = '22px "Courier New", monospace';
-  ctx.fillText('KUSURLU KALMA ÇABASI', w / 2, margin + 110);
+  ctx.font = (isTwitter ? '16px' : '20px') + ' "Courier New", monospace';
+  const headerY2 = headerY1 + (isTwitter ? 26 : 35);
+  ctx.fillText('KUSURLU KALMA ÇABASI', w / 2, headerY2);
 
-  // Ayırıcı çizgi üst
+  // Üst ayırıcı çizgi
+  const headerLineY = headerY2 + (isTwitter ? 20 : 28);
   ctx.strokeStyle = frameColor;
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(w / 2 - 120, margin + 140);
-  ctx.lineTo(w / 2 + 120, margin + 140);
+  ctx.moveTo(w / 2 - (isTwitter ? 90 : 120), headerLineY);
+  ctx.lineTo(w / 2 + (isTwitter ? 90 : 120), headerLineY);
   ctx.stroke();
 
-  // 4. Dekoratif Alıntı İmi
-  ctx.font = 'bold 120px Georgia, serif';
-  ctx.fillStyle = accentColor;
-  ctx.fillText('“', w / 2, currentFormat === 'story' ? h * 0.28 : h * 0.25);
+  // 4. Alt Bölüm (Yazar, Eser, Domain) Konumları
+  const author = document.getElementById('cardAuthor').value.trim();
+  const title = document.getElementById('cardTitle').value.trim();
+  const footerSeparatorY = h - margin - (isTwitter ? 115 : (currentFormat === 'story' ? 220 : 160));
 
-  // 5. Alıntı Metni
+  // 5. İçerik Alanı & Arka Plan Alıntı Filigranı (Watermark)
+  const contentTop = headerLineY + 20;
+  const contentBottom = footerSeparatorY - 20;
+  const contentCenterY = (contentTop + contentBottom) / 2;
+  const availHeight = contentBottom - contentTop;
+
+  ctx.save();
+  ctx.font = (isTwitter ? 'bold 200px' : 'bold 300px') + ' Georgia, serif';
+  ctx.fillStyle = watermarkColor;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('“', w / 2, contentCenterY);
+  ctx.restore();
+
+  // 6. Alıntı Metni Sarma & Dinamik Boyutlandırma
   const quote = document.getElementById('cardQuoteText').value.trim() || 'Sözcüklerin kusuru, insanın hakiki yarasına denk gelir.';
-  
-  // Metin Boyutu Hesaplama
-  let fontSize = currentFormat === 'story' ? (quote.length > 200 ? 46 : 56) : (quote.length > 200 ? 38 : 46);
+  const maxTextWidth = isTwitter ? w - 220 : w - 240;
+
+  function wrapWords(text, fontSize) {
+    ctx.font = `italic ${fontSize}px Georgia, serif`;
+    const words = text.split(/\s+/);
+    let lines = [];
+    let curLine = '';
+    for (let n = 0; n < words.length; n++) {
+      const test = curLine + words[n] + ' ';
+      if (ctx.measureText(test).width > maxTextWidth && n > 0) {
+        lines.push(curLine.trim());
+        curLine = words[n] + ' ';
+      } else {
+        curLine = test;
+      }
+    }
+    if (curLine.trim()) lines.push(curLine.trim());
+    return lines;
+  }
+
+  let fontSize = isTwitter ? 34 : (currentFormat === 'story' ? 52 : (currentFormat === 'portrait' ? 46 : 42));
+  let lines = wrapWords(quote, fontSize);
+  let lineHeight = fontSize * 1.55;
+  let totalTextHeight = lines.length * lineHeight;
+
+  // Uzun alıntılarda fontu ayrılan alana tam sığacak şekilde dinamik küçült
+  const minFont = isTwitter ? 17 : 22;
+  while ((totalTextHeight + 60 > availHeight) && fontSize > minFont) {
+    fontSize -= 2;
+    lineHeight = fontSize * 1.55;
+    lines = wrapWords(quote, fontSize);
+    totalTextHeight = lines.length * lineHeight;
+  }
+
+  // Metnin dikey başlangıç konumu
+  let startY = contentCenterY - (totalTextHeight / 2) + (fontSize * 0.4);
+
+  // 7. Zarif Alıntı Simgesi (Metnin daima tam üstünde, asla çakışmaz!)
+  const quoteBadgeY = startY - (lineHeight * 0.7);
+  ctx.font = 'bold ' + Math.min(42, Math.max(24, Math.round(fontSize * 0.85))) + 'px Georgia, serif';
+  ctx.fillStyle = accentColor;
+  ctx.textAlign = 'center';
+  ctx.fillText('“', w / 2, quoteBadgeY);
+
+  // 8. Metin Satırlarını Çiz
   ctx.font = `italic ${fontSize}px Georgia, serif`;
   ctx.fillStyle = textColor;
-
-  const maxTextWidth = w - 240;
-  const lineHeight = fontSize * 1.6;
-
-  // Kelime Sarma (Word Wrap)
-  const words = quote.split(/\s+/);
-  let lines = [];
-  let currentLine = '';
-
-  for (let n = 0; n < words.length; n++) {
-    const testLine = currentLine + words[n] + ' ';
-    const metrics = ctx.measureText(testLine);
-    if (metrics.width > maxTextWidth && n > 0) {
-      lines.push(currentLine.trim());
-      currentLine = words[n] + ' ';
-    } else {
-      currentLine = testLine;
-    }
-  }
-  lines.push(currentLine.trim());
-
-  // Metni dikeyde ortala
-  const totalTextHeight = lines.length * lineHeight;
-  let startY = (h / 2) - (totalTextHeight / 2) + 20;
-  if (currentFormat === 'story') {
-    startY = h * 0.38 - (totalTextHeight / 2);
-  }
-
+  ctx.textAlign = 'center';
   for (let k = 0; k < lines.length; k++) {
     ctx.fillText(lines[k], w / 2, startY + (k * lineHeight));
   }
 
-  // 6. Yazar & Eser Bilgisi (Alt Bölüm)
-  const author = document.getElementById('cardAuthor').value.trim();
-  const title = document.getElementById('cardTitle').value.trim();
-  const bottomY = currentFormat === 'story' ? h - margin - 220 : h - margin - 150;
-
-  // Ayırıcı minik çizgi
+  // 9. Alt Bilgi Çizimi
+  // Ayırıcı çizgi alt
+  ctx.strokeStyle = frameColor;
+  ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(w / 2 - 80, bottomY - 60);
-  ctx.lineTo(w / 2 + 80, bottomY - 60);
+  ctx.moveTo(w / 2 - (isTwitter ? 70 : 90), footerSeparatorY);
+  ctx.lineTo(w / 2 + (isTwitter ? 70 : 90), footerSeparatorY);
   ctx.stroke();
 
   if (author) {
-    ctx.font = 'bold 36px "Courier New", monospace';
+    ctx.font = (isTwitter ? 'bold 24px' : 'bold 30px') + ' "Courier New", monospace';
     ctx.fillStyle = accentColor;
-    ctx.fillText('[ ' + author.toUpperCase() + ' ]', w / 2, bottomY);
+    ctx.fillText('[ ' + author.toUpperCase() + ' ]', w / 2, footerSeparatorY + (isTwitter ? 32 : 44));
   }
 
   if (title) {
-    ctx.font = '26px Georgia, serif';
+    ctx.font = (isTwitter ? '18px' : '22px') + ' Georgia, serif';
     ctx.fillStyle = mutedColor;
-    ctx.fillText('« ' + title + ' »', w / 2, bottomY + 45);
+    ctx.fillText('« ' + title + ' »', w / 2, footerSeparatorY + (isTwitter ? 58 : 80));
   }
 
   // En alt domain
-  ctx.font = '22px "Courier New", monospace';
+  ctx.font = (isTwitter ? '16px' : '20px') + ' "Courier New", monospace';
   ctx.fillStyle = mutedColor;
-  ctx.fillText('pratfall.com.tr', w / 2, h - margin - 35);
+  ctx.fillText('pratfall.com.tr', w / 2, h - margin - (isTwitter ? 16 : 26));
 }
 
 function downloadQuoteCard() {
@@ -1176,6 +1270,457 @@ function downloadQuoteCard() {
   link.href = canvas.toDataURL('image/png');
   link.click();
 }
+
+// ==========================================================
+// OTOMATİK ÖNE ÇIKAN KAPAK GÖRSELİ ÜRETİCİSİ (CANVAS MOTORU)
+// ==========================================================
+let currentCoverTheme = 'paper'; // 'paper', 'dark', 'red', 'fanzine'
+let currentCoverFont = 'serif';  // 'serif', 'mono'
+
+function openCoverGeneratorModal() {
+  const titleInput = document.getElementById('title');
+  const authorSelect = document.getElementById('author_id');
+  const categorySelect = document.getElementById('category');
+
+  let postTitle = titleInput ? titleInput.value.trim() : '';
+  let authorName = 'Pratfall Yazarı';
+  if (authorSelect && authorSelect.selectedIndex >= 0) {
+    const selText = authorSelect.options[authorSelect.selectedIndex].text.trim();
+    if (selText && !selText.startsWith('✦')) {
+      authorName = selText;
+    }
+  }
+  let categoryName = categorySelect ? categorySelect.value.trim() : 'Deneme';
+
+  document.getElementById('coverGenTitle').value = postTitle || 'Eserin Başlığı';
+  document.getElementById('coverGenAuthor').value = authorName;
+  document.getElementById('coverGenCategory').value = categoryName || 'Edebiyat';
+  document.getElementById('coverGenBadge').value = 'PRATFALL · EDEBİYAT & FİKİR PLATFORMU';
+  document.getElementById('coverSaveStatus').innerHTML = '';
+
+  document.getElementById('coverGeneratorModal').style.display = 'flex';
+  setCoverTheme('paper');
+  setCoverFont('serif');
+  drawCoverImage();
+}
+
+function closeCoverGeneratorModal() {
+  document.getElementById('coverGeneratorModal').style.display = 'none';
+}
+
+function updateCoverPreview(url) {
+  const box = document.getElementById('featured_image_preview_box');
+  const img = document.getElementById('featured_image_preview_img');
+  if (!box || !img) return;
+  if (url && url.trim().length > 5) {
+    img.src = url.trim();
+    box.style.display = 'block';
+  } else {
+    box.style.display = 'none';
+  }
+}
+
+function setCoverTheme(thm) {
+  currentCoverTheme = thm;
+  const btns = {
+    paper: document.getElementById('coverThmPaperBtn'),
+    dark: document.getElementById('coverThmDarkBtn'),
+    red: document.getElementById('coverThmRedBtn'),
+    fanzine: document.getElementById('coverThmZineBtn')
+  };
+
+  Object.keys(btns).forEach(key => {
+    if (btns[key]) {
+      btns[key].style.boxShadow = '';
+      btns[key].classList.remove('btn-primary');
+      btns[key].classList.add('btn-secondary');
+    }
+  });
+
+  if (btns[thm]) {
+    btns[thm].classList.remove('btn-secondary');
+    btns[thm].classList.add('btn-primary');
+    btns[thm].style.boxShadow = '0 0 0 2px var(--adm-primary)';
+  }
+
+  drawCoverImage();
+}
+
+function setCoverFont(font) {
+  currentCoverFont = font;
+  const btnSerif = document.getElementById('coverFontSerifBtn');
+  const btnMono = document.getElementById('coverFontMonoBtn');
+
+  if (font === 'serif') {
+    btnSerif.style.background = '#1a1a1a';
+    btnSerif.style.color = '#fff';
+    btnMono.style.background = '';
+    btnMono.style.color = '';
+  } else {
+    btnMono.style.background = '#1a1a1a';
+    btnMono.style.color = '#fff';
+    btnSerif.style.background = '';
+    btnSerif.style.color = '';
+  }
+
+  drawCoverImage();
+}
+
+function drawCoverImage() {
+  const canvas = document.getElementById('coverGenCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;  // 1200
+  const h = canvas.height; // 675
+
+  // Tema Renkleri
+  let bgColor = '#f6f3eb';
+  let frameColor = '#141416';
+  let accentColor = '#d94e34';
+  let textColor = '#141416';
+  let mutedColor = '#57534e';
+  let badgeBg = '#fef08a';
+  let badgeText = '#141416';
+
+  if (currentCoverTheme === 'dark') {
+    bgColor = '#111113';
+    frameColor = '#383842';
+    accentColor = '#f59e0b';
+    textColor = '#f3efe6';
+    mutedColor = '#9ca3af';
+    badgeBg = '#1f2937';
+    badgeText = '#f59e0b';
+  } else if (currentCoverTheme === 'red') {
+    bgColor = '#7a170a';
+    frameColor = '#fbf7ee';
+    accentColor = '#fed7aa';
+    textColor = '#fbf7ee';
+    mutedColor = 'rgba(251,247,238,0.75)';
+    badgeBg = 'rgba(0,0,0,0.25)';
+    badgeText = '#fbf7ee';
+  } else if (currentCoverTheme === 'fanzine') {
+    bgColor = '#f0ede6';
+    frameColor = '#1e293b';
+    accentColor = '#0d9488';
+    textColor = '#0f172a';
+    mutedColor = '#64748b';
+    badgeBg = '#ccfbf1';
+    badgeText = '#0f766e';
+  }
+
+  // 1. Zemin Doldur
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(0, 0, w, h);
+
+  // 2. İnce Matbaa Izgara Deseni (Hafif Arka Plan Dokusu)
+  ctx.save();
+  ctx.strokeStyle = (currentCoverTheme === 'dark') ? 'rgba(255,255,255,0.025)' : 'rgba(0,0,0,0.025)';
+  ctx.lineWidth = 1;
+  const gridSize = 40;
+  for (let x = 0; x < w; x += gridSize) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, h);
+    ctx.stroke();
+  }
+  for (let y = 0; y < h; y += gridSize) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(w, y);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // 3. Çift Brutalist Çerçeve
+  const m = 40;
+  ctx.strokeStyle = frameColor;
+  ctx.lineWidth = 4;
+  ctx.strokeRect(m, m, w - m * 2, h - m * 2);
+
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(m + 10, m + 10, w - (m + 10) * 2, h - (m + 10) * 2);
+
+  // 4. Matbaa Kesişim İmleri (4 Köşe Krosları)
+  function drawCross(cx, cy, size = 10) {
+    ctx.beginPath();
+    ctx.moveTo(cx - size, cy);
+    ctx.lineTo(cx + size, cy);
+    ctx.moveTo(cx, cy - size);
+    ctx.lineTo(cx, cy + size);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = accentColor;
+  ctx.lineWidth = 2;
+  drawCross(m + 22, m + 22);
+  drawCross(w - m - 22, m + 22);
+  drawCross(m + 22, h - m - 22);
+  drawCross(w - m - 22, h - m - 22);
+
+  // 5. Üst Bilgi Başlığı (Sol: Platform, Sağ: Kategori Pulu)
+  const badgeTitle = document.getElementById('coverGenBadge').value.trim() || 'PRATFALL · EDEBİYAT & FİKİR PLATFORMU';
+  const category = document.getElementById('coverGenCategory').value.trim() || 'Edebiyat';
+
+  ctx.font = 'bold 20px "Courier New", monospace';
+  ctx.fillStyle = mutedColor;
+  ctx.textAlign = 'left';
+  ctx.fillText(badgeTitle.toUpperCase(), m + 35, m + 52);
+
+  // Kategori Pulu (Hafif Eğik / Zine Stamp)
+  ctx.save();
+  ctx.translate(w - m - 35, m + 45);
+  ctx.rotate(-0.02);
+  ctx.fillStyle = badgeBg;
+  ctx.strokeStyle = frameColor;
+  ctx.lineWidth = 2;
+  const catText = '✦ ' + (category.toUpperCase()) + ' ✦';
+  ctx.font = 'bold 18px "Courier New", monospace';
+  const badgeW = ctx.measureText(catText).width + 28;
+  ctx.fillRect(-badgeW, -17, badgeW, 34);
+  ctx.strokeRect(-badgeW, -17, badgeW, 34);
+  ctx.fillStyle = badgeText;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(catText, -badgeW / 2, 0);
+  ctx.restore();
+
+  // Üst Tırtıklı / Perfore Ayraç
+  const headDivY = m + 85;
+  ctx.strokeStyle = frameColor;
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([8, 6]);
+  ctx.beginPath();
+  ctx.moveTo(m + 25, headDivY);
+  ctx.lineTo(w - m - 25, headDivY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // 6. Alt Bilgi Çubuğu (Yazar & Edebi Arşiv)
+  const author = document.getElementById('coverGenAuthor').value.trim() || 'Pratfall Yazarı';
+  const footDivY = h - m - 85;
+
+  ctx.strokeStyle = frameColor;
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([8, 6]);
+  ctx.beginPath();
+  ctx.moveTo(m + 25, footDivY);
+  ctx.lineTo(w - m - 25, footDivY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Yazar Bilgisi (Sol)
+  ctx.textAlign = 'left';
+  ctx.font = 'bold 26px "Courier New", monospace';
+  ctx.fillStyle = accentColor;
+  ctx.fillText('[ YAZAR: ' + author.toUpperCase() + ' ]', m + 35, h - m - 40);
+
+  // Slogan & Domain (Sağ)
+  ctx.textAlign = 'right';
+  ctx.font = 'bold 18px "Courier New", monospace';
+  ctx.fillStyle = mutedColor;
+  ctx.fillText('PRATFALL.COM.TR · KUSURLU KALMA ÇABASI', w - m - 35, h - m - 40);
+
+  // 7. Orta Başlık Alanı (Dinamik Font ve Satır Sarma)
+  const rawTitle = document.getElementById('coverGenTitle').value.trim() || 'Kusurlu Kalma Çabası';
+  const fontFam = currentCoverFont === 'mono' ? '"Courier New", monospace' : 'Georgia, serif';
+
+  function wrapTitle(text, fSize) {
+    ctx.font = `bold ${fSize}px ${fontFam}`;
+    const words = text.split(/\s+/);
+    let lines = [];
+    let curLine = '';
+    const maxW = w - (m * 2) - 160;
+
+    for (let n = 0; n < words.length; n++) {
+      const test = curLine + words[n] + ' ';
+      if (ctx.measureText(test).width > maxW && n > 0) {
+        lines.push(curLine.trim());
+        curLine = words[n] + ' ';
+      } else {
+        curLine = test;
+      }
+    }
+    if (curLine.trim()) lines.push(curLine.trim());
+    return lines;
+  }
+
+  let titleSize = 58;
+  let titleLines = wrapTitle(rawTitle, titleSize);
+  let lineHeight = titleSize * 1.35;
+  let totalTitleH = titleLines.length * lineHeight;
+  const maxTitleH = footDivY - headDivY - 80;
+
+  // Başlık uzunsa dinamik küçült
+  while (totalTitleH > maxTitleH && titleSize > 32) {
+    titleSize -= 3;
+    lineHeight = titleSize * 1.35;
+    titleLines = wrapTitle(rawTitle, titleSize);
+    totalTitleH = titleLines.length * lineHeight;
+  }
+
+  // Başlığı ortala
+  const centerContentY = (headDivY + footDivY) / 2;
+  const titleStartY = centerContentY - (totalTitleH / 2) + (titleSize * 0.4);
+
+  ctx.textAlign = 'center';
+  ctx.font = `bold ${titleSize}px ${fontFam}`;
+  ctx.fillStyle = textColor;
+
+  for (let i = 0; i < titleLines.length; i++) {
+    ctx.fillText(titleLines[i], w / 2, titleStartY + (i * lineHeight));
+  }
+
+  // Başlığın Altına Zarif Edebi Elmas Ayraç
+  const ornamentY = titleStartY + (titleLines.length * lineHeight) + 12;
+  if (ornamentY < footDivY - 15) {
+    ctx.font = 'bold 22px Georgia, serif';
+    ctx.fillStyle = accentColor;
+    ctx.fillText('◆  ·  —  ·  ◆', w / 2, ornamentY);
+  }
+}
+
+function saveGeneratedCoverToPost() {
+  const canvas = document.getElementById('coverGenCanvas');
+  const btn = document.getElementById('saveCoverBtn');
+  const status = document.getElementById('coverSaveStatus');
+  if (!canvas || !btn) return;
+
+  btn.disabled = true;
+  btn.innerText = 'Kapak Optimize Edilip Kaydediliyor...';
+  status.innerHTML = '<span style="color:var(--adm-primary);">Sunucuya WebP olarak aktarılıyor...</span>';
+
+  const dataUrl = canvas.toDataURL('image/png');
+  const formData = new FormData();
+  formData.append('csrf_token', '<?= Auth::csrf_token(); ?>');
+  formData.append('image_data', dataUrl);
+
+  fetch('<?= SITE_URL; ?>/admin/posts.php?action=ajax_save_cover', {
+    method: 'POST',
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    btn.disabled = false;
+    btn.innerText = '✓ Görseli Kaydet ve Yazıya Ata';
+    if (data.success && data.url) {
+      // 1. Forma görsel URL'sini ata
+      const input = document.getElementById('featured_image_input');
+      if (input) {
+        input.value = data.url;
+      }
+      // 2. Önizlemeyi güncelle
+      updateCoverPreview(data.url);
+
+      status.innerHTML = '<span style="color:#10b981; font-weight:700;">✓ Kapak görseli başarıyla oluşturuldu ve yazıya atandı!</span>';
+      setTimeout(() => {
+        closeCoverGeneratorModal();
+      }, 700);
+    } else {
+      status.innerHTML = '<span style="color:#ef4444;">Hata: ' + (data.message || 'Görsel kaydedilemedi.') + '</span>';
+    }
+  })
+  .catch(err => {
+    btn.disabled = false;
+    btn.innerText = '✓ Görseli Kaydet ve Yazıya Ata';
+    status.innerHTML = '<span style="color:#ef4444;">Bağlantı hatası: ' + err + '</span>';
+  });
+}
+
+function downloadCoverImage() {
+  const canvas = document.getElementById('coverGenCanvas');
+  const title = (document.getElementById('coverGenTitle').value || 'pratfall-kapak').toLowerCase().replace(/[^a-z0-9]/g, '-');
+  const link = document.createElement('a');
+  link.download = `kapak-${title}-${Date.now()}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
 </script>
+
+<!-- OTOMATİK ÖNE ÇIKAN KAPAK GÖRSELİ ÜRETİCİ MODAL (CANVAS MOTORU) -->
+<div id="coverGeneratorModal" style="display:none; position:fixed; inset:0; z-index:99999; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); align-items:center; justify-content:center; padding:1.5rem;">
+  <div style="background:var(--adm-card, #fff); max-width:960px; width:100%; border-radius:12px; border:1px solid var(--adm-border); box-shadow:0 25px 50px rgba(0,0,0,0.3); overflow:hidden; max-height:92vh; display:flex; flex-direction:column;">
+    
+    <div style="padding:1.25rem 1.5rem; border-bottom:1px solid var(--adm-border); display:flex; justify-content:space-between; align-items:center; background:#fafbfc;">
+      <div style="display:flex; align-items:center; gap:0.5rem;">
+        <span style="font-size:1.3rem;">🎨</span>
+        <div>
+          <h3 style="margin:0; font-size:1.15rem; font-weight:700;">Otomatik Kapak Görseli Tasarımcısı</h3>
+          <span style="font-size:0.75rem; color:var(--adm-muted);">Site geneli ve sosyal paylaşımlar için 16:9 (1200x675) edebi kapak üretir.</span>
+        </div>
+      </div>
+      <button type="button" onclick="closeCoverGeneratorModal()" style="background:transparent; border:none; font-size:1.5rem; cursor:pointer; color:var(--adm-muted); padding:0 0.5rem;">&times;</button>
+    </div>
+
+    <div style="display:grid; grid-template-columns:460px 1fr; gap:1.5rem; padding:1.5rem; overflow-y:auto; align-items:start;">
+      
+      <!-- Sol: Canlı Kapak Önizleme (16:9 Canvas) -->
+      <div style="display:flex; flex-direction:column; align-items:center;">
+        <div style="width:100%; border:1px solid var(--adm-border); border-radius:8px; overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,0.15); background:#f0f0f0;">
+          <canvas id="coverGenCanvas" width="1200" height="675" style="width:100%; height:auto; display:block;"></canvas>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:0.5rem; width:100%; margin-top:1rem;">
+          <button type="button" onclick="saveGeneratedCoverToPost()" id="saveCoverBtn" class="btn btn-primary" style="width:100%; justify-content:center; padding:0.65rem; font-weight:700; font-size:0.9rem;">
+            ✓ Görseli Kaydet ve Yazıya Ata
+          </button>
+          <button type="button" onclick="downloadCoverImage()" class="btn btn-secondary btn-sm" style="width:100%; justify-content:center; font-size:0.8rem;">
+            💾 Bilgisayara İndir (PNG)
+          </button>
+        </div>
+
+        <div id="coverSaveStatus" style="font-size:0.75rem; margin-top:0.5rem; text-align:center; min-height:1.2rem;"></div>
+      </div>
+
+      <!-- Sağ: Düzenleme Parametreleri -->
+      <div style="display:flex; flex-direction:column; gap:0.9rem;">
+        
+        <div>
+          <label class="form-label" style="font-weight:600; margin-bottom:0.25rem;">Eser Başlığı (Kapakta Görünecek):</label>
+          <input type="text" id="coverGenTitle" class="form-control" oninput="drawCoverImage()" style="font-weight:600;" />
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+          <div>
+            <label class="form-label" style="font-weight:600; margin-bottom:0.25rem;">Yazar Adı:</label>
+            <input type="text" id="coverGenAuthor" class="form-control" oninput="drawCoverImage()" />
+          </div>
+          <div>
+            <label class="form-label" style="font-weight:600; margin-bottom:0.25rem;">Edebi Tür / Kategori:</label>
+            <input type="text" id="coverGenCategory" class="form-control" oninput="drawCoverImage()" />
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label" style="font-weight:600; margin-bottom:0.25rem;">Üst Logo & Platform Başlığı:</label>
+          <input type="text" id="coverGenBadge" class="form-control" oninput="drawCoverImage()" value="PRATFALL · EDEBİYAT & FİKİR PLATFORMU" />
+        </div>
+
+        <div>
+          <label class="form-label" style="font-weight:600; margin-bottom:0.3rem;">Kapak Teması & Renk Paleti:</label>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.45rem;">
+            <button type="button" class="btn btn-sm" id="coverThmPaperBtn" onclick="setCoverTheme('paper')" style="background:#f6f3eb; color:#141416; border:1.5px solid #141416; font-weight:700; font-size:0.78rem;">📜 Ham Kağıt & Mürekkep</button>
+            <button type="button" class="btn btn-sm btn-secondary" id="coverThmDarkBtn" onclick="setCoverTheme('dark')" style="background:#111113; color:#f4eee1; border:1px solid #333; font-size:0.78rem;">🌑 Gece Matbaası</button>
+            <button type="button" class="btn btn-sm btn-secondary" id="coverThmRedBtn" onclick="setCoverTheme('red')" style="background:#8b1e0f; color:#fbf7ee; border:1px solid #8b1e0f; font-size:0.78rem;">🧱 Matbaa Bordosu</button>
+            <button type="button" class="btn btn-sm btn-secondary" id="coverThmZineBtn" onclick="setCoverTheme('fanzine')" style="background:#f0ede6; color:#0d9488; border:1px solid #0d9488; font-size:0.78rem;">📑 Zine Fanzin & Pul</button>
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label" style="font-weight:600; margin-bottom:0.3rem;">Tipografi Dizgisi:</label>
+          <div style="display:flex; gap:0.5rem;">
+            <button type="button" class="btn btn-sm" id="coverFontSerifBtn" onclick="setCoverFont('serif')" style="flex:1; justify-content:center; background:#1a1a1a; color:#fff; font-weight:700; font-size:0.78rem;">Klasik Edebi Serif</button>
+            <button type="button" class="btn btn-sm btn-secondary" id="coverFontMonoBtn" onclick="setCoverFont('mono')" style="flex:1; justify-content:center; font-size:0.78rem;">Daktilo / Brutalist</button>
+          </div>
+        </div>
+
+        <div style="font-size:0.72rem; color:var(--adm-muted); line-height:1.4; background:#fafbfc; padding:0.6rem 0.8rem; border-radius:6px; border:1px solid #e2e8f0;">
+          ✦ <strong>Otomatik Optimizasyon:</strong> "Görseli Kaydet ve Yazıya Ata" dediğinizde görsel WebP formatında optimize edilerek <code>uploads/covers/</code> dizinine kaydedilir ve yazı formuyla anında ilişkilendirilir.
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</div>
 
 <?php require PATH_ADMIN . '/layout/footer.php'; ?>

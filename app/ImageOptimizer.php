@@ -96,4 +96,52 @@ class ImageOptimizer {
 
         return $filename;
     }
+
+    /**
+     * Canvas'tan Gelen Base64 Görselini Optimize Et ve Kaydet
+     */
+    public static function optimize_base64_image( string $base64_data, string $target_dir, string $prefix = 'cover' ): ?string {
+        if ( empty( $base64_data ) ) {
+            return null;
+        }
+
+        if ( preg_match( '/^data:image\/(\w+);base64,/', $base64_data ) ) {
+            $base64_data = substr( $base64_data, strpos( $base64_data, ',' ) + 1 );
+        }
+
+        $decoded = base64_decode( $base64_data );
+        if ( ! $decoded ) {
+            return null;
+        }
+
+        if ( ! is_dir( $target_dir ) ) {
+            @mkdir( $target_dir, 0755, true );
+        }
+
+        $supports_webp = function_exists( 'imagewebp' ) && extension_loaded( 'gd' );
+        $final_ext     = $supports_webp ? 'webp' : 'png';
+        $filename      = $prefix . '_' . time() . '_' . uniqid() . '.' . $final_ext;
+        $dest          = rtrim( $target_dir, '/' ) . '/' . $filename;
+
+        if ( extension_loaded( 'gd' ) && function_exists( 'imagecreatefromstring' ) ) {
+            $image = @imagecreatefromstring( $decoded );
+            if ( $image ) {
+                if ( $supports_webp ) {
+                    imagewebp( $image, $dest, 88 );
+                } else {
+                    imagepng( $image, $dest, 8 );
+                }
+                imagedestroy( $image );
+                @chmod( $dest, 0644 );
+                return $filename;
+            }
+        }
+
+        if ( file_put_contents( $dest, $decoded ) ) {
+            @chmod( $dest, 0644 );
+            return $filename;
+        }
+
+        return null;
+    }
 }
