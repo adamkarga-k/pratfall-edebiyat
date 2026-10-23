@@ -22,7 +22,7 @@ if ( $action === 'delete' && isset( $_GET['id'] ) ) {
     $id = (int) $_GET['id'];
     $stmt = $db->prepare( "DELETE FROM authors WHERE id = ?" );
     $stmt->execute( [ $id ] );
-    header( 'Location: ' . SITE_URL . '/admin/authors?msg=deleted' );
+    header( 'Location: ' . SITE_URL . '/admin/authors.php?msg=deleted' );
     exit;
 }
 
@@ -64,7 +64,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
                     WHERE id = ?
                 " );
                 $stmt->execute( [ $name, $title, $quote, $bio, $photo, $twitter, $instagram, $website, $id ] );
-                header( 'Location: ' . SITE_URL . '/admin/authors?msg=updated' );
+                header( 'Location: ' . SITE_URL . '/admin/authors.php?msg=updated' );
                 exit;
             } else {
                 $slug = Database::slugify( $name );
@@ -73,7 +73,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 " );
                 $stmt->execute( [ $name, $slug, $title, $quote, $bio, $photo, $twitter, $instagram, $website ] );
-                header( 'Location: ' . SITE_URL . '/admin/authors?msg=created' );
+                header( 'Location: ' . SITE_URL . '/admin/authors.php?msg=created' );
                 exit;
             }
         }

@@ -140,6 +140,58 @@ require PATH_VIEWS . '/layout/header.php';
 
     </div>
   </section>
+  <?php elseif ( $page === 1 ) : ?>
+  <!-- Henüz Yazı Yokken Gözüken Hoş Geldiniz Vitrini -->
+  <section class="editorial-hero-section" aria-label="Öne Çıkan Seçkiler">
+    <div class="editorial-hero-grid">
+      <div class="hero-lead-column">
+        <article class="brutal-card hero-lead-card rot-hover-straight">
+          <div class="hero-lead-thumb">
+            <span class="tape-badge rot-n2">✦ PRATFALL EDEBİYAT</span>
+            <div style="width:100%; min-height:280px; background:#292524; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#f6f3eb; padding:2.5rem; text-align:center;">
+              <h2 style="font-family:var(--font-serif); font-size:2rem; margin-bottom:1rem; color:#f6f3eb;">Kusurlu Kalma Çabası</h2>
+              <p style="font-family:var(--font-mono); font-size:0.95rem; color:#a8a29e; max-width:480px; margin:0 auto; line-height:1.6;">
+                Dijital çağın pürüzsüz yapaylığına inat, kağıdın ve daktilonun kusurlu ruhunu taşıyan edebiyat mecmuası.
+              </p>
+            </div>
+          </div>
+          <div class="hero-lead-body">
+            <p class="hero-lead-excerpt">
+              Henüz yayınlanmış bir metin bulunmuyor. Yönetim paneline giriş yaparak ilk yazınızı ve kapak görselinizi ekleyebilirsiniz.
+            </p>
+            <div style="margin-top:1rem;">
+              <a href="<?= SITE_URL; ?>/admin/login.php" class="brutal-btn" style="text-decoration:none; display:inline-block; font-family:var(--font-mono); font-size:0.85rem; padding:0.5rem 1rem; border:2px solid #292524; background:#fff; color:#292524; font-weight:700;">
+                ✦ Editör Girişi Yap
+              </a>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <aside class="hero-side-column">
+        <div class="brutal-card curator-note-card rot-p1 rot-hover-straight">
+          <div class="curator-title">
+            <span>✦ KÜRATÖRÜN MASASI</span>
+          </div>
+          <blockquote class="curator-quote">
+            "Bir yazıdaki en sahici cümle, yazarın silmekten korktuğu ama sonunda sayfada bıraktığı o kusurlu cümledir."
+          </blockquote>
+          <div class="curator-sign">
+            — Yayın Kurulu Notu
+          </div>
+        </div>
+
+        <div class="brutal-card" style="padding:1.5rem; background:var(--bg-card); border-left:4px solid var(--accent-secondary);">
+          <div style="font-family:var(--font-mono); font-size:0.75rem; font-weight:700; color:var(--accent-secondary); margin-bottom:0.35rem;">
+            ✦ MATBAADAN TAZE ÇIKANLAR
+          </div>
+          <p style="font-size:0.85rem; margin:0; line-height:1.5; color:var(--text-muted);">
+            Dergimizin yeni sayıları ve bağımsız fanzinleri yakında burada listelenecek.
+          </p>
+        </div>
+      </aside>
+    </div>
+  </section>
   <?php endif; ?>
 
   <!-- 2. KİMLER YAZMIŞ? (YAZARLAR MASASI - YOKLAMA LİSTESİ) -->

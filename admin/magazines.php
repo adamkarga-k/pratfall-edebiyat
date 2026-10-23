@@ -22,7 +22,7 @@ if ( $action === 'delete' && isset( $_GET['id'] ) ) {
     $id = (int) $_GET['id'];
     $stmt = $db->prepare( "DELETE FROM magazines WHERE id = ?" );
     $stmt->execute( [ $id ] );
-    header( 'Location: ' . SITE_URL . '/admin/magazines?msg=deleted' );
+    header( 'Location: ' . SITE_URL . '/admin/magazines.php?msg=deleted' );
     exit;
 }
 
@@ -63,7 +63,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
                     WHERE id = ?
                 " );
                 $stmt->execute( [ $issue_no, $title, $period, $price, $cover_image, $buy_url, $order_num, $id ] );
-                header( 'Location: ' . SITE_URL . '/admin/magazines?msg=updated' );
+                header( 'Location: ' . SITE_URL . '/admin/magazines.php?msg=updated' );
                 exit;
             } else {
                 $stmt = $db->prepare( "
@@ -71,7 +71,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
                     VALUES (?, ?, ?, ?, ?, ?, ?)
                 " );
                 $stmt->execute( [ $issue_no, $title, $period, $price, $cover_image, $buy_url, $order_num ] );
-                header( 'Location: ' . SITE_URL . '/admin/magazines?msg=created' );
+                header( 'Location: ' . SITE_URL . '/admin/magazines.php?msg=created' );
                 exit;
             }
         }

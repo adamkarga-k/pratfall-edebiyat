@@ -1,26 +1,16 @@
 ---
 deployment:
   tasks:
-    # Hedef yayın klasörü (cPanel ana siteniz için public_html, subdomain ise ilgili alt dizin)
-    - export DEPLOYPATH=/home/$USER/public_html/
+    # Hedef yayın klasörü: pratfall.com.tr ana dizini
+    - export DEPLOYPATH=/home/$USER/pratfall
     
-    # 1. Kod ve Şablon Dosyalarını Dağıt
-    - /bin/cp -R admin $DEPLOYPATH
-    - /bin/cp -R app $DEPLOYPATH
-    - /bin/cp -R assets $DEPLOYPATH
-    - /bin/cp -R views $DEPLOYPATH
-    - /bin/cp index.php $DEPLOYPATH
-    - /bin/cp config.php $DEPLOYPATH
-    - /bin/cp .htaccess $DEPLOYPATH
-    
-    # 2. Veri ve Medya Klasörlerini Oluştur (Varsa asla üzerine yazmaz)
+    # 1. Veri ve Medya Klasörlerini Güvenceye Al (İzinler)
     - /bin/mkdir -p $DEPLOYPATH/data
     - /bin/mkdir -p $DEPLOYPATH/uploads/docx-images
-    
-    # 3. Güvenlik Dosyalarını Sağlama Al
-    - /bin/cp data/.htaccess $DEPLOYPATH/data/
-    - /bin/cp uploads/.htaccess $DEPLOYPATH/uploads/
-    
-    # 4. İzinleri Güvenli ve Erişilebilir Hale Getir (Dizinler 755, Dosyalar 644)
     - /bin/chmod 755 $DEPLOYPATH/data
     - /bin/chmod 755 $DEPLOYPATH/uploads
+    
+    # 2. Güvenlik Dosyalarını ve İzinleri Belirle
+    - /bin/chmod 644 $DEPLOYPATH/.htaccess 2>/dev/null || true
+    - /bin/chmod 644 $DEPLOYPATH/data/.htaccess 2>/dev/null || true
+    - /bin/chmod 644 $DEPLOYPATH/uploads/.htaccess 2>/dev/null || true

@@ -32,7 +32,7 @@ $current_user = Auth::user();
   <!-- 1. SOL MENÜ (SIDEBAR) -->
   <aside class="admin-sidebar">
     <div class="sidebar-header">
-      <a href="<?= SITE_URL; ?>/admin" class="sidebar-brand">
+      <a href="<?= SITE_URL; ?>/admin/index.php" class="sidebar-brand">
         <div class="sidebar-brand-icon">✦</div>
         <div>
           <div class="sidebar-brand-name">PRATFALL</div>
@@ -47,7 +47,7 @@ $current_user = Auth::user();
       <div class="sidebar-group-title">Genel</div>
       <ul class="sidebar-menu">
         <li>
-          <a href="<?= SITE_URL; ?>/admin" class="sidebar-link <?= $active_tab === 'dashboard' ? 'active' : ''; ?>">
+          <a href="<?= SITE_URL; ?>/admin/index.php" class="sidebar-link <?= $active_tab === 'dashboard' ? 'active' : ''; ?>">
             <span class="sidebar-link-content">
               <span class="sidebar-link-icon">📊</span>
               <span>Kontrol Paneli</span>
@@ -60,7 +60,7 @@ $current_user = Auth::user();
       <div class="sidebar-group-title">İçerik</div>
       <ul class="sidebar-menu">
         <li>
-          <a href="<?= SITE_URL; ?>/admin/posts" class="sidebar-link <?= $active_tab === 'posts' ? 'active' : ''; ?>">
+          <a href="<?= SITE_URL; ?>/admin/posts.php" class="sidebar-link <?= $active_tab === 'posts' ? 'active' : ''; ?>">
             <span class="sidebar-link-content">
               <span class="sidebar-link-icon">✍️</span>
               <span>Yazılar & Eserler</span>
@@ -68,7 +68,7 @@ $current_user = Auth::user();
           </a>
         </li>
         <li>
-          <a href="<?= SITE_URL; ?>/admin/import-docx" class="sidebar-link <?= $active_tab === 'import' ? 'active' : ''; ?>">
+          <a href="<?= SITE_URL; ?>/admin/import-docx.php" class="sidebar-link <?= $active_tab === 'import' ? 'active' : ''; ?>">
             <span class="sidebar-link-content">
               <span class="sidebar-link-icon">📥</span>
               <span>Word'den Toplu Aktar</span>
@@ -76,7 +76,7 @@ $current_user = Auth::user();
           </a>
         </li>
         <li>
-          <a href="<?= SITE_URL; ?>/admin/magazines" class="sidebar-link <?= $active_tab === 'magazines' ? 'active' : ''; ?>">
+          <a href="<?= SITE_URL; ?>/admin/magazines.php" class="sidebar-link <?= $active_tab === 'magazines' ? 'active' : ''; ?>">
             <span class="sidebar-link-content">
               <span class="sidebar-link-icon">📖</span>
               <span>Dergilerimiz</span>
@@ -89,7 +89,7 @@ $current_user = Auth::user();
       <div class="sidebar-group-title">Yönetim</div>
       <ul class="sidebar-menu">
         <li>
-          <a href="<?= SITE_URL; ?>/admin/authors" class="sidebar-link <?= $active_tab === 'authors' ? 'active' : ''; ?>">
+          <a href="<?= SITE_URL; ?>/admin/authors.php" class="sidebar-link <?= $active_tab === 'authors' ? 'active' : ''; ?>">
             <span class="sidebar-link-content">
               <span class="sidebar-link-icon">👥</span>
               <span>Kimler Yazmış? (Yazarlar)</span>
@@ -97,7 +97,7 @@ $current_user = Auth::user();
           </a>
         </li>
         <li>
-          <a href="<?= SITE_URL; ?>/admin/settings" class="sidebar-link <?= $active_tab === 'settings' ? 'active' : ''; ?>">
+          <a href="<?= SITE_URL; ?>/admin/settings.php" class="sidebar-link <?= $active_tab === 'settings' ? 'active' : ''; ?>">
             <span class="sidebar-link-content">
               <span class="sidebar-link-icon">⚙️</span>
               <span>Site Ayarları & Manifesto</span>
@@ -105,7 +105,7 @@ $current_user = Auth::user();
           </a>
         </li>
         <li>
-          <a href="<?= SITE_URL; ?>/admin/git-sync" class="sidebar-link <?= $active_tab === 'git-sync' ? 'active' : ''; ?>">
+          <a href="<?= SITE_URL; ?>/admin/git-sync.php" class="sidebar-link <?= $active_tab === 'git-sync' ? 'active' : ''; ?>">
             <span class="sidebar-link-content">
               <span class="sidebar-link-icon">🔄</span>
               <span>cPanel Git Dağıtım</span>
@@ -133,13 +133,13 @@ $current_user = Auth::user();
 
       <div class="topbar-right">
         <!-- Hızlı Eylem Butonları -->
-        <a href="<?= SITE_URL; ?>/admin/posts?action=new" class="btn btn-sm">
+        <a href="<?= SITE_URL; ?>/admin/posts.php?action=new" class="btn btn-sm">
           <span>+</span> Yazı Ekle
         </a>
-        <a href="<?= SITE_URL; ?>/admin/import-docx" class="btn btn-sm btn-accent">
+        <a href="<?= SITE_URL; ?>/admin/import-docx.php" class="btn btn-sm btn-accent">
           <span>📥</span> Word Aktar
         </a>
-        <a href="<?= SITE_URL; ?>/admin/magazines?action=new" class="btn btn-sm">
+        <a href="<?= SITE_URL; ?>/admin/magazines.php?action=new" class="btn btn-sm">
           <span>📖</span> Dergi Ekle
         </a>
 
@@ -154,7 +154,7 @@ $current_user = Auth::user();
           <span><?= htmlspecialchars( $current_user['username'] ?? 'Admin', ENT_QUOTES, 'UTF-8' ); ?></span>
         </div>
 
-        <a href="<?= SITE_URL; ?>/admin/logout" class="btn btn-sm" style="color:#ef4444;" title="Oturumu Kapat">
+        <a href="<?= SITE_URL; ?>/admin/logout.php" class="btn btn-sm" style="color:#ef4444;" title="Oturumu Kapat">
           Çıkış
         </a>
       </div>

@@ -57,7 +57,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
       </div>
     <?php endif; ?>
 
-    <form method="POST" action="<?= SITE_URL; ?>/admin/login">
+    <form method="POST" action="<?= SITE_URL; ?>/admin/login.php">
       <div class="form-group">
         <label class="form-label" for="username">Kullanıcı Adı</label>
         <input type="text" id="username" name="username" class="form-control" placeholder="Kullanıcı adınız" required autofocus />

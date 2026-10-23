@@ -25,7 +25,7 @@ if ( $action === 'delete' && isset( $_GET['id'] ) ) {
     $id = (int) $_GET['id'];
     $stmt = $db->prepare( "DELETE FROM posts WHERE id = ?" );
     $stmt->execute( [ $id ] );
-    header( 'Location: ' . SITE_URL . '/admin/posts?msg=deleted' );
+    header( 'Location: ' . SITE_URL . '/admin/posts.php?msg=deleted' );
     exit;
 }
 
@@ -105,7 +105,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
             }
 
             // Kaydettikten sonra listeye dön veya sayfada kal
-            header( 'Location: ' . SITE_URL . '/admin/posts?msg=' . urlencode( $msg ) );
+            header( 'Location: ' . SITE_URL . '/admin/posts.php?msg=' . urlencode( $msg ) );
             exit;
         }
     }
