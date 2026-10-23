@@ -97,4 +97,39 @@ class Helpers {
             return "{$minutes} DAKİKA GENİŞ OKUMA · MATBAA METNİ";
         }
     }
+
+    /**
+     * Türkçe Uyumlu Küçük Harfe Dönüştür (I -> ı, İ -> i)
+     */
+    public static function turkish_lower( string $text ): string {
+        $text = str_replace( [ 'I', 'İ' ], [ 'ı', 'i' ], $text );
+        return mb_strtolower( $text, 'UTF-8' );
+    }
+
+    /**
+     * Türkçe Uyumlu Büyük Harfe Dönüştür (ı -> I, i -> İ)
+     */
+    public static function turkish_upper( string $text ): string {
+        $text = str_replace( [ 'ı', 'i' ], [ 'I', 'İ' ], $text );
+        return mb_strtoupper( $text, 'UTF-8' );
+    }
+
+    /**
+     * Kelimelerin İlk Harfini Büyük, Diğerlerini Küçük Yap (Türkçe Uyumlu Title Case)
+     * Örn: "VARLIK ÇATIŞMASI: VARLIK- YOKLUK" -> "Varlık Çatışması: Varlık- Yokluk"
+     */
+    public static function turkish_title_case( string $text ): string {
+        $text = trim( $text );
+        if ( $text === '' ) {
+            return '';
+        }
+
+        // Önce tüm metni Türkçe küçük harfe çevir
+        $lower = self::turkish_lower( $text );
+
+        // Kelime başlarını büyük harfe çevir (kesme işaretinden sonraki ekleri küçük bırakır)
+        return preg_replace_callback( '/(?<![\p{L}\'’])(\p{L})/u', function( $m ) {
+            return self::turkish_upper( $m[1] );
+        }, $lower );
+    }
 }

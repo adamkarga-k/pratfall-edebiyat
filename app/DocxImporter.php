@@ -40,10 +40,47 @@ class DocxImporter {
         // 4. XML'i Temiz Semantik HTML'e Dönüştür
         $parsed = self::xml_to_html( $doc_xml, $extracted_images );
 
-        // 5. Başlık Belirleme
+        // 4.1. Dosya Adından Akıllı Ayrıştırma (Örn: "Deneme, Emine Öykü Güner, Varlık Çatışması.docx")
+        $raw_filename = ! empty( $original_filename ) ? $original_filename : basename( $file_path );
+        $clean_fn = preg_replace( '/\.[^.]+$/', '', $raw_filename );
+        $fn_category = '';
+        $fn_author = '';
+        $fn_title = '';
+
+        if ( strpos( $clean_fn, ',' ) !== false ) {
+            $fn_parts = array_map( 'trim', explode( ',', $clean_fn ) );
+            if ( count( $fn_parts ) >= 3 ) {
+                $fn_category = $fn_parts[0];
+                $fn_author   = $fn_parts[1];
+                $fn_title    = implode( ', ', array_slice( $fn_parts, 2 ) );
+            } elseif ( count( $fn_parts ) === 2 ) {
+                $test_cat = self::suggest_category( $fn_parts[0], $fn_parts[0] );
+                if ( mb_strtolower( $fn_parts[0], 'UTF-8' ) === mb_strtolower( $test_cat, 'UTF-8' ) ) {
+                    $fn_category = $fn_parts[0];
+                    $fn_title = $fn_parts[1];
+                } else {
+                    $fn_author = $fn_parts[0];
+                    $fn_title = $fn_parts[1];
+                }
+            }
+        } elseif ( strpos( $clean_fn, '-' ) !== false ) {
+            $fn_parts = array_map( 'trim', explode( '-', $clean_fn ) );
+            if ( count( $fn_parts ) >= 3 ) {
+                $fn_category = $fn_parts[0];
+                $fn_author   = $fn_parts[1];
+                $fn_title    = implode( ' - ', array_slice( $fn_parts, 2 ) );
+            } elseif ( count( $fn_parts ) === 2 ) {
+                $fn_author = $fn_parts[0];
+                $fn_title = $fn_parts[1];
+            }
+        }
+
+        // 5. Başlık Belirleme (Kelimelerin İlk Harfleri Büyük, Kalanlar Küçük)
         $title = '';
         if ( ! empty( $parsed['detected_title'] ) ) {
             $title = $parsed['detected_title'];
+        } elseif ( ! empty( $fn_title ) ) {
+            $title = $fn_title;
         } elseif ( ! empty( $meta['title'] ) ) {
             $title = $meta['title'];
         } else {
@@ -52,31 +89,33 @@ class DocxImporter {
             $title = preg_replace( '/\.[^.]+$/', '', $name );
             $title = preg_replace( '/^\d+[\s\-_.]*/', '', $title ); // Başındaki '01 - ' gibi numaraları temizle
             $title = str_replace( [ '-', '_' ], ' ', $title );
-            $title = mb_convert_case( trim( $title ), MB_CASE_TITLE, "UTF-8" );
         }
+
+        // Başlığı otomatik Türkçe Title Case (İlk harfler büyük, diğerleri küçük) yap
+        $title = Helpers::turkish_title_case( $title );
 
         // 6. Yazar Belirleme
         $author_name = '';
         if ( ! empty( $parsed['detected_author'] ) ) {
             $author_name = $parsed['detected_author'];
+        } elseif ( ! empty( $fn_author ) && mb_strlen( $fn_author ) > 2 && mb_strlen( $fn_author ) < 50 ) {
+            $author_name = $fn_author;
         } elseif ( ! empty( $meta['creator'] ) ) {
             $author_name = $meta['creator'];
-        } else {
-            // Dosya adından yazar tespiti (Örn: "İlhan Berk - Aşk Şiiri.docx")
-            $name = ! empty( $original_filename ) ? $original_filename : basename( $file_path );
-            if ( strpos( $name, '-' ) !== false ) {
-                $parts = explode( '-', $name );
-                $possible_author = trim( $parts[0] );
-                if ( mb_strlen( $possible_author ) > 2 && mb_strlen( $possible_author ) < 40 ) {
-                    $author_name = $possible_author;
-                }
-            }
+        }
+
+        if ( ! empty( $author_name ) ) {
+            $author_name = Helpers::turkish_title_case( $author_name );
         }
 
         // 7. Kategori Belirleme (Öneri)
-        $category = ! empty( $parsed['detected_category'] ) 
-            ? $parsed['detected_category'] 
-            : self::suggest_category( $parsed['raw_text'], $title );
+        if ( ! empty( $parsed['detected_category'] ) ) {
+            $category = $parsed['detected_category'];
+        } elseif ( ! empty( $fn_category ) ) {
+            $category = self::suggest_category( $fn_category, $fn_category );
+        } else {
+            $category = self::suggest_category( $parsed['raw_text'], $title );
+        }
 
         // 8. Önerilen Etiketler (Tags)
         $tags = ! empty( $parsed['detected_tags'] )
@@ -432,6 +471,9 @@ class DocxImporter {
         $db = Database::get();
 
         $title          = trim( $data['title'] ?? '' );
+        if ( ! empty( $title ) ) {
+            $title = Helpers::turkish_title_case( $title );
+        }
         $author_id      = (int) ( $data['author_id'] ?? 0 );
         $category       = trim( $data['category'] ?? 'Deneme' );
         $tags           = trim( $data['tags'] ?? '' );

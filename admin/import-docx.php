@@ -293,6 +293,9 @@ require PATH_ADMIN . '/layout/header.php';
         </div>
 
         <div style="display:flex; align-items:center; gap:0.75rem;">
+          <button type="button" class="btn btn-sm" onclick="openBulkQuickAuthorModal()" style="color:var(--adm-primary); border:1px solid var(--adm-primary); background:#ffffff;">
+            👤 + Yeni Yazar Ekle
+          </button>
           <button type="button" class="btn btn-sm" onclick="toggleSelectAll()">
             Tümünü Seç / Kaldır
           </button>
@@ -338,8 +341,11 @@ require PATH_ADMIN . '/layout/header.php';
               
               <!-- Başlık -->
               <div>
-                <label class="form-label" style="font-weight:600; margin-bottom:0.3rem;">Eser Başlığı</label>
-                <input type="text" name="items[<?= $idx; ?>][title]" id="item_title_<?= $idx; ?>" class="form-control" value="<?= htmlspecialchars( $item['title'], ENT_QUOTES, 'UTF-8' ); ?>" required style="font-weight:600;" />
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.3rem;">
+                  <label class="form-label" style="font-weight:600; margin:0;">Eser Başlığı</label>
+                  <span style="font-size:0.7rem; color:var(--adm-muted); font-weight:normal;">✦ İlk Harfleri Büyük</span>
+                </div>
+                <input type="text" name="items[<?= $idx; ?>][title]" id="item_title_<?= $idx; ?>" class="form-control" value="<?= htmlspecialchars( Helpers::turkish_title_case( $item['title'] ), ENT_QUOTES, 'UTF-8' ); ?>" required style="font-weight:600;" onblur="this.value = toTurkishTitleCase(this.value)" />
               </div>
 
               <!-- Kategori -->
@@ -356,8 +362,13 @@ require PATH_ADMIN . '/layout/header.php';
 
               <!-- Yazar -->
               <div>
-                <label class="form-label" style="font-weight:600; margin-bottom:0.3rem;">Yazar</label>
-                <select name="items[<?= $idx; ?>][author_id]" class="form-control">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.3rem;">
+                  <label class="form-label" style="font-weight:600; margin:0;">Yazar</label>
+                  <button type="button" onclick="openBulkQuickAuthorModal(<?= $idx; ?>)" class="btn btn-sm" style="padding:0.1rem 0.45rem; font-size:0.7rem; color:var(--adm-primary); background:rgba(0,0,0,0.03); border:1px dashed var(--adm-primary); cursor:pointer;">
+                    + Yeni Ekle
+                  </button>
+                </div>
+                <select name="items[<?= $idx; ?>][author_id]" id="item_author_<?= $idx; ?>" class="form-control author-select-field">
                   <option value="0">✦ Ortak Platform Metni</option>
                   <?php foreach ( $authors as $a ) : ?>
                     <option value="<?= $a['id']; ?>" <?= $item['author_id'] == $a['id'] ? 'selected' : ''; ?>>
@@ -469,8 +480,13 @@ require PATH_ADMIN . '/layout/header.php';
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-top:1.5rem;">
           
           <div class="form-group">
-            <label class="form-label">Varsayılan Yazar (Öncelik)</label>
-            <select name="default_author_id" class="form-control">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
+              <label class="form-label" style="margin:0;">Varsayılan Yazar (Öncelik)</label>
+              <button type="button" onclick="openBulkQuickAuthorModal()" class="btn btn-sm" style="padding:0.15rem 0.5rem; font-size:0.72rem; color:var(--adm-primary); background:rgba(0,0,0,0.03); border:1px dashed var(--adm-primary); cursor:pointer;">
+                + Yeni Yazar Ekle
+              </button>
+            </div>
+            <select name="default_author_id" id="default_author_id" class="form-control author-select-field">
               <option value="0">✦ Belgeden Otomatik Tespit Et / Eşleştir</option>
               <?php foreach ( $authors as $a ) : ?>
                 <option value="<?= $a['id']; ?>"><?= htmlspecialchars( $a['name'], ENT_QUOTES, 'UTF-8' ); ?></option>
@@ -573,7 +589,151 @@ require PATH_ADMIN . '/layout/header.php';
   </div>
 </div>
 
+<!-- ==========================================================
+     HIZLI YAZAR EKLEME MODALI (POPUP)
+     ========================================================== -->
+<div id="quickAuthorModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.7); z-index:99999; align-items:center; justify-content:center; padding:1.5rem;">
+  <div style="background:#ffffff; max-width:480px; width:100%; border-radius:var(--adm-radius-lg); box-shadow:0 25px 50px -12px rgba(0,0,0,0.25); overflow:hidden; border:1px solid var(--adm-border);">
+    
+    <div style="padding:1rem 1.25rem; border-bottom:1px solid var(--adm-border); display:flex; justify-content:space-between; align-items:center; background:#fafbfc;">
+      <div style="font-weight:700; font-size:1.05rem; color:var(--adm-text); display:flex; align-items:center; gap:0.5rem;">
+        <span>👤</span> Yeni Yazar Ekle & Seç
+      </div>
+      <button type="button" onclick="closeBulkQuickAuthorModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--adm-muted); padding:0 0.35rem; line-height:1;">&times;</button>
+    </div>
+
+    <div style="padding:1.25rem;">
+      <div class="form-group" style="margin-bottom:1rem;">
+        <label class="form-label" style="font-weight:600; margin-bottom:0.35rem;">Yazar Adı Soyadı <span style="color:#ef4444;">*</span></label>
+        <input type="text" id="modalAuthorName" class="form-control" placeholder="Örn: Emine Öykü Güner" />
+      </div>
+
+      <div class="form-group" style="margin-bottom:1rem;">
+        <label class="form-label" style="font-weight:600; margin-bottom:0.35rem;">Edebi Alan / Ünvan (İsteğe Bağlı)</label>
+        <input type="text" id="modalAuthorTitle" class="form-control" placeholder="Örn: Deneme & Eleştiri" />
+      </div>
+
+      <div id="modalAuthorMsg" style="font-size:0.8rem; margin-bottom:0.75rem; min-height:1.2rem;"></div>
+
+      <div style="display:flex; justify-content:flex-end; gap:0.75rem;">
+        <button type="button" onclick="closeBulkQuickAuthorModal()" class="btn btn-sm">İptal</button>
+        <button type="button" onclick="saveBulkQuickAuthor()" id="modalAuthorSaveBtn" class="btn btn-primary btn-sm" style="padding:0.45rem 1.25rem;">
+          ✓ Yazarı Kaydet ve Seç
+        </button>
+      </div>
+
+      <div style="font-size:0.72rem; color:var(--adm-muted); margin-top:1rem; border-top:1px dashed #e2e8f0; padding-top:0.6rem; line-height:1.4;">
+        ✦ Eklediğiniz yazar sisteme anında kaydedilir ve sayfadaki tüm yazar kutularına eklenir. Detaylarını (fotoğraf, biyografi) dilediğiniz zaman <strong>Yazarlar</strong> sayfasından düzenleyebilirsiniz.
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <script>
+  let activeAuthorTargetIdx = null;
+
+  function openBulkQuickAuthorModal(idx = null) {
+    activeAuthorTargetIdx = idx;
+    document.getElementById('modalAuthorName').value = '';
+    document.getElementById('modalAuthorTitle').value = '';
+    document.getElementById('modalAuthorMsg').innerText = '';
+    document.getElementById('quickAuthorModal').style.display = 'flex';
+    setTimeout(() => {
+      document.getElementById('modalAuthorName').focus();
+    }, 100);
+  }
+
+  function closeBulkQuickAuthorModal() {
+    document.getElementById('quickAuthorModal').style.display = 'none';
+  }
+
+  function saveBulkQuickAuthor() {
+    const nameInput = document.getElementById('modalAuthorName');
+    const titleInput = document.getElementById('modalAuthorTitle');
+    const msg = document.getElementById('modalAuthorMsg');
+    const btn = document.getElementById('modalAuthorSaveBtn');
+
+    const name = nameInput.value.trim();
+    const title = titleInput.value.trim();
+
+    if (!name) {
+      msg.style.color = '#ef4444';
+      msg.innerText = 'Lütfen yazar adı ve soyadını giriniz.';
+      nameInput.focus();
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerText = 'Kaydediliyor...';
+    msg.innerText = '';
+
+    const formData = new FormData();
+    formData.append('csrf_token', '<?= Auth::csrf_token(); ?>');
+    formData.append('name', name);
+    formData.append('title', title);
+
+    fetch('<?= SITE_URL; ?>/admin/authors.php?action=ajax_create', {
+      method: 'POST',
+      body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+      btn.disabled = false;
+      btn.innerText = '✓ Yazarı Kaydet ve Seç';
+      if (data.success) {
+        // Tüm yazar select kutularına yeni yazarı ekle
+        const allAuthorSelects = document.querySelectorAll('.author-select-field, select[name="default_author_id"]');
+        allAuthorSelects.forEach(select => {
+          const opt = document.createElement('option');
+          opt.value = data.id;
+          opt.textContent = data.name + (data.title ? ' (' + data.title + ')' : '');
+          select.appendChild(opt);
+        });
+
+        // Hedeflenen select varsa anında onu seçili yap
+        if (activeAuthorTargetIdx !== null) {
+          const targetSelect = document.getElementById('item_author_' + activeAuthorTargetIdx);
+          if (targetSelect) {
+            targetSelect.value = data.id;
+          }
+        } else {
+          // Varsayılan yazar dropdown'ı varsa onu seç
+          const defSelect = document.getElementById('default_author_id');
+          if (defSelect) {
+            defSelect.value = data.id;
+          }
+        }
+
+        msg.style.color = '#10b981';
+        msg.innerText = '✓ Yazar başarıyla oluşturuldu ve seçildi!';
+        setTimeout(() => {
+          closeBulkQuickAuthorModal();
+        }, 500);
+      } else {
+        msg.style.color = '#ef4444';
+        msg.innerText = data.message || 'Hata oluştu.';
+      }
+    })
+    .catch(err => {
+      btn.disabled = false;
+      btn.innerText = '✓ Yazarı Kaydet ve Seç';
+      msg.style.color = '#ef4444';
+      msg.innerText = 'Bağlantı hatası: ' + err;
+    });
+  }
+
+  // Türkçe Title Case JavaScript Yardımcısı
+  function toTurkishTitleCase(str) {
+    if (!str) return '';
+    const turkishLower = str.replace(/I/g, 'ı').replace(/İ/g, 'i').toLowerCase();
+    return turkishLower.replace(/(?<![\p{L}'’])(\p{L})/gu, function(match, char) {
+      if (char === 'i') return 'İ';
+      if (char === 'ı') return 'I';
+      return char.toLocaleUpperCase('tr-TR');
+    });
+  }
+
   function showSelectedFiles(input) {
     const listWrap = document.getElementById('selectedFilesList');
     const countSpan = document.getElementById('selectedCount');
