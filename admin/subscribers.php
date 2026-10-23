@@ -224,6 +224,9 @@ require PATH_ADMIN . '/layout/header.php';
     <p class="page-subtitle">Veritabanında askeri düzeyde AES-256-CBC ile şifreli saklanan güvenli abone kasası.</p>
   </div>
   <div class="header-actions">
+    <a href="<?= SITE_URL; ?>/admin/newsletter-send.php" class="btn btn-primary" style="background:#8b1e0f; border-color:#8b1e0f;">
+      <span>✍️</span> Yeni Bülten Gönder
+    </a>
     <a href="<?= SITE_URL; ?>/admin/subscribers.php?action=export_csv" class="btn btn-secondary">
       <span>💾</span> CSV Olarak İndir (Yedekle)
     </a>

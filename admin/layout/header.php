@@ -110,16 +110,28 @@ $current_user = Auth::user();
       </ul>
 
       <!-- YÖNET -->
-      <div class="sidebar-group-title">Yönetim</div>
+      <div class="sidebar-group-title">Bülten & Dağıtım</div>
       <ul class="sidebar-menu">
         <li>
-          <a href="<?= SITE_URL; ?>/admin/subscribers.php" class="sidebar-link <?= $active_tab === 'subscribers' ? 'active' : ''; ?>">
+          <a href="<?= SITE_URL; ?>/admin/subscribers.php" class="sidebar-link <?= ( $active_tab === 'subscribers' && strpos($_SERVER['REQUEST_URI'] ?? '', 'newsletter-send') === false ) ? 'active' : ''; ?>">
             <span class="sidebar-link-content">
               <span class="sidebar-link-icon">📬</span>
-              <span>E-Posta Bülteni & Aboneler</span>
+              <span>Aboneler (Şifreli Kasa)</span>
             </span>
           </a>
         </li>
+        <li>
+          <a href="<?= SITE_URL; ?>/admin/newsletter-send.php" class="sidebar-link <?= strpos($_SERVER['REQUEST_URI'] ?? '', 'newsletter-send') !== false ? 'active' : ''; ?>">
+            <span class="sidebar-link-content">
+              <span class="sidebar-link-icon">✍️</span>
+              <span>Yeni Bülten Gönder</span>
+            </span>
+          </a>
+        </li>
+      </ul>
+
+      <div class="sidebar-group-title">Yönetim</div>
+      <ul class="sidebar-menu">
         <li>
           <a href="<?= SITE_URL; ?>/admin/authors.php" class="sidebar-link <?= $active_tab === 'authors' ? 'active' : ''; ?>">
             <span class="sidebar-link-content">

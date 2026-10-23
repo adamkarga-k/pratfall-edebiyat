@@ -21,6 +21,16 @@ if ( ! $post ) {
     exit;
 }
 
+// Okunma Sayacını Artır (Aynı oturumda tekrar saymayı engelle)
+$viewed_key = 'viewed_post_' . $post['id'];
+if ( empty( $_SESSION[$viewed_key] ) ) {
+    $_SESSION[$viewed_key] = true;
+    try {
+        $db->prepare( "UPDATE posts SET views_count = COALESCE(views_count, 0) + 1 WHERE id = ?" )->execute( [ $post['id'] ] );
+        $post['views_count'] = (int) ( $post['views_count'] ?? 0 ) + 1;
+    } catch ( Throwable $e ) {}
+}
+
 $is_single = true;
 
 // SEO Bilgileri

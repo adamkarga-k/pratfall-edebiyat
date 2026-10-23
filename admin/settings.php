@@ -28,7 +28,8 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
                 'authors_badge', 'authors_title', 'authors_desc',
                 'feed_badge', 'feed_title',
                 'manifesto_title', 'manifesto_badge', 'manifesto_tag', 'manifesto_p1', 'manifesto_p2',
-                'footer_slogan', 'footer_desc', 'footer_newsletter_title', 'footer_newsletter_desc', 'footer_copyright'
+                'footer_slogan', 'footer_desc', 'footer_newsletter_title', 'footer_newsletter_desc', 'footer_copyright',
+                'smtp_host', 'smtp_port', 'smtp_secure', 'smtp_user', 'smtp_pass', 'smtp_from_email', 'smtp_from_name'
             ];
 
             foreach ( $settings_keys as $k ) {
@@ -199,6 +200,55 @@ require PATH_ADMIN . '/layout/header.php';
       <div class="form-group">
         <label class="form-label">Telif / Haklar Metni</label>
         <input type="text" name="footer_copyright" class="form-control" value="<?= htmlspecialchars( Database::get_setting('footer_copyright', 'Tüm hakları yazarlara ve platforma aittir.'), ENT_QUOTES, 'UTF-8' ); ?>" />
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. E-POSTA DAĞITIMI & SMTP AYARLARI -->
+  <div class="admin-card" style="border-left:6px solid #8b1e0f;">
+    <h2 style="margin-top:0; font-family:var(--admin-serif); font-size:1.4rem;">6. Kurumsal E-Posta & SMTP Ayarları (Bülten Dağıtımı)</h2>
+    <p style="font-size:0.85rem; color:var(--admin-muted); margin-top:-0.5rem; margin-bottom:1.25rem;">
+      Abonelerinize gönderdiğiniz bültenlerin spam kutusuna düşmeden doğrudan gelen kutusuna ulaşması için cPanel veya kurumsal mail bilgilerinizi girin.
+    </p>
+
+    <div style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:1.25rem;">
+      <div class="form-group">
+        <label class="form-label">SMTP Sunucu Adresi (Host)</label>
+        <input type="text" name="smtp_host" class="form-control" value="<?= htmlspecialchars( Database::get_setting('smtp_host', 'mail.pratfall.com.tr'), ENT_QUOTES, 'UTF-8' ); ?>" placeholder="mail.pratfall.com.tr" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Port</label>
+        <input type="text" name="smtp_port" class="form-control" value="<?= htmlspecialchars( Database::get_setting('smtp_port', '465'), ENT_QUOTES, 'UTF-8' ); ?>" placeholder="465 veya 587" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Şifreleme Türü</label>
+        <select name="smtp_secure" class="form-control">
+          <option value="ssl" <?= Database::get_setting('smtp_secure', 'ssl') === 'ssl' ? 'selected' : ''; ?>>SSL (Port 465)</option>
+          <option value="tls" <?= Database::get_setting('smtp_secure') === 'tls' ? 'selected' : ''; ?>>TLS (Port 587)</option>
+          <option value="none" <?= Database::get_setting('smtp_secure') === 'none' ? 'selected' : ''; ?>>Yok / Düz</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.25rem;">
+      <div class="form-group">
+        <label class="form-label">SMTP Kullanıcı Adı / E-Posta</label>
+        <input type="email" name="smtp_user" class="form-control" value="<?= htmlspecialchars( Database::get_setting('smtp_user', ''), ENT_QUOTES, 'UTF-8' ); ?>" placeholder="bulten@pratfall.com.tr" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">SMTP Şifresi</label>
+        <input type="password" name="smtp_pass" class="form-control" value="<?= htmlspecialchars( Database::get_setting('smtp_pass', ''), ENT_QUOTES, 'UTF-8' ); ?>" placeholder="••••••••••••" />
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.25rem;">
+      <div class="form-group">
+        <label class="form-label">Gönderen E-Posta (From)</label>
+        <input type="email" name="smtp_from_email" class="form-control" value="<?= htmlspecialchars( Database::get_setting('smtp_from_email', ''), ENT_QUOTES, 'UTF-8' ); ?>" placeholder="bulten@pratfall.com.tr" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Gönderen Adı</label>
+        <input type="text" name="smtp_from_name" class="form-control" value="<?= htmlspecialchars( Database::get_setting('smtp_from_name', 'Pratfall Edebiyat & Matbaa Bülteni'), ENT_QUOTES, 'UTF-8' ); ?>" placeholder="Pratfall Edebiyat Bülteni" />
       </div>
     </div>
 

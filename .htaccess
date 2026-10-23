@@ -89,6 +89,7 @@ DirectoryIndex index.php index.html
     RewriteRule ^admin/magazines/?$ admin/magazines.php [L]
     RewriteRule ^admin/books/?$ admin/books.php [L]
     RewriteRule ^admin/subscribers/?$ admin/subscribers.php [L]
+    RewriteRule ^admin/newsletter-send/?$ admin/newsletter-send.php [L]
     RewriteRule ^admin/import-docx/?$ admin/import-docx.php [L]
     RewriteRule ^admin/settings/?$ admin/settings.php [L]
     RewriteRule ^admin/git-sync/?$ admin/git-sync.php [L]

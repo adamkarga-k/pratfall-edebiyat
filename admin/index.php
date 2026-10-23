@@ -22,6 +22,17 @@ $total_magazines   = (int) $db->query( "SELECT COUNT(*) FROM magazines" )->fetch
 $total_books       = (int) $db->query( "SELECT COUNT(*) FROM books" )->fetchColumn();
 $total_categories  = (int) $db->query( "SELECT COUNT(*) FROM categories" )->fetchColumn();
 $total_subscribers = (int) $db->query( "SELECT COUNT(*) FROM subscribers WHERE status = 'active'" )->fetchColumn();
+$total_views       = (int) $db->query( "SELECT SUM(views_count) FROM posts" )->fetchColumn();
+
+// En Çok Okunan Eserler (Lider Tablosu)
+$top_posts = $db->query( "
+    SELECT p.*, a.name AS author_name 
+    FROM posts p 
+    LEFT JOIN authors a ON p.author_id = a.id 
+    WHERE p.status = 'published'
+    ORDER BY p.views_count DESC, p.id DESC 
+    LIMIT 5
+" )->fetchAll();
 
 // Son Yazılar (Son Etkinlik için)
 $recent_posts = $db->query( "
@@ -71,6 +82,14 @@ $db_size = file_exists( DB_FILE ) ? round( filesize( DB_FILE ) / 1024, 1 ) . ' K
     <div class="stat-card-value" style="color:var(--adm-green);"><?= $total_subscribers; ?></div>
     <div style="font-size:0.75rem; color:var(--adm-muted); margin-top:0.4rem;">
       <a href="<?= SITE_URL; ?>/admin/subscribers.php" style="color:inherit; text-decoration:none;">🔒 AES-256 Şifreli Kasa →</a>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-card-label">Toplam Okunma</div>
+    <div class="stat-card-value" style="color:#d97706;"><?= number_format($total_views); ?></div>
+    <div style="font-size:0.75rem; color:var(--adm-muted); margin-top:0.4rem;">
+      👁️ Gizlilik dostu sayaç
     </div>
   </div>
 
@@ -185,6 +204,50 @@ $db_size = file_exists( DB_FILE ) ? round( filesize( DB_FILE ) / 1024, 1 ) . ' K
     </div>
   </div>
 
+</div>
+
+<!-- EN ÇOK OKUNANLAR (LİDER TABLOSU) -->
+<div class="card" style="margin-top:1.5rem;">
+  <div class="card-header">
+    <h2 class="card-title">🔥 En Çok Okunan Eserler</h2>
+    <span style="font-size:0.75rem; color:var(--adm-muted); font-family:var(--adm-font-mono);">Okur etkileşimi ve sayfa görüntülenmeleri</span>
+  </div>
+  <div class="card-body" style="padding:0; overflow-x:auto;">
+    <table class="admin-table" style="width:100%; text-align:left; border-collapse:collapse;">
+      <thead>
+        <tr style="background:var(--adm-bg); border-bottom:1px solid var(--adm-border); font-size:0.75rem; color:var(--adm-muted); text-transform:uppercase;">
+          <th style="padding:0.6rem 1.25rem; width:50px;">Sıra</th>
+          <th style="padding:0.6rem 1.25rem;">Eser Başlığı</th>
+          <th style="padding:0.6rem 1.25rem;">Yazar</th>
+          <th style="padding:0.6rem 1.25rem;">Kategori</th>
+          <th style="padding:0.6rem 1.25rem; text-align:right;">Okunma Sayısı</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php $rank = 1; foreach ( $top_posts as $tp ) : ?>
+          <tr style="border-bottom:1px solid var(--adm-border); font-size:0.85rem;">
+            <td style="padding:0.7rem 1.25rem; font-weight:700; color:<?= $rank === 1 ? '#d97706' : 'var(--adm-muted)'; ?>;">
+              #<?= $rank++; ?>
+            </td>
+            <td style="padding:0.7rem 1.25rem; font-weight:600;">
+              <a href="<?= SITE_URL; ?>/admin/posts.php?action=edit&id=<?= $tp['id']; ?>" style="color:inherit; text-decoration:none;">
+                <?= htmlspecialchars( $tp['title'], ENT_QUOTES, 'UTF-8' ); ?>
+              </a>
+            </td>
+            <td style="padding:0.7rem 1.25rem; color:var(--adm-muted);">
+              <?= htmlspecialchars( $tp['author_name'] ?? 'Bilinmiyor', ENT_QUOTES, 'UTF-8' ); ?>
+            </td>
+            <td style="padding:0.7rem 1.25rem;">
+              <span class="pill-badge pill-purple" style="font-size:0.7rem;"><?= htmlspecialchars( $tp['category'], ENT_QUOTES, 'UTF-8' ); ?></span>
+            </td>
+            <td style="padding:0.7rem 1.25rem; text-align:right; font-family:var(--adm-font-mono); font-weight:700;">
+              👁️ <?= number_format( (int) ($tp['views_count'] ?? 0) ); ?>
+            </td>
+          </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <!-- 3. HIZLI ERİŞİM DİP BİLGİSİ -->

@@ -31,10 +31,38 @@ $stmt->bindValue( 2, $offset, PDO::PARAM_INT );
 $stmt->execute();
 $posts = $stmt->fetchAll();
 
-// Manşet Eseri, İkincil Seçki ve Kalan Yazılar
-$lead_post = ( $page === 1 && ! empty( $posts ) ) ? $posts[0] : null;
-$secondary_post = ( $page === 1 && count( $posts ) > 1 ) ? $posts[1] : null;
-$feed_posts = ( $page === 1 && count( $posts ) > 2 ) ? array_slice( $posts, 2 ) : ( $page === 1 ? [] : $posts );
+// Manşet Eseri, İkincil Seçki ve Kalan Yazılar (Öne Çıkarılan / Featured Desteği)
+$lead_post = null;
+if ( $page === 1 ) {
+    $featured_stmt = $db->query( "
+        SELECT p.*, a.name AS author_name, a.slug AS author_slug, a.photo AS author_photo, a.title AS author_title
+        FROM posts p
+        LEFT JOIN authors a ON p.author_id = a.id
+        WHERE p.status = 'published' AND p.is_featured = 1
+        ORDER BY p.published_at DESC
+        LIMIT 1
+    " );
+    $lead_post = $featured_stmt->fetch();
+}
+
+if ( ! $lead_post && $page === 1 && ! empty( $posts ) ) {
+    $lead_post = $posts[0];
+}
+
+// Kalan yazıları ayıkla (lead_post hariç)
+$other_posts = [];
+if ( $lead_post ) {
+    foreach ( $posts as $p ) {
+        if ( $p['id'] != $lead_post['id'] ) {
+            $other_posts[] = $p;
+        }
+    }
+} else {
+    $other_posts = $posts;
+}
+
+$secondary_post = ( $page === 1 && count( $other_posts ) > 0 ) ? array_shift( $other_posts ) : null;
+$feed_posts = ( $page === 1 ) ? $other_posts : $posts;
 
 // Eğer feed boşsa veya az yazı varsa demo yazıları göster
 if ( empty( $feed_posts ) && ! empty( $posts ) ) {

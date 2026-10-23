@@ -69,6 +69,9 @@ Router::any( '/admin/books.php', PATH_ADMIN . '/books.php' );
 Router::any( '/admin/subscribers', PATH_ADMIN . '/subscribers.php' );
 Router::any( '/admin/subscribers.php', PATH_ADMIN . '/subscribers.php' );
 
+Router::any( '/admin/newsletter-send', PATH_ADMIN . '/newsletter-send.php' );
+Router::any( '/admin/newsletter-send.php', PATH_ADMIN . '/newsletter-send.php' );
+
 Router::any( '/admin/import-docx', PATH_ADMIN . '/import-docx.php' );
 Router::any( '/admin/import-docx.php', PATH_ADMIN . '/import-docx.php' );
 

@@ -103,6 +103,8 @@ class Database {
                 content TEXT,
                 featured_image TEXT,
                 reading_time INTEGER DEFAULT 5,
+                is_featured INTEGER DEFAULT 0,
+                views_count INTEGER DEFAULT 0,
                 status TEXT DEFAULT 'published',
                 published_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -201,6 +203,12 @@ class Database {
             $col_names = array_column( $cols, 'name' );
             if ( ! in_array( 'tags', $col_names ) ) {
                 self::$pdo->exec( "ALTER TABLE posts ADD COLUMN tags TEXT;" );
+            }
+            if ( ! in_array( 'is_featured', $col_names ) ) {
+                self::$pdo->exec( "ALTER TABLE posts ADD COLUMN is_featured INTEGER DEFAULT 0;" );
+            }
+            if ( ! in_array( 'views_count', $col_names ) ) {
+                self::$pdo->exec( "ALTER TABLE posts ADD COLUMN views_count INTEGER DEFAULT 0;" );
             }
         } catch ( Throwable $e ) {}
     }

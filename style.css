@@ -201,3 +201,32 @@ h1, h2, h3, h4, h5, h6 {
   z-index: 100000;
   box-shadow: var(--shadow-solid);
 }
+
+/* ==========================================================================
+   EDEBI TIPOGRAFİ EKLERİ: ŞİİR BLOĞU & DİPNOTLAR
+   ========================================================================== */
+.poem-block {
+  margin: 2.25rem auto;
+  max-width: 640px;
+  padding: 1.5rem 2.25rem;
+  background: rgba(0, 0, 0, 0.02);
+  border-left: 3px solid var(--accent-primary, #8b1e0f);
+  font-family: var(--font-serif, Georgia, serif);
+  font-style: italic;
+  font-size: 1.15rem;
+  line-height: 2.2;
+  white-space: pre-line;
+}
+
+.footnote-word {
+  text-decoration: underline dotted var(--accent-primary, #8b1e0f);
+  cursor: help;
+  position: relative;
+}
+
+.footnote-word sup {
+  color: var(--accent-primary, #8b1e0f);
+  font-weight: 700;
+  font-size: 0.75em;
+  margin-left: 2px;
+}
