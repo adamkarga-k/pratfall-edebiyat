@@ -10,30 +10,14 @@ $db = Database::get();
 
 // Sayfalama Parametresi
 $page = isset( $_GET['paged'] ) ? max( 1, (int) $_GET['paged'] ) : 1;
-$per_page = 6;
-$offset = ( $page - 1 ) * $per_page;
+$per_page = 9; // Her sayfada Son Eserler akışında tam 9 eser yer alır
 
-// Toplam Yazı Sayısı
-$total_posts = (int) $db->query( "SELECT COUNT(*) FROM posts WHERE status = 'published'" )->fetchColumn();
-$total_pages = ceil( $total_posts / $per_page );
-
-// Yazıları Çek (Yazar Bilgisiyle Birlikte)
-$stmt = $db->prepare( "
-    SELECT p.*, a.name AS author_name, a.slug AS author_slug, a.photo AS author_photo, a.title AS author_title
-    FROM posts p
-    LEFT JOIN authors a ON p.author_id = a.id
-    WHERE p.status = 'published'
-    ORDER BY p.published_at DESC
-    LIMIT ? OFFSET ?
-" );
-$stmt->bindValue( 1, $per_page, PDO::PARAM_INT );
-$stmt->bindValue( 2, $offset, PDO::PARAM_INT );
-$stmt->execute();
-$posts = $stmt->fetchAll();
-
-// Manşet Eseri, İkincil Seçki ve Kalan Yazılar (Öne Çıkarılan / Featured Desteği)
+// Manşet Eseri (Öne Çıkarılan veya En Son Eser - Yalnızca 1. Sayfada Gösterilir)
 $lead_post = null;
+$lead_id = 0;
+
 if ( $page === 1 ) {
+    // 1. Öncelik: Editörün manşete sabitlediği (is_featured = 1) eser
     $featured_stmt = $db->query( "
         SELECT p.*, a.name AS author_name, a.slug AS author_slug, a.photo AS author_photo, a.title AS author_title
         FROM posts p
@@ -43,32 +27,85 @@ if ( $page === 1 ) {
         LIMIT 1
     " );
     $lead_post = $featured_stmt->fetch();
-}
 
-if ( ! $lead_post && $page === 1 && ! empty( $posts ) ) {
-    $lead_post = $posts[0];
-}
+    // 2. Öncelik: Eğer özel öne çıkarılan yoksa en son yayınlanan eser manşet olur
+    if ( ! $lead_post ) {
+        $latest_stmt = $db->query( "
+            SELECT p.*, a.name AS author_name, a.slug AS author_slug, a.photo AS author_photo, a.title AS author_title
+            FROM posts p
+            LEFT JOIN authors a ON p.author_id = a.id
+            WHERE p.status = 'published'
+            ORDER BY p.published_at DESC
+            LIMIT 1
+        " );
+        $lead_post = $latest_stmt->fetch();
+    }
 
-// Kalan yazıları ayıkla (lead_post hariç)
-$other_posts = [];
-if ( $lead_post ) {
-    foreach ( $posts as $p ) {
-        if ( $p['id'] != $lead_post['id'] ) {
-            $other_posts[] = $p;
-        }
+    if ( $lead_post ) {
+        $lead_id = (int) $lead_post['id'];
     }
 } else {
-    $other_posts = $posts;
+    // 2. ve sonraki sayfalarda manşet eseri tekrarlanmasın diye yine ana manşet ID'sini tespit et
+    $feat_id_stmt = $db->query( "
+        SELECT id FROM posts 
+        WHERE status = 'published' AND is_featured = 1 
+        ORDER BY published_at DESC LIMIT 1
+    " );
+    $lead_id = (int) ( $feat_id_stmt->fetchColumn() ?: 0 );
+    if ( ! $lead_id ) {
+        $latest_id_stmt = $db->query( "
+            SELECT id FROM posts 
+            WHERE status = 'published' 
+            ORDER BY published_at DESC LIMIT 1
+        " );
+        $lead_id = (int) ( $latest_id_stmt->fetchColumn() ?: 0 );
+    }
 }
 
-$feed_posts = ( $page === 1 ) ? $other_posts : $posts;
+// Toplam Akış Yazısı Sayısı (Manşetteki eser hariç)
+if ( $lead_id > 0 ) {
+    $count_stmt = $db->prepare( "SELECT COUNT(*) FROM posts WHERE status = 'published' AND id != ?" );
+    $count_stmt->execute( [ $lead_id ] );
+    $total_feed_posts = (int) $count_stmt->fetchColumn();
+} else {
+    $total_feed_posts = (int) $db->query( "SELECT COUNT(*) FROM posts WHERE status = 'published'" )->fetchColumn();
+}
+
+$total_pages = max( 1, (int) ceil( $total_feed_posts / $per_page ) );
+$offset = ( $page - 1 ) * $per_page;
+
+// Akış Yazılarını Çek (Her sayfada tam 9 eser; 1. sayfada manşet ile birlikte toplam 10 eser)
+if ( $lead_id > 0 ) {
+    $stmt = $db->prepare( "
+        SELECT p.*, a.name AS author_name, a.slug AS author_slug, a.photo AS author_photo, a.title AS author_title
+        FROM posts p
+        LEFT JOIN authors a ON p.author_id = a.id
+        WHERE p.status = 'published' AND p.id != ?
+        ORDER BY p.published_at DESC
+        LIMIT ? OFFSET ?
+    " );
+    $stmt->bindValue( 1, $lead_id, PDO::PARAM_INT );
+    $stmt->bindValue( 2, $per_page, PDO::PARAM_INT );
+    $stmt->bindValue( 3, $offset, PDO::PARAM_INT );
+    $stmt->execute();
+    $feed_posts = $stmt->fetchAll();
+} else {
+    $stmt = $db->prepare( "
+        SELECT p.*, a.name AS author_name, a.slug AS author_slug, a.photo AS author_photo, a.title AS author_title
+        FROM posts p
+        LEFT JOIN authors a ON p.author_id = a.id
+        WHERE p.status = 'published'
+        ORDER BY p.published_at DESC
+        LIMIT ? OFFSET ?
+    " );
+    $stmt->bindValue( 1, $per_page, PDO::PARAM_INT );
+    $stmt->bindValue( 2, $offset, PDO::PARAM_INT );
+    $stmt->execute();
+    $feed_posts = $stmt->fetchAll();
+}
+
 $insta_dergi_url = Database::get_setting( 'site_instagram_url', 'https://www.instagram.com/pratfalldergi/' );
 $insta_kitap_url = Database::get_setting( 'site_instagram_kitap_url', 'https://www.instagram.com/pratfallkitap/' );
-
-// Eğer feed boşsa veya az yazı varsa demo yazıları göster
-if ( empty( $feed_posts ) && ! empty( $posts ) ) {
-    $feed_posts = $posts;
-}
 
 // Ana Sayfa: Rastgele 4 Yazar (Her sayfa yenilendiğinde başka 4 yazar gelir)
 $authors = $db->query( "
