@@ -192,7 +192,7 @@ require PATH_ADMIN . '/layout/header.php';
     <div>
       <h1 class="admin-title">Kimler Yazmış? (Yazarlar Masası)</h1>
       <p style="margin:0.25rem 0 0 0; color:var(--admin-muted); font-size:0.9rem;">
-        Mecmuada adı geçen tüm yazarların yoklama listesi ve profilleri.
+        Platformda adı geçen tüm yazarların yoklama listesi ve profilleri.
       </p>
     </div>
     <a href="<?= SITE_URL; ?>/admin/authors?action=new" class="btn btn-primary">+ Yeni Yazar Ekle</a>

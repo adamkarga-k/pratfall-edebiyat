@@ -1,6 +1,6 @@
 <?php
 /**
- * Pratfall Standalone - Mecmua ve Sistem Ayarları
+ * Pratfall Standalone - Platform ve Sistem Ayarları
  */
 
 if ( ! defined( 'PRATFALL_ROOT' ) ) {
@@ -9,7 +9,7 @@ if ( ! defined( 'PRATFALL_ROOT' ) ) {
 
 Auth::require_login();
 
-$page_title = 'Mecmua Ayarları';
+$page_title = 'Site & Platform Ayarları';
 $active_tab = 'settings';
 
 $msg = '';
@@ -66,7 +66,7 @@ require PATH_ADMIN . '/layout/header.php';
 
 <div class="admin-header-row">
   <div>
-    <h1 class="admin-title">⚙️ Mecmua ve Sistem Ayarları</h1>
+    <h1 class="admin-title">⚙️ Site & Platform Ayarları</h1>
     <p style="margin:0.25rem 0 0 0; color:var(--admin-muted); font-size:0.9rem;">
       Sitedeki tüm editoryal metinleri, manifestoyu, kayan bant cümlelerini ve şifrenizi buradan yönetin.
     </p>
@@ -159,10 +159,10 @@ require PATH_ADMIN . '/layout/header.php';
 
   <!-- 4. ÜSTBİLGİ (MASTHEAD) & SLOGAN -->
   <div class="admin-card">
-    <h2 style="margin-top:0; font-family:var(--admin-serif); font-size:1.4rem;">4. Mecmua Kimliği & Gazete Künyesi</h2>
+    <h2 style="margin-top:0; font-family:var(--admin-serif); font-size:1.4rem;">4. Platform Kimliği & Gazete Künyesi</h2>
     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.25rem;">
       <div class="form-group">
-        <label class="form-label">Mecmua Adı</label>
+        <label class="form-label">Platform Adı</label>
         <input type="text" name="site_name" class="form-control" value="<?= htmlspecialchars( Database::get_setting('site_name', 'PRATFALL'), ENT_QUOTES, 'UTF-8' ); ?>" />
       </div>
       <div class="form-group">
@@ -198,7 +198,7 @@ require PATH_ADMIN . '/layout/header.php';
       </div>
       <div class="form-group">
         <label class="form-label">Telif / Haklar Metni</label>
-        <input type="text" name="footer_copyright" class="form-control" value="<?= htmlspecialchars( Database::get_setting('footer_copyright', 'Tüm hakları yazarlara ve mecmuaya aittir.'), ENT_QUOTES, 'UTF-8' ); ?>" />
+        <input type="text" name="footer_copyright" class="form-control" value="<?= htmlspecialchars( Database::get_setting('footer_copyright', 'Tüm hakları yazarlara ve platforma aittir.'), ENT_QUOTES, 'UTF-8' ); ?>" />
       </div>
     </div>
 

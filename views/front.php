@@ -195,7 +195,7 @@ require PATH_VIEWS . '/layout/header.php';
                       </a>
                     </div>
                     <div style="font-size:0.7rem; color:var(--text-muted);">
-                      <?= htmlspecialchars( $lead_post['author_title'] ?? 'Mecmua Yazarı' ); ?>
+                      <?= htmlspecialchars( $lead_post['author_title'] ?? 'Yazar' ); ?>
                     </div>
                   </div>
                 </div>

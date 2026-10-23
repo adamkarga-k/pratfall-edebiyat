@@ -342,7 +342,7 @@ require PATH_ADMIN . '/layout/header.php';
               <div>
                 <label class="form-label" style="font-weight:600; margin-bottom:0.3rem;">Yazar</label>
                 <select name="items[<?= $idx; ?>][author_id]" class="form-control">
-                  <option value="0">✦ Ortak Mecmua Metni</option>
+                  <option value="0">✦ Ortak Platform Metni</option>
                   <?php foreach ( $authors as $a ) : ?>
                     <option value="<?= $a['id']; ?>" <?= $item['author_id'] == $a['id'] ? 'selected' : ''; ?>>
                       <?= htmlspecialchars( $a['name'], ENT_QUOTES, 'UTF-8' ); ?>

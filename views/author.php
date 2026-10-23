@@ -35,7 +35,7 @@ $has_socials = ! empty( $author['twitter'] ) || ! empty( $author['instagram'] ) 
 // SEO Bilgileri
 $seo_data = [
     'title'        => $author['name'] . ' Masası',
-    'description'  => $author['bio'] ?: ( $author['name'] . ' tarafından Pratfall Mecmua sayfalarında kaleme alınan eserler.' ),
+    'description'  => $author['bio'] ?: ( $author['name'] . ' tarafından Pratfall sayfalarında kaleme alınan eserler.' ),
     'url'          => SITE_URL . '/yazar/' . $author['slug'],
     'image'        => $author['photo'] ?? '',
     'type'         => 'profile',

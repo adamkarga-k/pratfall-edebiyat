@@ -3,8 +3,11 @@
  * Pratfall Standalone - Ortak Üstbilgi (Header)
  */
 
-$site_name     = Database::get_setting( 'site_name', 'PRATFALL' );
-$site_slogan   = Database::get_setting( 'site_slogan', 'Kusurlu Kalma Çabası' );
+$site_name     = trim( str_ireplace( 'Mecmua', '', Database::get_setting( 'site_name', 'PRATFALL' ) ) );
+if ( empty( $site_name ) ) {
+    $site_name = 'PRATFALL';
+}
+$site_slogan   = trim( str_ireplace( 'Mecmua', 'Edebiyat Dergisi & Platformu', Database::get_setting( 'site_slogan', 'Kusurlu Kalma Çabası' ) ) );
 $location_badge= Database::get_setting( 'site_location_badge', 'Edebiyat & Fikir & Kültür & Sanat' );
 if ( empty( $location_badge ) || strpos( $location_badge, 'İSTANBUL' ) !== false ) {
     $location_badge = 'Edebiyat & Fikir & Kültür & Sanat';
@@ -100,7 +103,7 @@ $ticker_items = array_filter( $ticker_items );
 
       <nav class="pratfall-nav" role="navigation" aria-label="Ana Menü">
         <ul class="pratfall-menu">
-          <li><a href="<?= SITE_URL; ?>/">Mecmua</a></li>
+          <li><a href="<?= SITE_URL; ?>/">Ana Sayfa</a></li>
           <li><a href="<?= SITE_URL; ?>/#dergiler">Dergilerimiz</a></li>
           <li><a href="<?= SITE_URL; ?>/kitaplik">Kitaplık</a></li>
           <li><a href="<?= SITE_URL; ?>/#yazarlar">Kimler Yazmış?</a></li>

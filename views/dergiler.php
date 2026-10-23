@@ -8,7 +8,7 @@ $magazines = $db->query( "SELECT * FROM magazines ORDER BY order_num ASC, id DES
 
 $seo_data = [
     'title'       => 'Dergilerimizin Tüm Sayıları',
-    'description' => 'Pratfall Mecmua basılı sayıları ve fanzin arşivi.',
+    'description' => 'Pratfall basılı dergi sayıları ve edebiyat arşivi.',
     'url'         => SITE_URL . '/dergiler',
     'type'        => 'website',
 ];

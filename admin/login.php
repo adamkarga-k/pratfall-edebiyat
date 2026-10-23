@@ -77,7 +77,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 
     <div style="text-align:center; margin-top:1.75rem; border-top:1px solid var(--adm-border-light); padding-top:1rem;">
       <a href="<?= SITE_URL; ?>/" style="font-size:0.8rem; color:var(--adm-muted); text-decoration:none;">
-        ← Mecmua Ana Sayfasına Dön
+        ← Ana Sayfaya Dön
       </a>
     </div>
   </div>

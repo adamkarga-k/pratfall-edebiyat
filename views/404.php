@@ -18,7 +18,7 @@ require PATH_VIEWS . '/layout/header.php';
       "Kusurlu Kalma Çabası" derken belki de bu sayfayı hiç basmadık ya da sahafların tozlu raflarında bir yere sıkıştı. Aradığınız metin taşınmış veya silinmiş olabilir.
     </p>
     <a href="<?= SITE_URL; ?>/" class="stamp-tag" style="padding:0.75rem 1.5rem; font-size:0.9rem;">
-      ← Mecmua Ana Sayfasına Dön
+      ← Ana Sayfaya Dön
     </a>
   </div>
 </div>

@@ -41,6 +41,7 @@ class Database {
             self::ensure_categories();
             self::ensure_columns();
             self::ensure_books();
+            self::clean_mecmua_settings();
         }
         return self::$pdo;
     }
@@ -183,7 +184,7 @@ class Database {
                     [ 'Röportaj', 'roportaj', 'Yazarlar ve şairlerle yapılan derinlikli söyleşiler.', 5 ],
                     [ 'Felsefe', 'felsefe', 'Varoluş, etik ve estetik üzerine felsefi metinler.', 6 ],
                     [ 'Fragmanlar', 'fragmanlar', 'Aforizmalar, kısa notlar ve daktilo pasajları.', 7 ],
-                    [ 'Manifesto', 'manifesto', 'Mecmuanın ilkeleri ve editoryal manifestolar.', 8 ],
+                    [ 'Manifesto', 'manifesto', 'Platformun ilkeleri ve editoryal manifestolar.', 8 ],
                 ];
                 $stmt = $db->prepare( "INSERT OR IGNORE INTO categories (name, slug, description, order_num) VALUES (?, ?, ?, ?)" );
                 foreach ( $defaults as $cat ) {
@@ -265,6 +266,19 @@ class Database {
         } catch ( Throwable $e ) {}
     }
 
+    public static function clean_mecmua_settings(): void {
+        try {
+            $db = self::$pdo;
+            $db->exec( "UPDATE settings SET value = 'PRATFALL' WHERE key = 'site_name' AND value LIKE '%Mecmua%';" );
+            $db->exec( "UPDATE settings SET value = REPLACE(value, 'Pratfall Mecmua', 'Pratfall') WHERE key IN ('manifesto_p2', 'footer_desc', 'ticker_1');" );
+            $db->exec( "UPDATE settings SET value = REPLACE(value, 'kültür mecmuasıdır', 'edebiyat dergisi ve yayınevinin bağımsız edebiyat platformudur') WHERE key = 'footer_desc';" );
+            $db->exec( "UPDATE settings SET value = REPLACE(value, 'mecmuaya aittir', 'platforma aittir') WHERE key = 'footer_copyright';" );
+            $db->exec( "UPDATE settings SET value = 'Dergimizde yayınlanan eserler, yayınevimizden çıkan kitaplar ve edebiyat dünyasından bültenler için e-posta bültenimize kaydolun.' WHERE key = 'footer_newsletter_desc';" );
+            $db->exec( "UPDATE authors SET name = 'Pratfall Editörü' WHERE name = 'Mecmua Editörü';" );
+            $db->exec( "UPDATE authors SET bio = REPLACE(bio, 'Mecmuamızın', 'Platformumuzun'), bio = REPLACE(bio, 'mecmua sayfalarında', 'platform sayfalarında') WHERE bio LIKE '%mecmua%';" );
+        } catch ( Throwable $e ) {}
+    }
+
     public static function ensure_initial_posts(): void {
         try {
             $count = (int) self::$pdo->query( "SELECT COUNT(*) FROM posts" )->fetchColumn();
@@ -283,7 +297,7 @@ class Database {
                 'slug'           => 'kusursuzlugun-iflasi-matbaanin-ve-ham-edebiyatin-dirilisi',
                 'category'       => 'DENEME',
                 'excerpt'        => 'Mükemmel pürüzsüzlükte tasarlanmış dijital çağın karşısında, kağıdın kusurlu liflerini ve daktilonun atlayan tuşlarını savunuyoruz.',
-                'content'        => '<p>Mükemmel pürüzsüzlükte tasarlanmış dijital çağın karşısında, kağıdın kusurlu liflerini ve daktilonun atlayan tuşlarını savunuyoruz.</p><p>Kusursuzluk sanayileşmiş bir yanılsamadır; hakikat ve samimiyet daima çatlaklarda gizlenir. Pratfall, "Kusurlu Kalma Çabası" şiarıyla yola çıkan, matbaa mürekkebinin kokusunu, sokakların dağınıklığını ve kusurlu estetiğin cazibesini bir araya getiren bağımsız bir kültür mecmuasıdır.</p><p>Sözcüklerin kusuru, insanın hakiki yarasına denk gelir. Kusursuz bir dil, henüz acı çekmemiş bir zihnin ezberidir.</p>',
+                'content'        => '<p>Mükemmel pürüzsüzlükte tasarlanmış dijital çağın karşısında, kağıdın kusurlu liflerini ve daktilonun atlayan tuşlarını savunuyoruz.</p><p>Kusursuzluk sanayileşmiş bir yanılsamadır; hakikat ve samimiyet daima çatlaklarda gizlenir. Pratfall, "Kusurlu Kalma Çabası" şiarıyla yola çıkan, matbaa mürekkebinin kokusunu, sokakların dağınıklığını ve kusurlu estetiğin cazibesini bir araya getiren edebiyat dergisi ve yayınevinin bağımsız edebiyat platformudur.</p><p>Sözcüklerin kusuru, insanın hakiki yarasına denk gelir. Kusursuz bir dil, henüz acı çekmemiş bir zihnin ezberidir.</p>',
                 'featured_image' => 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=1200&q=80',
                 'reading_time'   => 7,
             ],
@@ -363,12 +377,12 @@ class Database {
             'manifesto_badge'       => '✦ EDİTORYAL MANİFESTO',
             'manifesto_tag'         => 'ELLIOT ARONSON · 1966',
             'manifesto_p1'          => '1966 yılında sosyal psikolog Elliot Aronson tarafından keşfedilen Pratfall Etkisi (Sakarlık/Kusur Etkisi), kusursuzluğun soğuk bir yabancılaşma ürettiğini, küçük tökezlemelerin ise hakiki bir yakınlık doğurduğunu kanıtladı. Deneyde, soruları hatasız yanıtlayan parlak bir adayın üzerine kahve döküp sakarlık yapması, onu izleyicilerin gözünde çok daha sevimli, samimi ve sahici kılmıştır. Mükemmel olan yapay ve mesafelidir; kusurlarını saklamayan ise bizden biridir.',
-            'manifesto_p2'          => 'Pratfall Mecmua, adını bu sarsıcı hakikatten alır. Dijital çağın yapay pürüzsüzlüğüne ve steril estetiğine karşı; silinip yeniden yazılan satırların tereddüdünü, dökülen kahvenin lekesini, matbaa mürekkebinin bulaşıklığını ve insan olmanın o kırılgan sakarlıklarını savunuyoruz. Çünkü hakikat daima çatlaklarda gizlenir. Bizim edebiyatımız, tek bir direniş cümlesinden ibarettir: "Kusurlu Kalma Çabası".',
+            'manifesto_p2'          => 'Pratfall, adını bu sarsıcı hakikatten alır. Dijital çağın yapay pürüzsüzlüğüne ve steril estetiğine karşı; silinip yeniden yazılan satırların tereddüdünü, dökülen kahvenin lekesini, matbaa mürekkebinin bulaşıklığını ve insan olmanın o kırılgan sakarlıklarını savunuyoruz. Çünkü hakikat daima çatlaklarda gizlenir. Bizim edebiyatımız, tek bir direniş cümlesinden ibarettir: "Kusurlu Kalma Çabası".',
             'footer_slogan'         => '✦ Kusurlu Kalma Çabası',
-            'footer_desc'           => 'Kusursuzluk sanayileşmiş bir yanılsamadır; hakikat ve samimiyet daima çatlaklarda gizlenir. Pratfall, "Kusurlu Kalma Çabası" şiarıyla yola çıkan, matbaa mürekkebinin kokusunu, sokakların dağınıklığını ve kusurlu estetiğin cazibesini bir araya getiren bağımsız bir kültür mecmuasıdır.',
-            'footer_newsletter_title'=> 'Matbaa Bülteni',
-            'footer_newsletter_desc' => 'Yeni sayılar matbaaya girdiğinde ve yeni eserler yayınlandığında haberdar olun.',
-            'footer_copyright'      => 'Tüm hakları yazarlara ve mecmuaya aittir.',
+            'footer_desc'           => 'Kusursuzluk sanayileşmiş bir yanılsamadır; hakikat ve samimiyet daima çatlaklarda gizlenir. Pratfall; dergimizde yayınlanan eserlerin, bağımsız kitapların ve edebi bültenlerin bir araya geldiği bağımsız bir edebiyat platformudur.',
+            'footer_newsletter_title'=> 'Matbaa & Edebiyat Bülteni',
+            'footer_newsletter_desc' => 'Dergimizde yayınlanan eserler, yayınevimizden çıkan kitaplar ve edebiyat dünyasından bültenler için e-posta bültenimize kaydolun.',
+            'footer_copyright'      => 'Tüm hakları yazarlara ve platforma aittir.',
         ];
 
         $stmt = $db->prepare( "INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)" );
@@ -379,11 +393,11 @@ class Database {
         // Demo Yazarlar
         $authors = [
             [
-                'name'      => 'Mecmua Editörü',
+                'name'      => 'Pratfall Editörü',
                 'slug'      => 'editor',
                 'title'     => 'Yayın Kurulu & Deneme',
                 'quote'     => 'Sözcüklerin kusuru, insanın hakiki yarasına denk gelir. Kusursuz bir dil, henüz acı çekmemiş bir zihnin ezberidir.',
-                'bio'       => 'Mecmuamızın bağımsız yazarı. Edebiyat, felsefe, matbaa ve kültür yazılarıyla mecmua sayfalarında yer almaktadır.',
+                'bio'       => 'Platformumuzun bağımsız yazarı. Edebiyat dergimizde ve yayınevimizde yer alan yazılarıyla katkı sunmaktadır.',
                 'photo'     => '',
                 'twitter'   => '',
                 'instagram' => '',

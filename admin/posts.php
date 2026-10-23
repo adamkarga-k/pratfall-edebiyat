@@ -329,7 +329,7 @@ require PATH_ADMIN . '/layout/header.php';
             <div class="form-group">
               <label class="form-label" for="author_id">Yazar Seçin</label>
               <select name="author_id" id="author_id" class="form-control">
-                <option value="0">✦ Ortak Mecmua Metni</option>
+                <option value="0">✦ Ortak Platform Metni</option>
                 <?php foreach ( $authors as $a ) : ?>
                   <option value="<?= $a['id']; ?>" <?= $post['author_id'] == $a['id'] ? 'selected' : ''; ?>>
                     <?= htmlspecialchars( $a['name'], ENT_QUOTES, 'UTF-8' ); ?>
@@ -550,7 +550,7 @@ require PATH_ADMIN . '/layout/header.php';
     <div>
       <h2 style="margin:0; font-size:1.4rem; font-weight:700;">Yayınlanan Tüm Eserler</h2>
       <p style="margin:0.2rem 0 0 0; color:var(--adm-muted); font-size:0.85rem;">
-        Mecmuada kayıtlı tüm denemeler, şiirler ve edebi metinler.
+        Platformda kayıtlı tüm denemeler, şiirler ve edebi metinler.
       </p>
     </div>
     <div style="display:flex; gap:0.5rem;">

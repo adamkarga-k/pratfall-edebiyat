@@ -15,12 +15,16 @@ class Seo {
      * Sayfa Tipine Göre Tüm Meta Etiketlerini HTML Olarak Basar
      */
     public static function render_head( array $page_data = [] ): string {
-        $site_name = Database::get_setting( 'site_name', 'PRATFALL' );
-        $site_slogan = Database::get_setting( 'site_slogan', 'Kusurlu Kalma Çabası' );
+        $site_name = trim( str_ireplace( 'Mecmua', '', Database::get_setting( 'site_name', 'PRATFALL' ) ) );
+        if ( empty( $site_name ) ) {
+            $site_name = 'PRATFALL';
+        }
+        $site_slogan = trim( str_ireplace( 'Mecmua', 'Edebiyat Dergisi & Platformu', Database::get_setting( 'site_slogan', 'Kusurlu Kalma Çabası' ) ) );
 
         $type        = $page_data['type'] ?? 'website';
         $title       = ! empty( $page_data['title'] ) ? $page_data['title'] . ' ✦ ' . $site_name : $site_name . ' — ' . $site_slogan;
-        $description = $page_data['description'] ?? Database::get_setting( 'footer_desc', 'Kusursuzluk sanayileşmiş bir yanılsamadır; hakikat daima çatlaklarda gizlenir. Bağımsız kültür ve edebiyat mecmuası.' );
+        $description = $page_data['description'] ?? Database::get_setting( 'footer_desc', 'Kusursuzluk sanayileşmiş bir yanılsamadır; hakikat daima çatlaklarda gizlenir. Edebiyat dergisi ve yayınevinin bağımsız edebiyat platformu.' );
+        $description = str_ireplace( [ 'kültür mecmuasıdır', 'Pratfall Mecmua', 'mecmua' ], [ 'edebiyat dergisi ve yayınevinin bağımsız edebiyat platformudur', 'Pratfall', 'edebiyat platformu' ], $description );
         $url         = $page_data['url'] ?? SITE_URL;
         $image       = ! empty( $page_data['image'] ) ? $page_data['image'] : SITE_URL . '/assets/images/og-share.jpg';
 
@@ -101,7 +105,7 @@ class Seo {
                     '@type'       => 'Person',
                     'name'        => $page_data['author_name'] ?? '',
                     'description' => $desc,
-                    'jobTitle'    => $page_data['author_title'] ?? 'Mecmua Yazarı',
+                    'jobTitle'    => $page_data['author_title'] ?? 'Yazar',
                     'url'         => $url,
                 ],
             ];

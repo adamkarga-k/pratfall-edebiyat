@@ -36,7 +36,7 @@ $current_user = Auth::user();
         <div class="sidebar-brand-icon">✦</div>
         <div>
           <div class="sidebar-brand-name">PRATFALL</div>
-          <div style="font-size:0.72rem; color:var(--adm-subtle); font-family:var(--adm-font-mono);">Kültür & Mecmua</div>
+          <div style="font-size:0.72rem; color:var(--adm-subtle); font-family:var(--adm-font-mono);">Edebiyat Platformu</div>
         </div>
       </a>
     </div>
