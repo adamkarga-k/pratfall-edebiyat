@@ -23,14 +23,17 @@ $current_user = Auth::user();
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet" />
 
-  <link rel="stylesheet" href="<?= SITE_URL; ?>/assets/css/admin.css?v=<?= PRATFALL_APP_VERSION; ?>.<?= time(); ?>" />
+  <link rel="stylesheet" href="<?= SITE_URL; ?>/assets/css/admin.css?v=<?= PRATFALL_APP_VERSION; ?>" />
 </head>
 <body>
 
 <div class="admin-app-wrapper">
   
+  <!-- Mobil Menü Karartma Katmanı (Backdrop) -->
+  <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleAdminSidebar(false)"></div>
+
   <!-- 1. SOL MENÜ (SIDEBAR) -->
-  <aside class="admin-sidebar">
+  <aside class="admin-sidebar" id="adminSidebar">
     <div class="sidebar-header">
       <a href="<?= SITE_URL; ?>/admin/index.php" class="sidebar-brand">
         <div class="sidebar-brand-icon">✦</div>
@@ -39,6 +42,9 @@ $current_user = Auth::user();
           <div style="font-size:0.72rem; color:var(--adm-subtle); font-family:var(--adm-font-mono);">Edebiyat Platformu</div>
         </div>
       </a>
+      <button type="button" class="sidebar-close-btn" onclick="toggleAdminSidebar(false)" aria-label="Menüyü Kapat" title="Menüyü Kapat">
+        ✕
+      </button>
     </div>
 
     <div class="sidebar-nav-scroll">
@@ -180,36 +186,43 @@ $current_user = Auth::user();
     <!-- Üst Gezinme Çubuğu (Top Bar) -->
     <header class="admin-topbar">
       <div class="topbar-left">
+        <button type="button" class="sidebar-toggle-btn" onclick="toggleAdminSidebar(true)" aria-label="Menüyü Aç" title="Menüyü Aç">
+          <span class="hamburger-bar"></span>
+          <span class="hamburger-bar"></span>
+          <span class="hamburger-bar"></span>
+        </button>
         <h1 class="topbar-page-title"><?= htmlspecialchars( $page_title ?? 'Kontrol Paneli', ENT_QUOTES, 'UTF-8' ); ?></h1>
       </div>
 
       <div class="topbar-right">
         <!-- Hızlı Eylem Butonları -->
-        <a href="<?= SITE_URL; ?>/admin/posts.php?action=new" class="btn btn-sm">
-          <span>+</span> Yazı Ekle
-        </a>
-        <a href="<?= SITE_URL; ?>/admin/import-docx.php" class="btn btn-sm btn-accent">
-          <span>📥</span> Word Aktar
-        </a>
-        <a href="<?= SITE_URL; ?>/admin/magazines.php?action=new" class="btn btn-sm">
-          <span>📖</span> Dergi Ekle
-        </a>
-        <a href="<?= SITE_URL; ?>/admin/books.php?action=new" class="btn btn-sm">
-          <span>📚</span> Kitap Ekle
+        <a href="<?= SITE_URL; ?>/admin/posts.php?action=new" class="btn btn-sm btn-primary" title="Yeni Eser Ekle">
+          <span>+</span> <span class="btn-text-responsive">Yazı Ekle</span>
         </a>
 
-        <div style="height:20px; width:1px; background:var(--adm-border); margin:0 0.25rem;"></div>
+        <div class="topbar-actions-desktop">
+          <a href="<?= SITE_URL; ?>/admin/import-docx.php" class="btn btn-sm btn-accent" title="Word'den Eser Aktar">
+            <span>📥</span> Word Aktar
+          </a>
+          <a href="<?= SITE_URL; ?>/admin/magazines.php?action=new" class="btn btn-sm" title="Yeni Dergi Sayısı Tanımla">
+            <span>📖</span> Dergi Ekle
+          </a>
+          <a href="<?= SITE_URL; ?>/admin/books.php?action=new" class="btn btn-sm" title="Yeni Kitap Tanımla">
+            <span>📚</span> Kitap Ekle
+          </a>
+          <div style="height:20px; width:1px; background:var(--adm-border); margin:0 0.25rem;"></div>
+        </div>
 
-        <a href="<?= SITE_URL; ?>/" target="_blank" class="btn btn-sm" title="Siteyi yeni sekmede aç">
-          <span>↗</span> Siteyi Görüntüle
+        <a href="<?= SITE_URL; ?>/" target="_blank" class="btn btn-sm topbar-btn-site" title="Siteyi yeni sekmede aç">
+          <span>↗</span> <span class="btn-text-responsive">Siteyi Gör</span>
         </a>
 
         <div class="user-profile-badge">
           <div class="user-avatar-dot"><?= strtoupper( substr( $current_user['username'] ?? 'A', 0, 1 ) ); ?></div>
-          <span><?= htmlspecialchars( $current_user['username'] ?? 'Admin', ENT_QUOTES, 'UTF-8' ); ?></span>
+          <span class="user-name-text"><?= htmlspecialchars( $current_user['username'] ?? 'Admin', ENT_QUOTES, 'UTF-8' ); ?></span>
         </div>
 
-        <a href="<?= SITE_URL; ?>/admin/logout.php" class="btn btn-sm" style="color:#ef4444;" title="Oturumu Kapat">
+        <a href="<?= SITE_URL; ?>/admin/logout.php" class="btn btn-sm btn-logout" style="color:#ef4444;" title="Oturumu Kapat">
           Çıkış
         </a>
       </div>
