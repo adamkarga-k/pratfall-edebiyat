@@ -80,15 +80,32 @@ class Mailer {
     }
 
     /**
-     * Doğrudan Soket Tabanlı SMTP Gönderici (TLS / SSL Destekli)
+     * Doğrudan Soket Tabanlı SMTP Gönderici (TLS / SSL Destekli & cPanel Uyumlu)
      */
     private static function sendSmtp( string $host, int $port, string $secure, string $user, string $pass, string $fromEmail, string $fromName, string $to, string $subject, string $htmlContent, string $textContent ): array {
-        $prefix = ( $secure === 'ssl' ) ? 'ssl://' : '';
+        $prefix = ( $secure === 'ssl' ) ? 'ssl://' : 'tcp://';
         $timeout = 15;
         $errno = 0;
         $errstr = '';
 
-        $socket = @fsockopen( $prefix . $host, $port, $errno, $errstr, $timeout );
+        // cPanel / Paylaşımlı Hostinglerde sunucu sertifika uyuşmazlığını (*.guzelhosting.com) aşmak için SSL bağlamı
+        $context = stream_context_create( [
+            'ssl' => [
+                'verify_peer'       => false,
+                'verify_peer_name'  => false,
+                'allow_self_signed' => true,
+            ],
+        ] );
+
+        $remote_socket = $prefix . $host . ':' . $port;
+        $socket = @stream_socket_client( $remote_socket, $errno, $errstr, $timeout, STREAM_CLIENT_CONNECT, $context );
+        
+        // Eğer ssl:// veya belirtilen host ile bağlanamazsa ve host localhost değilse, yerel sunucuyu (localhost) dene
+        if ( ! $socket && $host !== 'localhost' && $host !== '127.0.0.1' ) {
+            $fallback_socket = $prefix . 'localhost:' . $port;
+            $socket = @stream_socket_client( $fallback_socket, $errno, $errstr, $timeout, STREAM_CLIENT_CONNECT, $context );
+        }
+
         if ( ! $socket ) {
             return [ 'success' => false, 'message' => "SMTP sunucusuna bağlanılamadı ({$host}:{$port}) - Hata: {$errstr} ({$errno})" ];
         }
