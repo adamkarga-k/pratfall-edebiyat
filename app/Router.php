@@ -39,7 +39,12 @@ class Router {
         $uri = '/' . trim( $uri, '/' );
 
         foreach ( self::$routes as $route ) {
-            if ( $route['method'] !== 'ANY' && $route['method'] !== $method ) {
+            // HEAD istekleri GET rotalarıyla da eşleşmelidir (HTTP standardı)
+            $method_match = ( $route['method'] === 'ANY' ) 
+                || ( $route['method'] === $method ) 
+                || ( $method === 'HEAD' && $route['method'] === 'GET' );
+
+            if ( ! $method_match ) {
                 continue;
             }
 

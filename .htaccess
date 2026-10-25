@@ -64,7 +64,11 @@ DirectoryIndex index.php index.html
     RewriteEngine On
     RewriteBase /
 
+    # 0. Let's Encrypt / ACME SSL Doğrulama Dosyalarını Asla Yönlendirme (Bypass)
+    RewriteRule ^\.well-known/acme-challenge/ - [L]
+
     # Otomatik HTTPS Yönlendirmesi (SSL Sertifikası Koruması)
+    RewriteCond %{REQUEST_URI} !^/\.well-known/acme-challenge/ [NC]
     RewriteCond %{HTTPS} !on
     RewriteCond %{HTTP:X-Forwarded-Proto} !https [NC]
     RewriteCond %{HTTP:X-Forwarded-SSL} !on [NC]
