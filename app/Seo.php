@@ -62,6 +62,10 @@ class Seo {
             $html[] = "<meta name=\"twitter:image\" content=\"{$image}\" />";
         }
 
+        // RSS & Atom Edebi Akış Keşfi
+        $html[] = '<link rel="alternate" type="application/rss+xml" title="' . htmlspecialchars( $site_name . ' ✦ Edebi Akış (RSS 2.0)', ENT_QUOTES, 'UTF-8' ) . '" href="' . SITE_URL . '/rss.xml" />';
+        $html[] = '<link rel="alternate" type="application/atom+xml" title="' . htmlspecialchars( $site_name . ' ✦ Edebi Akış (Atom)', ENT_QUOTES, 'UTF-8' ) . '" href="' . SITE_URL . '/feed" />';
+
         // JSON-LD Schema.org Yapısal Veri
         $schema = self::build_schema( $page_data, $site_name, $site_slogan, $url, $title, $description, $image );
         if ( ! empty( $schema ) ) {
@@ -216,6 +220,82 @@ class Seo {
         echo "Disallow: /admin/\n";
         echo "Disallow: /data/\n";
         echo "\nSitemap: " . SITE_URL . "/sitemap.xml\n";
+        echo "RSS: " . SITE_URL . "/rss.xml\n";
+        exit;
+    }
+
+    /**
+     * Dinamik RSS 2.0 & Atom Edebi Akışı Üretir (/rss.xml, /feed)
+     */
+    public static function generate_rss(): void {
+        header( 'Content-Type: application/rss+xml; charset=utf-8' );
+        $db = Database::get();
+
+        $site_name = trim( str_ireplace( 'Mecmua', '', Database::get_setting( 'site_name', 'PRATFALL' ) ) );
+        if ( empty( $site_name ) ) {
+            $site_name = 'PRATFALL';
+        }
+        $site_slogan = trim( str_ireplace( 'Mecmua', 'Edebiyat Dergisi & Platformu', Database::get_setting( 'site_slogan', 'Kusurlu Kalma Çabası' ) ) );
+        $desc = Database::get_setting( 'footer_desc', 'Kusursuzluk sanayileşmiş bir yanılsamadır; hakikat daima çatlaklarda gizlenir. Bağımsız edebiyat platformu.' );
+
+        $stmt = $db->query( "
+            SELECT p.*, a.name AS author_name, a.title AS author_title, a.photo AS author_photo
+            FROM posts p
+            LEFT JOIN authors a ON p.author_id = a.id
+            WHERE p.status = 'published'
+            ORDER BY p.published_at DESC
+            LIMIT 50
+        " );
+        $posts = $stmt->fetchAll();
+
+        $latest_pub_date = ! empty( $posts[0]['published_at'] ) ? date( 'r', strtotime( $posts[0]['published_at'] ) ) : date( 'r' );
+
+        echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+        echo '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:dc="http://purl.org/dc/elements/1.1/">' . "\n";
+        echo "  <channel>\n";
+        echo "    <title><![CDATA[" . $site_name . " ✦ " . $site_slogan . "]]></title>\n";
+        echo "    <link>" . htmlspecialchars( SITE_URL, ENT_XML1 ) . "/</link>\n";
+        echo "    <description><![CDATA[" . strip_tags( $desc ) . "]]></description>\n";
+        echo "    <language>tr</language>\n";
+        echo "    <lastBuildDate>" . $latest_pub_date . "</lastBuildDate>\n";
+        echo "    <atom:link href=\"" . htmlspecialchars( SITE_URL . '/rss.xml', ENT_XML1 ) . "\" rel=\"self\" type=\"application/rss+xml\" />\n";
+        echo "    <generator>Pratfall Standalone Literary Engine</generator>\n";
+        echo "    <image>\n";
+        echo "      <url>" . htmlspecialchars( SITE_URL . '/assets/images/og-share.jpg', ENT_XML1 ) . "</url>\n";
+        echo "      <title><![CDATA[" . $site_name . "]]></title>\n";
+        echo "      <link>" . htmlspecialchars( SITE_URL, ENT_XML1 ) . "/</link>\n";
+        echo "    </image>\n";
+
+        foreach ( $posts as $p ) {
+            $link = SITE_URL . '/eser/' . $p['slug'];
+            $pub_date = date( 'r', strtotime( $p['published_at'] ) );
+            $author = ! empty( $p['author_name'] ) ? $p['author_name'] : ( Helpers::is_poet( $p ) ? 'Pratfall Şairi' : 'Pratfall Yazarı' );
+            $category = $p['category'] ?? 'Edebiyat';
+            $excerpt = ! empty( $p['excerpt'] ) ? $p['excerpt'] : mb_substr( strip_tags( $p['content'] ?? '' ), 0, 280 ) . '...';
+            
+            $is_poem = ( mb_stripos( $category, 'şiir' ) !== false || mb_stripos( $category, 'siir' ) !== false );
+            $content_html = $is_poem ? Helpers::format_poem_content( $p['content'] ?? '' ) : ( $p['content'] ?? '' );
+            if ( ! empty( $p['featured_image'] ) ) {
+                $content_html = '<p><img src="' . htmlspecialchars( $p['featured_image'] ) . '" alt="' . htmlspecialchars( $p['title'] ) . '" style="max-width:100%; height:auto;" /></p>' . $content_html;
+            }
+
+            echo "    <item>\n";
+            echo "      <title><![CDATA[" . $p['title'] . "]]></title>\n";
+            echo "      <link>" . htmlspecialchars( $link, ENT_XML1 ) . "</link>\n";
+            echo "      <guid isPermaLink=\"true\">" . htmlspecialchars( $link, ENT_XML1 ) . "</guid>\n";
+            echo "      <pubDate>" . $pub_date . "</pubDate>\n";
+            echo "      <dc:creator><![CDATA[" . $author . "]]></dc:creator>\n";
+            echo "      <category><![CDATA[" . $category . "]]></category>\n";
+            echo "      <description><![CDATA[" . $excerpt . "]]></description>\n";
+            echo "      <content:encoded><![CDATA[" . $content_html . "]]></content:encoded>\n";
+            if ( ! empty( $p['featured_image'] ) ) {
+                echo "      <enclosure url=\"" . htmlspecialchars( $p['featured_image'], ENT_XML1 ) . "\" type=\"image/jpeg\" length=\"0\" />\n";
+            }
+            echo "    </item>\n";
+        }
+
+        echo "  </channel>\n";
+        echo "</rss>";
         exit;
     }
 }

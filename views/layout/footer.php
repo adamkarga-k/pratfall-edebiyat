@@ -73,6 +73,7 @@ $copyright_text   = str_ireplace( 'mecmuaya', 'platforma', Database::get_setting
           <li><a href="<?= SITE_URL; ?>/#dergiler">✦ Dergilerimizin Sayıları</a></li>
           <li><a href="<?= SITE_URL; ?>/kitaplik">✦ Pratfall Kitap</a></li>
           <li><a href="<?= SITE_URL; ?>/yazarlar">✦ Dostlarımız</a></li>
+          <li><a href="<?= SITE_URL; ?>/rss.xml" target="_blank" rel="alternate" type="application/rss+xml">✦ Edebi RSS Akışı ↗</a></li>
         </ul>
       </div>
 

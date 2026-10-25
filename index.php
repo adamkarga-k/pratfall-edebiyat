@@ -18,6 +18,26 @@ Router::get( '/robots.txt', function() {
     Seo::generate_robots();
 } );
 
+Router::get( '/rss.xml', function() {
+    Seo::generate_rss();
+} );
+
+Router::get( '/rss', function() {
+    Seo::generate_rss();
+} );
+
+Router::get( '/feed', function() {
+    Seo::generate_rss();
+} );
+
+Router::get( '/feed.xml', function() {
+    Seo::generate_rss();
+} );
+
+Router::get( '/atom.xml', function() {
+    Seo::generate_rss();
+} );
+
 // 2. Ön Yüz (Front-End) Rotaları
 Router::get( '/', PATH_VIEWS . '/front.php' );
 Router::get( '/dergiler', PATH_VIEWS . '/dergiler.php' );
