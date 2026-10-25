@@ -11,6 +11,7 @@ Auth::require_login();
 
 $page_title = 'Site & Platform Ayarları';
 $active_tab = 'settings';
+$db = Database::get();
 
 $msg = '';
 $err = '';

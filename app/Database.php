@@ -10,7 +10,7 @@
 class Database {
 
     private static ?PDO $pdo = null;
-    const DB_SYSTEM_VERSION = '1.4.7';
+    const DB_SYSTEM_VERSION = '1.4.8';
 
     /**
      * PDO Bağlantısını Getir (Singleton)
@@ -627,7 +627,7 @@ class Database {
      */
     public static function ensure_performance_indexes(): void {
         try {
-            $db = self::$pdo;
+            $db = self::get();
             // 1. Posts tablosu sorgu indeksleri (Yazar, kategori, tarih, durum, öne çıkan)
             $db->exec( "CREATE INDEX IF NOT EXISTS idx_posts_slug ON posts(slug);" );
             $db->exec( "CREATE INDEX IF NOT EXISTS idx_posts_status ON posts(status);" );
@@ -658,6 +658,8 @@ class Database {
             'message'     => ''
         ];
         try {
+            $db = self::get();
+
             if ( file_exists( DB_FILE ) ) {
                 $result['old_size'] = (int) filesize( DB_FILE );
             }
@@ -665,9 +667,9 @@ class Database {
             self::ensure_performance_indexes();
 
             // İndeks analizi ve istatistik güncelleme
-            self::$pdo->exec( 'PRAGMA optimize;' );
+            $db->exec( 'PRAGMA optimize;' );
             // Boş alanları geri kazan ve disk parçalanmasını gider
-            self::$pdo->exec( 'VACUUM;' );
+            $db->exec( 'VACUUM;' );
 
             clearstatcache( true, DB_FILE );
             if ( file_exists( DB_FILE ) ) {
