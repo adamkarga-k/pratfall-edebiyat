@@ -195,15 +195,20 @@ class Mailer {
             return [ 'success' => false, 'message' => 'DATA komutu kabul edilmedi: ' . trim( $dataRes ) ];
         }
 
-        $boundary = 'pratfall_boundary_' . md5( uniqid( time() ) );
+        $boundary = 'pratfall_boundary_' . md5( uniqid( (string) time(), true ) );
+        $domain = ! empty( $_SERVER['HTTP_HOST'] ) ? $_SERVER['HTTP_HOST'] : 'pratfall.com.tr';
+        $messageId = '<' . time() . '.' . bin2hex( random_bytes( 8 ) ) . '@' . $domain . '>';
 
         $headers = [];
         $headers[] = 'Date: ' . date( 'r' );
-        $headers[] = 'To: <' . $to . '>';
+        $headers[] = 'Message-ID: ' . $messageId;
         $headers[] = 'From: =?UTF-8?B?' . base64_encode( $fromName ) . '?= <' . $fromEmail . '>';
+        $headers[] = 'Reply-To: <' . $fromEmail . '>';
+        $headers[] = 'Return-Path: <' . $fromEmail . '>';
+        $headers[] = 'To: <' . $to . '>';
         $headers[] = 'Subject: =?UTF-8?B?' . base64_encode( $subject ) . '?=';
         $headers[] = 'MIME-Version: 1.0';
-        $headers[] = 'X-Mailer: Pratfall Native SMTP';
+        $headers[] = 'X-Mailer: Pratfall Standalone Engine';
         $headers[] = 'Content-Type: multipart/alternative; boundary="' . $boundary . '"';
 
         $body = implode( "\r\n", $headers ) . "\r\n\r\n";
@@ -220,9 +225,11 @@ class Mailer {
         $body .= "Content-Type: text/html; charset=UTF-8\r\n";
         $body .= "Content-Transfer-Encoding: base64\r\n\r\n";
         $body .= chunk_split( base64_encode( $htmlContent ) ) . "\r\n";
-        $body .= "--{$boundary}--\r\n.\r\n";
+        $body .= "--{$boundary}--\r\n";
 
-        $sendCommand( $body );
+        // E-Posta gövdesini ve ardından RFC 5321 bitiş işaretini (.) gönder
+        fputs( $socket, $body );
+        $sendCommand( '.' );
         $sendRes = $readResponse();
 
         $sendCommand( 'QUIT' );
