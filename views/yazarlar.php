@@ -134,13 +134,13 @@ require PATH_VIEWS . '/layout/header.php';
 
           <div class="author-spotlight-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:1.25rem;">
             <?php foreach ( $group_authors as $author ) : ?>
-              <a href="<?= SITE_URL; ?>/yazar/<?= $author['slug']; ?>" class="author-pill-card searchable-author-card" data-name="<?= htmlspecialchars( mb_strtolower( $author['name'], 'UTF-8' ) ); ?>" style="text-decoration:none; color:inherit; padding:0.85rem 1rem;">
+              <a href="<?= Helpers::author_url( $author ); ?>" class="author-pill-card searchable-author-card" data-name="<?= htmlspecialchars( mb_strtolower( $author['name'], 'UTF-8' ) ); ?>" style="text-decoration:none; color:inherit; padding:0.85rem 1rem;">
                 <div class="author-pill-avatar">
                   <?= Helpers::author_avatar( $author, 52 ); ?>
                 </div>
                 <div class="author-pill-info" style="min-width:0;">
                   <span class="author-pill-name" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"><?= htmlspecialchars( $author['name'] ); ?></span>
-                  <span class="author-pill-role" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"><?= htmlspecialchars( ! empty( $author['title'] ) ? $author['title'] : 'Yazar & Katkıda Bulunan' ); ?></span>
+                  <span class="author-pill-role" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"><?= htmlspecialchars( ! empty( $author['title'] ) ? $author['title'] : ( Helpers::is_poet( $author ) ? 'Şair' : 'Yazar & Katkıda Bulunan' ) ); ?></span>
                   <span class="author-pill-count">✦ <?= (int) $author['post_count']; ?> Eser</span>
                 </div>
               </a>

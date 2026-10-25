@@ -287,7 +287,7 @@ require PATH_ADMIN . '/layout/header.php';
             </td>
             <td><strong><?= (int) $a['post_count']; ?></strong> eser</td>
             <td style="text-align:right; white-space:nowrap;">
-              <a href="<?= SITE_URL; ?>/yazar/<?= $a['slug']; ?>" target="_blank" class="btn" style="padding:0.25rem 0.5rem; font-size:0.75rem;">Masası ↗</a>
+              <a href="<?= Helpers::author_url( $a ); ?>" target="_blank" class="btn" style="padding:0.25rem 0.5rem; font-size:0.75rem;"><?= Helpers::is_poet( $a ) ? 'Şair Masası ↗' : 'Masası ↗'; ?></a>
               <a href="<?= SITE_URL; ?>/admin/authors?action=edit&id=<?= $a['id']; ?>" class="btn" style="padding:0.25rem 0.5rem; font-size:0.75rem;">Düzenle</a>
               <a href="<?= SITE_URL; ?>/admin/authors?action=delete&id=<?= $a['id']; ?>" onclick="return confirm('Bu yazarı silmek istediğinize emin misiniz?')" class="btn btn-danger" style="padding:0.25rem 0.5rem; font-size:0.75rem;">Sil</a>
             </td>

@@ -192,9 +192,9 @@ class Seo {
             echo "  </url>\n";
         }
 
-        // Yazarlar
+        // Yazarlar & Şairler
         foreach ( $authors as $a ) {
-            $loc = SITE_URL . '/yazar/' . $a['slug'];
+            $loc = Helpers::author_url( $a );
             echo "  <url>\n";
             echo "    <loc>" . htmlspecialchars( $loc, ENT_XML1 ) . "</loc>\n";
             echo "    <changefreq>weekly</changefreq>\n";

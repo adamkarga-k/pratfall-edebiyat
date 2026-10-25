@@ -29,6 +29,7 @@ Router::get( '/yazarlar', PATH_VIEWS . '/yazarlar.php' );
 Router::get( '/yazarlar.php', PATH_VIEWS . '/yazarlar.php' );
 Router::get( '/eser/{slug}', PATH_VIEWS . '/single.php' );
 Router::get( '/yazar/{slug}', PATH_VIEWS . '/author.php' );
+Router::get( '/sair/{slug}', PATH_VIEWS . '/author.php' );
 Router::get( '/kategori/{slug}', PATH_VIEWS . '/category.php' );
 
 // 3. Yönetim Paneli (Admin) Rotaları (Hem .php hem uzantısız destekler)

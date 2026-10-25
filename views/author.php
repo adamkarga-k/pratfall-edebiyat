@@ -32,15 +32,29 @@ $has_quote = ! empty( $author['quote'] );
 $has_bio   = ! empty( $author['bio'] );
 $has_socials = ! empty( $author['twitter'] ) || ! empty( $author['instagram'] ) || ! empty( $author['website'] );
 
+$is_poet = Helpers::is_poet( $author );
+$canonical_url = Helpers::author_url( $author );
+
+// 301 Kalıcı Yönlendirme (Kusursuz SEO & Doğru URL Uzantısı)
+// Şair ise ve URL /yazar/ ile geldiyse /sair/ uzantısına; Şair değilse ve /sair/ ile geldiyse /yazar/ uzantısına yönlendir
+$req_uri = parse_url( $_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH );
+if ( $is_poet && preg_match( '#/yazar/' . preg_quote( $author['slug'], '#' ) . '(/|$)#iu', $req_uri ) ) {
+    header( 'Location: ' . $canonical_url, true, 301 );
+    exit;
+} elseif ( ! $is_poet && preg_match( '#/sair/' . preg_quote( $author['slug'], '#' ) . '(/|$)#iu', $req_uri ) ) {
+    header( 'Location: ' . $canonical_url, true, 301 );
+    exit;
+}
+
 // SEO Bilgileri
 $seo_data = [
-    'title'        => $author['name'] . ' Masası',
-    'description'  => $author['bio'] ?: ( $author['name'] . ' tarafından Pratfall sayfalarında kaleme alınan eserler.' ),
-    'url'          => SITE_URL . '/yazar/' . $author['slug'],
+    'title'        => $author['name'] . ( $is_poet ? ' Şiirleri & Masası' : ' Masası' ),
+    'description'  => $author['bio'] ?: ( $author['name'] . ' tarafından Pratfall sayfalarında kaleme alınan ' . ( $is_poet ? 'şiirler ve edebi eserler.' : 'eserler.' ) ),
+    'url'          => $canonical_url,
     'image'        => $author['photo'] ?? '',
     'type'         => 'profile',
     'author_name'  => $author['name'],
-    'author_title' => $author['title'] ?? '',
+    'author_title' => $author['title'] ?? ( $is_poet ? 'Şair' : 'Yazar' ),
 ];
 
 require PATH_VIEWS . '/layout/header.php';
@@ -68,7 +82,7 @@ require PATH_VIEWS . '/layout/header.php';
     <!-- Yazar Bilgileri -->
     <div class="author-desk-info">
       <div class="author-desk-badge">
-        <span class="tape-badge rot-p1">✦ YAZAR MASASI & ESERLERİ</span>
+        <span class="tape-badge rot-p1">✦ <?= $is_poet ? 'ŞAİR MASASI & DİZELERİ' : 'YAZAR MASASI & ESERLERİ'; ?></span>
       </div>
 
       <h1 class="author-desk-name">
@@ -119,13 +133,13 @@ require PATH_VIEWS . '/layout/header.php';
 
   <!-- Tırtıklı Perfore Ayraç -->
   <div class="perforated-divider" style="margin-top: 3.5rem; margin-bottom: 2rem;">
-    <span class="perforated-badge">✂ · YAZARIN MATBAA ÇIKTILARI · ✦</span>
+    <span class="perforated-badge">✂ · <?= $is_poet ? 'ŞAİRİN MATBAA ÇIKTILARI' : 'YAZARIN MATBAA ÇIKTILARI'; ?> · ✦</span>
   </div>
 
   <!-- 2. BÖLÜM BAŞLIĞI -->
   <div class="section-headline" style="margin-bottom:2rem;">
     <h2 class="section-headline-title">
-      <span><?= htmlspecialchars( $author['name'], ENT_QUOTES, 'UTF-8' ); ?> Tarafından Kaleme Alınan Eserler</span>
+      <span><?= htmlspecialchars( $author['name'], ENT_QUOTES, 'UTF-8' ); ?> Tarafından Kaleme Alınan <?= $is_poet ? 'Şiirler & Eserler' : 'Eserler'; ?></span>
       <span class="tape-badge rot-p1" style="font-size:0.75rem;"><?= count( $posts ); ?> ESER</span>
     </h2>
   </div>

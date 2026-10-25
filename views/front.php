@@ -256,22 +256,22 @@ require PATH_VIEWS . '/layout/header.php';
               </div>
               <div class="lead-footer">
                 <div style="display:flex; align-items:center; gap:0.75rem;">
-                  <a href="<?= SITE_URL; ?>/yazar/<?= $lead_post['author_slug']; ?>" class="post-card-author-img">
+                  <a href="<?= Helpers::author_url( $lead_post ); ?>" class="post-card-author-img">
                     <?= Helpers::author_avatar( [ 'photo' => $lead_post['author_photo'], 'name' => $lead_post['author_name'] ], 36 ); ?>
                   </a>
                   <div>
                     <div style="font-weight:700;">
-                      <a href="<?= SITE_URL; ?>/yazar/<?= $lead_post['author_slug']; ?>" style="color:inherit; text-decoration:none;">
+                      <a href="<?= Helpers::author_url( $lead_post ); ?>" style="color:inherit; text-decoration:none;">
                         <?= htmlspecialchars( $lead_post['author_name'] ); ?>
                       </a>
                     </div>
                     <div style="font-size:0.7rem; color:var(--text-muted);">
-                      <?= htmlspecialchars( $lead_post['author_title'] ?? 'Yazar' ); ?>
+                      <?= htmlspecialchars( $lead_post['author_title'] ?? ( Helpers::is_poet( $lead_post ) ? 'Şair' : 'Yazar' ) ); ?>
                     </div>
                   </div>
                 </div>
-                <a href="<?= SITE_URL; ?>/yazar/<?= $lead_post['author_slug']; ?>" class="stamp-tag" style="background:var(--accent-primary); color:#fff; cursor:pointer; text-decoration:none;">
-                  Yazar Masası ↗
+                <a href="<?= Helpers::author_url( $lead_post ); ?>" class="stamp-tag" style="background:var(--accent-primary); color:#fff; cursor:pointer; text-decoration:none;">
+                  <?= Helpers::is_poet( $lead_post ) ? 'Şair Masası ↗' : 'Yazar Masası ↗'; ?>
                 </a>
               </div>
             </div>
@@ -347,7 +347,7 @@ require PATH_VIEWS . '/layout/header.php';
 
             <div class="hero-authors-list" style="display:flex; flex-direction:column; gap:0.55rem;">
               <?php foreach ( $authors as $author ) : ?>
-              <a href="<?= SITE_URL; ?>/yazar/<?= $author['slug']; ?>" class="hero-author-item" style="display:flex; align-items:center; justify-content:space-between; padding:0.5rem 0.75rem; background:var(--bg-surface); border:1.5px solid var(--border-color); text-decoration:none; color:var(--text-main); transition:all 0.15s ease; box-shadow:2px 2px 0 var(--border-color);">
+              <a href="<?= Helpers::author_url( $author ); ?>" class="hero-author-item" style="display:flex; align-items:center; justify-content:space-between; padding:0.5rem 0.75rem; background:var(--bg-surface); border:1.5px solid var(--border-color); text-decoration:none; color:var(--text-main); transition:all 0.15s ease; box-shadow:2px 2px 0 var(--border-color);">
                 <div style="display:flex; align-items:center; gap:0.65rem; min-width:0;">
                   <div style="flex-shrink:0;">
                     <?= Helpers::author_avatar( $author, 36 ); ?>
@@ -357,7 +357,7 @@ require PATH_VIEWS . '/layout/header.php';
                       <?= htmlspecialchars( $author['name'] ); ?>
                     </div>
                     <div style="font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                      <?= htmlspecialchars( ! empty($author['title']) ? $author['title'] : 'Yazar' ); ?>
+                      <?= htmlspecialchars( ! empty($author['title']) ? $author['title'] : ( Helpers::is_poet( $author ) ? 'Şair' : 'Yazar' ) ); ?>
                     </div>
                   </div>
                 </div>
@@ -410,12 +410,12 @@ require PATH_VIEWS . '/layout/header.php';
             <p><?= htmlspecialchars( $post['excerpt'] ); ?></p>
           </div>
           <div class="post-card-author">
-            <a href="<?= SITE_URL; ?>/yazar/<?= $post['author_slug']; ?>" class="post-card-author-img">
+            <a href="<?= Helpers::author_url( $post ); ?>" class="post-card-author-img">
               <?= Helpers::author_avatar( [ 'photo' => $post['author_photo'], 'name' => $post['author_name'] ], 36 ); ?>
             </a>
             <div>
               <span class="post-card-author-name">
-                <a href="<?= SITE_URL; ?>/yazar/<?= $post['author_slug']; ?>" style="text-decoration:none; color:inherit;">
+                <a href="<?= Helpers::author_url( $post ); ?>" style="text-decoration:none; color:inherit;">
                   <?= htmlspecialchars( $post['author_name'] ); ?>
                 </a>
               </span>

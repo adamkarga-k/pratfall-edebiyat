@@ -5,6 +5,75 @@
 
 class Helpers {
 
+    private static array $poet_slug_cache = [];
+
+    /**
+     * Yazarın Şair olup olmadığını kontrol et
+     * title, author_title, bio veya author_bio alanlarında 'şair' / 'sair' kelimesi geçiyorsa true döner.
+     */
+    public static function is_poet( $author ): bool {
+        if ( empty( $author ) ) {
+            return false;
+        }
+
+        // Eğer doğrudan slug stringi verildiyse veritabanından unvan/biyografi kontrolü yap ve önbellekle
+        if ( is_string( $author ) ) {
+            $slug = trim( $author );
+            if ( isset( self::$poet_slug_cache[$slug] ) ) {
+                return self::$poet_slug_cache[$slug];
+            }
+            try {
+                $db = Database::get();
+                $stmt = $db->prepare( "SELECT title, bio FROM authors WHERE slug = ? LIMIT 1" );
+                $stmt->execute( [ $slug ] );
+                $row = $stmt->fetch();
+                self::$poet_slug_cache[$slug] = $row ? self::is_poet( $row ) : false;
+                return self::$poet_slug_cache[$slug];
+            } catch ( Throwable $e ) {
+                return false;
+            }
+        }
+
+        if ( ! is_array( $author ) ) {
+            return false;
+        }
+
+        $title = $author['title'] ?? ( $author['author_title'] ?? '' );
+        $bio   = $author['bio'] ?? ( $author['author_bio'] ?? '' );
+        $quote = $author['quote'] ?? '';
+
+        $haystack = self::turkish_lower( $title . ' ' . $bio . ' ' . $quote );
+
+        if ( mb_strpos( $haystack, 'şair' ) !== false || mb_strpos( $haystack, 'sair' ) !== false ) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Yazar veya Şair Profil URL'si Üret
+     * Şair ise: SITE_URL . '/sair/' . $slug
+     * Diğer yazarlar için: SITE_URL . '/yazar/' . $slug
+     */
+    public static function author_url( $author, string $default_slug = '' ): string {
+        $slug = '';
+        $is_poet = false;
+
+        if ( is_array( $author ) ) {
+            $slug = $author['slug'] ?? ( $author['author_slug'] ?? $default_slug );
+            $is_poet = self::is_poet( $author );
+        } else {
+            $slug = (string) $author;
+            $is_poet = self::is_poet( $slug );
+        }
+
+        $slug = ltrim( trim( $slug ), '/' );
+        $prefix = $is_poet ? '/sair/' : '/yazar/';
+
+        return SITE_URL . $prefix . $slug;
+    }
+
     /**
      * Yazar Avatarı veya Monogram Kaşe Pulunu Üret
      */

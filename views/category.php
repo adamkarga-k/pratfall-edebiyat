@@ -165,13 +165,13 @@ require PATH_VIEWS . '/layout/header.php';
           <?php endif; ?>
 
           <div class="post-card-author">
-            <a href="<?= SITE_URL; ?>/yazar/<?= $post['author_slug']; ?>" class="post-card-author-img">
+            <a href="<?= Helpers::author_url( $post ); ?>" class="post-card-author-img">
               <?= Helpers::author_avatar( [ 'photo' => $post['author_photo'], 'name' => $post['author_name'] ], 36 ); ?>
             </a>
             <div>
               <span class="post-card-author-name">
-                <a href="<?= SITE_URL; ?>/yazar/<?= $post['author_slug']; ?>" style="text-decoration:none; color:inherit;">
-                  <?= htmlspecialchars( $post['author_name'] ?? 'Pratfall Yazarı' ); ?>
+                <a href="<?= Helpers::author_url( $post ); ?>" style="text-decoration:none; color:inherit;">
+                  <?= htmlspecialchars( $post['author_name'] ?? ( Helpers::is_poet( $post ) ? 'Pratfall Şairi' : 'Pratfall Yazarı' ) ); ?>
                 </a>
               </span>
             </div>

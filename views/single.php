@@ -43,8 +43,8 @@ $seo_data = [
     'type'          => 'article',
     'published_at'  => date( 'c', strtotime( $post['published_at'] ) ),
     'updated_at'    => date( 'c', strtotime( $post['updated_at'] ?? $post['published_at'] ) ),
-    'author_name'   => $post['author_name'] ?? 'Pratfall Yazarı',
-    'author_url'    => SITE_URL . '/yazar/' . ( $post['author_slug'] ?? '' ),
+    'author_name'   => $post['author_name'] ?? ( Helpers::is_poet( $post ) ? 'Pratfall Şairi' : 'Pratfall Yazarı' ),
+    'author_url'    => Helpers::author_url( $post ),
 ];
 
 require PATH_VIEWS . '/layout/header.php';
@@ -77,13 +77,13 @@ require PATH_VIEWS . '/layout/header.php';
         </div>
       <?php endif; ?>
 
-      <!-- Yazar Künyesi -->
+      <!-- Yazar / Şair Künyesi -->
       <div class="single-article-byline">
-        <a href="<?= SITE_URL; ?>/yazar/<?= $post['author_slug']; ?>" class="single-byline-avatar">
+        <a href="<?= Helpers::author_url( $post ); ?>" class="single-byline-avatar">
           <?= Helpers::author_avatar( [ 'photo' => $post['author_photo'], 'name' => $post['author_name'] ], 44 ); ?>
         </a>
         <div class="single-byline-info">
-          <a href="<?= SITE_URL; ?>/yazar/<?= $post['author_slug']; ?>" class="single-byline-author">
+          <a href="<?= Helpers::author_url( $post ); ?>" class="single-byline-author">
             <?= htmlspecialchars( $post['author_name'], ENT_QUOTES, 'UTF-8' ); ?>
           </a>
           <div class="single-byline-date">
@@ -128,17 +128,18 @@ require PATH_VIEWS . '/layout/header.php';
       <span class="perforated-badge">✂ · ESERİN SONU · ✦</span>
     </div>
 
-    <!-- Yazı Sonu Yazar Masası Kartı -->
+    <!-- Yazı Sonu Yazar / Şair Masası Kartı -->
+    <?php $is_author_poet = Helpers::is_poet( $post ); ?>
     <div class="article-author-box rot-hover-straight">
       <div class="article-author-box-avatar">
         <?= Helpers::author_avatar( [ 'photo' => $post['author_photo'], 'name' => $post['author_name'] ], 90 ); ?>
       </div>
       <div>
         <span class="tape-badge rot-p1" style="font-size:0.65rem; margin-bottom:0.4rem;">
-          ✦ YAZARIN MASASI
+          ✦ <?= $is_author_poet ? 'ŞAİRİN MASASI' : 'YAZARIN MASASI'; ?>
         </span>
         <h3 class="article-author-box-name">
-          <a href="<?= SITE_URL; ?>/yazar/<?= $post['author_slug']; ?>">
+          <a href="<?= Helpers::author_url( $post ); ?>">
             <?= htmlspecialchars( $post['author_name'], ENT_QUOTES, 'UTF-8' ); ?>
           </a>
         </h3>
@@ -152,8 +153,8 @@ require PATH_VIEWS . '/layout/header.php';
             <p><?= htmlspecialchars( $post['author_bio'], ENT_QUOTES, 'UTF-8' ); ?></p>
           </div>
         <?php endif; ?>
-        <a href="<?= SITE_URL; ?>/yazar/<?= $post['author_slug']; ?>" class="stamp-tag">
-          <?= htmlspecialchars( $post['author_name'], ENT_QUOTES, 'UTF-8' ); ?> Adlı Yazarın Tüm Eserleri ↗
+        <a href="<?= Helpers::author_url( $post ); ?>" class="stamp-tag">
+          <?= htmlspecialchars( $post['author_name'], ENT_QUOTES, 'UTF-8' ); ?> Adlı <?= $is_author_poet ? 'Şairin Tüm Şiirleri & Eserleri' : 'Yazarın Tüm Eserleri'; ?> ↗
         </a>
       </div>
     </div>
