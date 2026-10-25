@@ -17,7 +17,7 @@ $page_title = 'Word (.docx) Toplu İçe Aktar';
 $active_tab = 'import';
 
 $db = Database::get();
-$authors = $db->query( "SELECT id, name FROM authors" )->fetchAll();
+$authors = $db->query( "SELECT id, name, slug, title, bio FROM authors" )->fetchAll();
 Helpers::sort_turkish_alphabetical( $authors );
 
 // 0. AJAX Otomatik Üretilen Kapak Görselini Kaydet
@@ -400,8 +400,8 @@ require PATH_ADMIN . '/layout/header.php';
                 <select name="items[<?= $idx; ?>][author_id]" id="item_author_<?= $idx; ?>" class="form-control author-select-field">
                   <option value="0">✦ Ortak Platform Metni</option>
                   <?php foreach ( $authors as $a ) : ?>
-                    <option value="<?= $a['id']; ?>" <?= $item['author_id'] == $a['id'] ? 'selected' : ''; ?>>
-                      <?= htmlspecialchars( $a['name'], ENT_QUOTES, 'UTF-8' ); ?>
+                    <option value="<?= $a['id']; ?>" data-is-poet="<?= Helpers::is_poet( $a ) ? '1' : '0'; ?>" <?= $item['author_id'] == $a['id'] ? 'selected' : ''; ?>>
+                      <?= htmlspecialchars( $a['name'], ENT_QUOTES, 'UTF-8' ); ?><?= Helpers::is_poet( $a ) ? ' (Şair)' : ''; ?>
                     </option>
                   <?php endforeach; ?>
                 </select>
@@ -537,7 +537,7 @@ require PATH_ADMIN . '/layout/header.php';
             <select name="default_author_id" id="default_author_id" class="form-control author-select-field">
               <option value="0">✦ Belgeden Otomatik Tespit Et / Eşleştir</option>
               <?php foreach ( $authors as $a ) : ?>
-                <option value="<?= $a['id']; ?>"><?= htmlspecialchars( $a['name'], ENT_QUOTES, 'UTF-8' ); ?></option>
+                <option value="<?= $a['id']; ?>" data-is-poet="<?= Helpers::is_poet( $a ) ? '1' : '0'; ?>"><?= htmlspecialchars( $a['name'], ENT_QUOTES, 'UTF-8' ); ?><?= Helpers::is_poet( $a ) ? ' (Şair)' : ''; ?></option>
               <?php endforeach; ?>
             </select>
             <div style="font-size:0.72rem; color:var(--adm-muted); margin-top:0.25rem;">Belgede yazar belirtilmemişse geçerli olur.</div>
@@ -721,14 +721,21 @@ require PATH_ADMIN . '/layout/header.php';
           <input type="text" id="coverGenTitle" class="form-control" oninput="drawCoverImage()" style="font-weight:600;" />
         </div>
 
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+        <div style="display:grid; grid-template-columns:1.2fr 1fr 0.8fr; gap:0.6rem;">
           <div>
-            <label class="form-label" style="font-weight:600; margin-bottom:0.25rem;">Yazar Adı:</label>
+            <label class="form-label" style="font-weight:600; margin-bottom:0.25rem;">Yazar / Şair Adı:</label>
             <input type="text" id="coverGenAuthor" class="form-control" oninput="drawCoverImage()" />
           </div>
           <div>
             <label class="form-label" style="font-weight:600; margin-bottom:0.25rem;">Edebi Tür / Kategori:</label>
             <input type="text" id="coverGenCategory" class="form-control" oninput="drawCoverImage()" />
+          </div>
+          <div>
+            <label class="form-label" style="font-weight:600; margin-bottom:0.25rem;">Rol / Ünvan:</label>
+            <select id="coverGenRole" class="form-control" onchange="drawCoverImage()" style="font-size:0.85rem; padding:0.4rem 0.45rem;">
+              <option value="writer">✍️ Yazar</option>
+              <option value="poet">📜 Şair</option>
+            </select>
           </div>
         </div>
 
@@ -1438,10 +1445,16 @@ require PATH_ADMIN . '/layout/header.php';
     ctx.stroke();
     ctx.setLineDash([]);
 
+    const catVal = (customCat || (document.getElementById('coverGenCategory') ? document.getElementById('coverGenCategory').value.trim() : '')).toLowerCase();
+    const roleSelect = document.getElementById('coverGenRole');
+    const isPoet = (roleSelect && roleSelect.value === 'poet') || catVal.includes('şiir') || catVal.includes('siir') || (author && (author.toLowerCase().includes('şair') || author.toLowerCase().includes('sair')));
+    const rolePrefix = isPoet ? 'ŞAİR: ' : 'YAZAR: ';
+    let cleanAuthor = author.replace(/^(yazar|şair|sair)\s*:\s*/i, '').trim();
+
     ctx.textAlign = 'center';
     ctx.font = 'bold 24px "Courier New", monospace';
     ctx.fillStyle = accentColor;
-    ctx.fillText('[ YAZAR: ' + author.toUpperCase() + ' ]', w / 2, footDivY + 34);
+    ctx.fillText('[ ' + rolePrefix + cleanAuthor.toUpperCase() + ' ]', w / 2, footDivY + 34);
 
     ctx.font = '15px "Courier New", monospace';
     ctx.fillStyle = mutedColor;

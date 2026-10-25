@@ -21,7 +21,7 @@ $msg = $_GET['msg'] ?? '';
 $err = $_GET['err'] ?? '';
 
 // Yazar Listesi (A'dan Z'ye Türkçe Harf Sıralı)
-$authors = $db->query( "SELECT id, name FROM authors" )->fetchAll();
+$authors = $db->query( "SELECT id, name, slug, title, bio FROM authors" )->fetchAll();
 Helpers::sort_turkish_alphabetical( $authors );
 
 // Kategori Listesi
@@ -398,8 +398,8 @@ require PATH_ADMIN . '/layout/header.php';
               <select name="author_id" id="author_id" class="form-control" onchange="updateAuthorEditLink()">
                 <option value="0">✦ Ortak Platform Metni</option>
                 <?php foreach ( $authors as $a ) : ?>
-                  <option value="<?= $a['id']; ?>" <?= $post['author_id'] == $a['id'] ? 'selected' : ''; ?>>
-                    <?= htmlspecialchars( $a['name'], ENT_QUOTES, 'UTF-8' ); ?>
+                  <option value="<?= $a['id']; ?>" data-is-poet="<?= Helpers::is_poet( $a ) ? '1' : '0'; ?>" <?= $post['author_id'] == $a['id'] ? 'selected' : ''; ?>>
+                    <?= htmlspecialchars( $a['name'], ENT_QUOTES, 'UTF-8' ); ?><?= Helpers::is_poet( $a ) ? ' (Şair)' : ''; ?>
                   </option>
                 <?php endforeach; ?>
               </select>
@@ -486,8 +486,12 @@ require PATH_ADMIN . '/layout/header.php';
             </div>
 
             <?php if ( $action === 'edit' ) : ?>
+              <?php 
+              $edit_author_match = $authors[array_search($post['author_id'], array_column($authors, 'id'))] ?? null;
+              $edit_is_poet = $edit_author_match ? (Helpers::is_poet($edit_author_match) ? 1 : 0) : (stripos($post['category'] ?? '', 'şiir') !== false ? 1 : 0);
+              ?>
               <div style="margin-top:0.75rem;">
-                <button type="button" onclick="openStoryModal(<?= htmlspecialchars(json_encode([ 'title' => $post['title'], 'author' => $authors[array_search($post['author_id'], array_column($authors, 'id'))]['name'] ?? 'Pratfall Yazarı', 'excerpt' => $post['excerpt'] ]), ENT_QUOTES, 'UTF-8'); ?>)" class="btn btn-secondary" style="width:100%; justify-content:center; font-size:0.8rem;">
+                <button type="button" onclick="openStoryModal(<?= htmlspecialchars(json_encode([ 'title' => $post['title'], 'author' => $edit_author_match['name'] ?? 'Pratfall Yazarı', 'excerpt' => $post['excerpt'], 'is_poet' => $edit_is_poet ]), ENT_QUOTES, 'UTF-8'); ?>)" class="btn btn-secondary" style="width:100%; justify-content:center; font-size:0.8rem;">
                   📱 Sosyal Medya / Alıntı Kartı Üret
                 </button>
               </div>
@@ -986,7 +990,7 @@ require PATH_ADMIN . '/layout/header.php';
 
   // 4. Sayfalı Veriyi Çek
   $list_sql = "
-      SELECT p.*, a.name AS author_name, a.slug AS author_slug 
+      SELECT p.*, a.name AS author_name, a.slug AS author_slug, a.title AS author_title, a.bio AS author_bio 
       FROM posts p 
       LEFT JOIN authors a ON p.author_id = a.id 
       WHERE {$where_sql}
@@ -1121,7 +1125,10 @@ require PATH_ADMIN . '/layout/header.php';
                   <a href="<?= SITE_URL; ?>/admin/posts.php?action=toggle_featured&id=<?= $p['id']; ?>" class="btn btn-sm" style="padding:0.2rem 0.5rem; font-size:0.75rem; <?= ! empty( $p['is_featured'] ) ? 'color:#b45309; font-weight:bold; background:#fef3c7; border:1px solid #f59e0b;' : ''; ?>" title="Ana Sayfa Manşeti Yap / Kaldır">
                     <?= ! empty( $p['is_featured'] ) ? '★ Manşette' : '☆ Manşet Yap'; ?>
                   </a>
-                  <button type="button" onclick="openStoryModal(<?= htmlspecialchars(json_encode([ 'title' => $p['title'], 'author' => $p['author_name'] ?? 'Pratfall Yazarı', 'excerpt' => $p['excerpt'] ]), ENT_QUOTES, 'UTF-8'); ?>)" class="btn btn-sm" style="padding:0.2rem 0.5rem; font-size:0.75rem;" title="Instagram / X için Alıntı Kartı Üret">
+                  <?php 
+                  $p_is_poet = Helpers::is_poet([ 'title' => $p['author_title'] ?? '', 'bio' => $p['author_bio'] ?? '' ]) || ( stripos( $p['category'] ?? '', 'şiir' ) !== false );
+                  ?>
+                  <button type="button" onclick="openStoryModal(<?= htmlspecialchars(json_encode([ 'title' => $p['title'], 'author' => $p['author_name'] ?? 'Pratfall Yazarı', 'excerpt' => $p['excerpt'], 'is_poet' => $p_is_poet ? 1 : 0 ]), ENT_QUOTES, 'UTF-8'); ?>)" class="btn btn-sm" style="padding:0.2rem 0.5rem; font-size:0.75rem;" title="Instagram / X için Alıntı Kartı Üret">
                     📱 Kart
                   </button>
                   <a href="<?= SITE_URL; ?>/eser/<?= $p['slug']; ?>" target="_blank" class="btn btn-sm" style="padding:0.2rem 0.5rem; font-size:0.75rem;" title="Sitede İncele">
@@ -1263,14 +1270,21 @@ require PATH_ADMIN . '/layout/header.php';
           <textarea id="cardQuoteText" rows="5" class="form-control" oninput="drawQuoteCard()" style="font-family:Georgia, serif; font-size:0.92rem; line-height:1.5;"></textarea>
         </div>
 
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+        <div style="display:grid; grid-template-columns:1.2fr 1fr 0.8fr; gap:0.6rem;">
           <div>
-            <label style="display:block; font-size:0.8rem; font-weight:600; margin-bottom:0.35rem;">Yazar Adı:</label>
+            <label style="display:block; font-size:0.8rem; font-weight:600; margin-bottom:0.35rem;">Yazar / Şair Adı:</label>
             <input type="text" id="cardAuthor" class="form-control" oninput="drawQuoteCard()" style="font-size:0.85rem;" />
           </div>
           <div>
             <label style="display:block; font-size:0.8rem; font-weight:600; margin-bottom:0.35rem;">Eser Başlığı:</label>
             <input type="text" id="cardTitle" class="form-control" oninput="drawQuoteCard()" style="font-size:0.85rem;" />
+          </div>
+          <div>
+            <label style="display:block; font-size:0.8rem; font-weight:600; margin-bottom:0.35rem;">Rol / Ünvan:</label>
+            <select id="cardRole" class="form-control" onchange="drawQuoteCard()" style="font-size:0.85rem; padding:0.4rem 0.45rem;">
+              <option value="writer">✍️ Yazar</option>
+              <option value="poet">📜 Şair</option>
+            </select>
           </div>
         </div>
 
@@ -1290,9 +1304,16 @@ let currentFormat = 'portrait'; // 'portrait' (4:5), 'twitter' (16:9), 'story' (
 let currentTheme = 'paper';     // 'paper', 'dark', 'red'
 
 function openStoryModal(data) {
+  let cleanAuthor = (data.author || 'Pratfall Yazarı').replace(/\s*\(şair\)/i, '').trim();
   document.getElementById('cardQuoteText').value = data.excerpt || data.title || '';
-  document.getElementById('cardAuthor').value = data.author || 'Pratfall Yazarı';
+  document.getElementById('cardAuthor').value = cleanAuthor;
   document.getElementById('cardTitle').value = data.title || '';
+  
+  const roleSelect = document.getElementById('cardRole');
+  if (roleSelect) {
+    const isPoet = !!data.is_poet || (data.author && (data.author.toLowerCase().includes('şair') || data.author.toLowerCase().includes('sair')));
+    roleSelect.value = isPoet ? 'poet' : 'writer';
+  }
   
   var modal = document.getElementById('storyModal');
   modal.style.display = 'flex';
@@ -1870,9 +1891,14 @@ function drawQuoteCard() {
   ctx.stroke();
 
   if (author) {
+    const cardRoleEl = document.getElementById('cardRole');
+    const isPoet = cardRoleEl ? (cardRoleEl.value === 'poet') : false;
+    const rolePrefix = isPoet ? 'ŞAİR: ' : 'YAZAR: ';
+    let cleanAuthor = author.replace(/^(yazar|şair|sair)\s*:\s*/i, '').trim();
+
     ctx.font = (isTwitter ? 'bold 24px' : 'bold 30px') + ' "Courier New", monospace';
     ctx.fillStyle = accentColor;
-    ctx.fillText('[ ' + author.toUpperCase() + ' ]', w / 2, footerSeparatorY + (isTwitter ? 32 : 44));
+    ctx.fillText('[ ' + rolePrefix + cleanAuthor.toUpperCase() + ' ]', w / 2, footerSeparatorY + (isTwitter ? 32 : 44));
   }
 
   if (title) {
@@ -1935,13 +1961,27 @@ function openCoverGeneratorModal() {
 
   let postTitle = titleInput ? titleInput.value.trim() : '';
   let authorName = 'Pratfall Yazarı';
+  let isPoet = false;
+
   if (authorSelect && authorSelect.selectedIndex >= 0) {
-    const selText = authorSelect.options[authorSelect.selectedIndex].text.trim();
+    const selOpt = authorSelect.options[authorSelect.selectedIndex];
+    const selText = selOpt.text.trim();
     if (selText && !selText.startsWith('✦')) {
-      authorName = selText;
+      authorName = selText.replace(/\s*\(şair\)/i, '').trim();
+    }
+    if (selOpt.dataset && selOpt.dataset.isPoet === '1') {
+      isPoet = true;
     }
   }
   let categoryName = categorySelect ? categorySelect.value.trim() : 'Deneme';
+  if (categoryName.toLowerCase().includes('şiir') || categoryName.toLowerCase().includes('siir')) {
+    isPoet = true;
+  }
+
+  const roleSelect = document.getElementById('coverGenRole');
+  if (roleSelect) {
+    roleSelect.value = isPoet ? 'poet' : 'writer';
+  }
 
   document.getElementById('coverGenTitle').value = postTitle || 'Eserin Başlığı';
   document.getElementById('coverGenAuthor').value = authorName;
@@ -2324,11 +2364,18 @@ function drawCoverImage() {
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // Yazar Bilgisi
+  // Yazar / Şair Bilgisi
+  const coverRoleEl = document.getElementById('coverGenRole');
+  const catInput = document.getElementById('coverGenCategory');
+  const catVal = catInput ? catInput.value.toLowerCase() : '';
+  const isPoet = (coverRoleEl && coverRoleEl.value === 'poet') || catVal.includes('şiir') || catVal.includes('siir');
+  const rolePrefix = isPoet ? 'ŞAİR: ' : 'YAZAR: ';
+  let cleanAuthor = author.replace(/^(yazar|şair|sair)\s*:\s*/i, '').trim();
+
   ctx.textAlign = 'center';
   ctx.font = 'bold 24px "Courier New", monospace';
   ctx.fillStyle = accentColor;
-  ctx.fillText('[ YAZAR: ' + author.toUpperCase() + ' ]', w / 2, footDivY + 34);
+  ctx.fillText('[ ' + rolePrefix + cleanAuthor.toUpperCase() + ' ]', w / 2, footDivY + 34);
 
   // Slogan & Domain
   ctx.font = '15px "Courier New", monospace';
@@ -2525,14 +2572,21 @@ function downloadCoverImage() {
           <input type="text" id="coverGenTitle" class="form-control" oninput="drawCoverImage()" style="font-weight:600;" />
         </div>
 
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+        <div style="display:grid; grid-template-columns:1.2fr 1fr 0.8fr; gap:0.6rem;">
           <div>
-            <label class="form-label" style="font-weight:600; margin-bottom:0.25rem;">Yazar Adı:</label>
+            <label class="form-label" style="font-weight:600; margin-bottom:0.25rem;">Yazar / Şair Adı:</label>
             <input type="text" id="coverGenAuthor" class="form-control" oninput="drawCoverImage()" />
           </div>
           <div>
             <label class="form-label" style="font-weight:600; margin-bottom:0.25rem;">Edebi Tür / Kategori:</label>
             <input type="text" id="coverGenCategory" class="form-control" oninput="drawCoverImage()" />
+          </div>
+          <div>
+            <label class="form-label" style="font-weight:600; margin-bottom:0.25rem;">Rol / Ünvan:</label>
+            <select id="coverGenRole" class="form-control" onchange="drawCoverImage()" style="font-size:0.85rem; padding:0.4rem 0.45rem;">
+              <option value="writer">✍️ Yazar</option>
+              <option value="poet">📜 Şair</option>
+            </select>
           </div>
         </div>
 
