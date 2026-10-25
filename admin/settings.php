@@ -58,6 +58,14 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
             } else {
                 $err = 'Mevcut şifrenizi yanlış girdiniz.';
             }
+        } elseif ( $action_type === 'optimize_db' ) {
+            $opt = Database::vacuum_and_optimize();
+            if ( $opt['success'] ) {
+                $saved_text = $opt['saved_bytes'] > 0 ? ' (Geri kazanılan disk alanı: ' . Helpers::format_bytes( $opt['saved_bytes'] ) . ')' : '';
+                $msg = $opt['message'] . ' Güncel dosya boyutu: ' . Helpers::format_bytes( $opt['new_size'] ) . $saved_text;
+            } else {
+                $err = $opt['message'];
+            }
         }
     }
 }
@@ -288,6 +296,50 @@ require PATH_ADMIN . '/layout/header.php';
       </button>
     </div>
   </form>
+</div>
+
+<!-- 7. SQLITE VERİTABANI BAKIMI & OPTİMİZASYON -->
+<?php
+$db_conn = Database::get();
+$db_size = file_exists( DB_FILE ) ? filesize( DB_FILE ) : 0;
+$posts_cnt = (int) $db_conn->query( "SELECT COUNT(*) FROM posts" )->fetchColumn();
+$authors_cnt = (int) $db_conn->query( "SELECT COUNT(*) FROM authors" )->fetchColumn();
+?>
+<div class="admin-card" style="margin-top:1.5rem; border-left:6px solid #10b981;">
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+    <div>
+      <h2 style="margin:0; font-family:var(--admin-serif); font-size:1.3rem;">⚡ SQLite Veritabanı Bakımı & Hızlandırma</h2>
+      <p style="margin:0.25rem 0 0 0; color:var(--admin-muted); font-size:0.85rem;">
+        Tüm tabloları vakumlar (VACUUM), silinen/değişen verilerin bıraktığı boşlukları temizler, B-Tree indekslerini defragmente eder ve SQLite sorgu hızını maksimize eder.
+      </p>
+    </div>
+    <form method="POST" action="<?= SITE_URL; ?>/admin/settings.php" style="margin:0;">
+      <input type="hidden" name="csrf_token" value="<?= Auth::csrf_token(); ?>" />
+      <input type="hidden" name="action_type" value="optimize_db" />
+      <button type="submit" class="btn btn-primary" style="background:#059669; border-color:#059669; padding:0.65rem 1.25rem; font-weight:700;">
+        ⚡ Veritabanını Optimize Et & Vakumla
+      </button>
+    </form>
+  </div>
+
+  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin-top:1.25rem; background:#f8fafc; padding:1rem; border-radius:6px; border:1px solid #e2e8f0; font-size:0.85rem;">
+    <div>
+      <span style="color:var(--admin-muted); display:block; font-size:0.75rem;">Veritabanı Dosya Boyutu:</span>
+      <strong style="font-size:1.05rem; color:#0f172a;"><?= Helpers::format_bytes( $db_size ); ?></strong>
+    </div>
+    <div>
+      <span style="color:var(--admin-muted); display:block; font-size:0.75rem;">Çalışma Modu:</span>
+      <strong style="color:#059669;">WAL (Write-Ahead Logging)</strong>
+    </div>
+    <div>
+      <span style="color:var(--admin-muted); display:block; font-size:0.75rem;">Toplam Eser & Şiir:</span>
+      <strong><?= $posts_cnt; ?> adet</strong>
+    </div>
+    <div>
+      <span style="color:var(--admin-muted); display:block; font-size:0.75rem;">Kayıtlı Yazar & Şair:</span>
+      <strong><?= $authors_cnt; ?> kişi</strong>
+    </div>
+  </div>
 </div>
 
 <?php require PATH_ADMIN . '/layout/footer.php'; ?>

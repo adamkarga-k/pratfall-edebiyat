@@ -10,6 +10,7 @@
 class Database {
 
     private static ?PDO $pdo = null;
+    const DB_SYSTEM_VERSION = '1.4.5';
 
     /**
      * PDO Bağlantısını Getir (Singleton)
@@ -22,29 +23,23 @@ class Database {
             self::$pdo->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
             self::$pdo->setAttribute( PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC );
             
-            // SQLite Hız ve Bütünlük Optimizasyonları (Güvenli Hata Yakalamayla)
+            // SQLite Hız ve Bütünlük Optimizasyonları (WAL Modu + Bellek Önbelleği)
             try {
                 self::$pdo->exec( 'PRAGMA journal_mode = WAL;' );
+                self::$pdo->exec( 'PRAGMA synchronous = NORMAL;' );
+                self::$pdo->exec( 'PRAGMA cache_size = -32000;' ); // 32MB bellek önbelleği
+                self::$pdo->exec( 'PRAGMA temp_store = MEMORY;' );
+                self::$pdo->exec( 'PRAGMA foreign_keys = ON;' );
             } catch ( Throwable $e ) {
                 try { self::$pdo->exec( 'PRAGMA journal_mode = DELETE;' ); } catch ( Throwable $t ) {}
             }
-            try {
-                self::$pdo->exec( 'PRAGMA foreign_keys = ON;' );
-            } catch ( Throwable $e ) {}
 
             if ( $is_new || self::needs_schema() ) {
                 self::init_schema();
             }
 
-            // Vitrinin boş kalmaması için ilk yazıları kontrol et
-            self::ensure_initial_posts();
-            self::ensure_categories();
-            self::ensure_columns();
-            self::ensure_books();
-            self::ensure_subscribers();
-            self::clean_mecmua_settings();
-            self::normalize_existing_poems();
-            self::clear_all_post_tags_once();
+            // Şema ve İyileştirme Kontrollerini Her İstek Yerine Yalnızca Sürüm Değiştiğinde 1 Defa Çalıştırır
+            self::run_migrations_if_needed();
         }
         return self::$pdo;
     }
@@ -583,16 +578,95 @@ class Database {
      * Kullanıcı isteği doğrultusunda mevcut yazılardaki tüm anlamsız/otomatik etiketleri temizle.
      * Bu işlem 1 defa çalışır (flag ile korunur), böylece kullanıcının sonradan ekleyeceği SEO etiketleri silinmez.
      */
-    public static function clear_all_post_tags_once(): void {
+    /**
+     * Şema ve veri iyileştirmelerini her istek yerine yalnızca sürüm yükseltildiğinde 1 defa çalıştırır.
+     * Bu sayede site sayfaları açılırken veritabanı gereksiz DDL ve UPDATE sorgularıyla kilitlenmez.
+     */
+    public static function run_migrations_if_needed(): void {
         try {
-            $stmt = self::$pdo->query( "SELECT value FROM settings WHERE key = 'post_tags_cleaned_once_v2'" );
-            $row = $stmt ? $stmt->fetch() : null;
-            if ( ! $row ) {
-                self::$pdo->exec( "UPDATE posts SET tags = '' WHERE tags IS NOT NULL AND tags != ''" );
-                self::$pdo->exec( "INSERT OR REPLACE INTO settings (key, value) VALUES ('post_tags_cleaned_once_v2', '1')" );
+            $stmt = self::$pdo->query( "SELECT value FROM settings WHERE key = 'db_system_version'" );
+            $installed_ver = $stmt ? (string) $stmt->fetchColumn() : '';
+
+            if ( $installed_ver === self::DB_SYSTEM_VERSION ) {
+                return; // Veritabanı zaten optimize ve güncel!
             }
+
+            // Sürüm yükseltildiğinde veya ilk açılışta 1 defa çalıştır
+            self::ensure_initial_posts();
+            self::ensure_categories();
+            self::ensure_columns();
+            self::ensure_books();
+            self::ensure_subscribers();
+            self::clean_mecmua_settings();
+            self::normalize_existing_poems();
+            self::clear_all_post_tags_once();
+            self::ensure_performance_indexes();
+            self::vacuum_and_optimize();
+
+            // Sürümü kaydet
+            self::set_setting( 'db_system_version', self::DB_SYSTEM_VERSION );
         } catch ( Throwable $e ) {
             // sessizce geç
         }
+    }
+
+    /**
+     * SQLite İçin Yüksek Performanslı Arama & Sıralama İndeksleri
+     */
+    public static function ensure_performance_indexes(): void {
+        try {
+            $db = self::$pdo;
+            // 1. Posts tablosu sorgu indeksleri (Yazar, kategori, tarih, durum, öne çıkan)
+            $db->exec( "CREATE INDEX IF NOT EXISTS idx_posts_slug ON posts(slug);" );
+            $db->exec( "CREATE INDEX IF NOT EXISTS idx_posts_status ON posts(status);" );
+            $db->exec( "CREATE INDEX IF NOT EXISTS idx_posts_author_id ON posts(author_id);" );
+            $db->exec( "CREATE INDEX IF NOT EXISTS idx_posts_category ON posts(category);" );
+            $db->exec( "CREATE INDEX IF NOT EXISTS idx_posts_status_pubdate ON posts(status, published_at DESC);" );
+            $db->exec( "CREATE INDEX IF NOT EXISTS idx_posts_featured ON posts(is_featured, status);" );
+            
+            // 2. Authors tablosu indeksleri
+            $db->exec( "CREATE INDEX IF NOT EXISTS idx_authors_slug ON authors(slug);" );
+            
+            // 3. Vitrin ve Sıralama indeksleri
+            $db->exec( "CREATE INDEX IF NOT EXISTS idx_magazines_order ON magazines(order_num);" );
+            $db->exec( "CREATE INDEX IF NOT EXISTS idx_books_order ON books(order_num);" );
+        } catch ( Throwable $e ) {}
+    }
+
+    /**
+     * SQLite Veritabanını Optimize Et ve Vakumla (VACUUM)
+     * Boş alanları geri kazanır, disk parçalanmasını giderir ve sorgu hızını maksimize eder.
+     */
+    public static function vacuum_and_optimize(): array {
+        $result = [
+            'success'     => false,
+            'old_size'    => 0,
+            'new_size'    => 0,
+            'saved_bytes' => 0,
+            'message'     => ''
+        ];
+        try {
+            if ( file_exists( DB_FILE ) ) {
+                $result['old_size'] = (int) filesize( DB_FILE );
+            }
+
+            self::ensure_performance_indexes();
+
+            // İndeks analizi ve istatistik güncelleme
+            self::$pdo->exec( 'PRAGMA optimize;' );
+            // Boş alanları geri kazan ve disk parçalanmasını gider
+            self::$pdo->exec( 'VACUUM;' );
+
+            clearstatcache( true, DB_FILE );
+            if ( file_exists( DB_FILE ) ) {
+                $result['new_size'] = (int) filesize( DB_FILE );
+                $result['saved_bytes'] = max( 0, $result['old_size'] - $result['new_size'] );
+            }
+            $result['success'] = true;
+            $result['message'] = 'SQLite veritabanı başarıyla optimize edildi, kullanılmayan alanlar temizlendi ve tüm indeksler güncellendi.';
+        } catch ( Throwable $e ) {
+            $result['message'] = 'Optimizasyon sırasında hata: ' . $e->getMessage();
+        }
+        return $result;
     }
 }

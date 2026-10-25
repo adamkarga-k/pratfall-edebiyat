@@ -386,4 +386,22 @@ class Helpers {
 
         return implode( "\n\n", $final_stanzas );
     }
+
+    /**
+     * Bayt Cinsinden Dosya Boyutunu İnsan Okuyabilir Formata Çevir (KB, MB, GB)
+     */
+    public static function format_bytes( int $bytes ): string {
+        if ( $bytes >= 1073741824 ) {
+            return number_format( $bytes / 1073741824, 2, ',', '.' ) . ' GB';
+        } elseif ( $bytes >= 1048576 ) {
+            return number_format( $bytes / 1048576, 2, ',', '.' ) . ' MB';
+        } elseif ( $bytes >= 1024 ) {
+            return number_format( $bytes / 1024, 2, ',', '.' ) . ' KB';
+        } elseif ( $bytes > 1 ) {
+            return $bytes . ' bayt';
+        } elseif ( $bytes === 1 ) {
+            return '1 bayt';
+        }
+        return '0 bayt';
+    }
 }

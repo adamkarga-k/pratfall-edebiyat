@@ -267,9 +267,10 @@ require PATH_ADMIN . '/layout/header.php';
   $poet_total_count  = count( array_filter( $all_authors_raw, fn( $a ) => Helpers::is_poet( $a ) ) );
   $writer_total_count = $total_all_count - $poet_total_count;
 
-  // 3. Filtre Parametreleri
+  // 3. Filtre ve Sıralama Parametreleri
   $filter_role   = $_GET['role'] ?? 'all'; // 'all', 'poet', 'writer'
   $filter_letter = trim( (string) ( $_GET['letter'] ?? '' ) );
+  $filter_sort   = trim( (string) ( $_GET['sort'] ?? 'name_asc' ) ); // 'name_asc', 'name_desc', 'posts_desc', 'posts_asc', 'newest'
   $search_query  = trim( (string) ( $_GET['q'] ?? '' ) );
   $current_paged = max( 1, (int) ( $_GET['paged'] ?? 1 ) );
   $per_page      = 20;
@@ -311,7 +312,36 @@ require PATH_ADMIN . '/layout/header.php';
   } );
   $filtered_authors = array_values( $filtered_authors );
 
-  // 4. Sayfalama Hesaplamaları
+  // 4. Sıralama Uygula (Eser Sayısı veya İsim)
+  if ( $filter_sort === 'posts_desc' ) {
+      usort( $filtered_authors, function( $a, $b ) {
+          $cA = (int) ( $a['post_count'] ?? 0 );
+          $cB = (int) ( $b['post_count'] ?? 0 );
+          if ( $cA === $cB ) {
+              return Helpers::turkish_strcoll( $a['name'], $b['name'] );
+          }
+          return $cB <=> $cA;
+      } );
+  } elseif ( $filter_sort === 'posts_asc' ) {
+      usort( $filtered_authors, function( $a, $b ) {
+          $cA = (int) ( $a['post_count'] ?? 0 );
+          $cB = (int) ( $b['post_count'] ?? 0 );
+          if ( $cA === $cB ) {
+              return Helpers::turkish_strcoll( $a['name'], $b['name'] );
+          }
+          return $cA <=> $cB;
+      } );
+  } elseif ( $filter_sort === 'name_desc' ) {
+      Helpers::sort_turkish_alphabetical( $filtered_authors, 'name' );
+      $filtered_authors = array_reverse( $filtered_authors );
+  } elseif ( $filter_sort === 'newest' ) {
+      usort( $filtered_authors, fn( $a, $b ) => ( (int)$b['id'] <=> (int)$a['id'] ) );
+  } else {
+      // Varsayılan: A-Z İsim Sıralaması
+      Helpers::sort_turkish_alphabetical( $filtered_authors, 'name' );
+  }
+
+  // 5. Sayfalama Hesaplamaları
   $total_items = count( $filtered_authors );
   $total_pages = max( 1, (int) ceil( $total_items / $per_page ) );
   if ( $current_paged > $total_pages && $total_items > 0 ) {
@@ -320,7 +350,7 @@ require PATH_ADMIN . '/layout/header.php';
   $offset = ( $current_paged - 1 ) * $per_page;
   $paged_authors = array_slice( $filtered_authors, $offset, $per_page );
 
-  $has_active_filters = ( $filter_role !== 'all' || ! empty( $filter_letter ) || ! empty( $search_query ) );
+  $has_active_filters = ( $filter_role !== 'all' || ! empty( $filter_letter ) || ! empty( $search_query ) || $filter_sort !== 'name_asc' );
 
   // URL Üretici
   $build_author_url = function( $overrides = [] ) {
@@ -336,14 +366,16 @@ require PATH_ADMIN . '/layout/header.php';
   };
 
   $turkish_letters = ['A', 'B', 'C', 'Ç', 'D', 'E', 'F', 'G', 'Ğ', 'H', 'I', 'İ', 'J', 'K', 'L', 'M', 'N', 'O', 'Ö', 'P', 'R', 'S', 'Ş', 'T', 'U', 'Ü', 'V', 'Y', 'Z'];
+  $next_name_sort  = ($filter_sort === 'name_asc') ? 'name_desc' : 'name_asc';
+  $next_posts_sort = ($filter_sort === 'posts_desc') ? 'posts_asc' : 'posts_desc';
   ?>
 
   <!-- Filtre & Sekme Çubuğu -->
   <div class="card" style="margin-bottom:1.25rem; padding:1.15rem 1.25rem; background:#ffffff; border:1px solid var(--adm-border, #e2e8f0); border-radius:8px;">
     
-    <!-- Üst Sekmeler: Rol Filtreleri -->
-    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1rem; padding-bottom:0.85rem; border-bottom:1px solid #f1f5f9;">
-      <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+    <!-- Üst Sekmeler: Rol Filtreleri & Arama & Sıralama -->
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.85rem; margin-bottom:1rem; padding-bottom:0.85rem; border-bottom:1px solid #f1f5f9;">
+      <div style="display:flex; gap:0.4rem; flex-wrap:wrap; align-items:center;">
         <a href="<?= $build_author_url(['role' => 'all', 'paged' => 1]); ?>" 
            class="btn btn-sm <?= $filter_role === 'all' ? 'btn-primary' : 'btn-secondary'; ?>" 
            style="font-size:0.8rem; padding:0.35rem 0.8rem; font-weight:<?= $filter_role === 'all' ? '700' : '500'; ?>;">
@@ -361,24 +393,41 @@ require PATH_ADMIN . '/layout/header.php';
         </a>
       </div>
 
-      <!-- Arama Formu -->
-      <form method="GET" action="<?= SITE_URL; ?>/admin/authors.php" style="display:flex; gap:0.4rem; align-items:center; flex:1; max-width:380px; min-width:240px;">
-        <?php if ( $filter_role !== 'all' ) : ?>
-          <input type="hidden" name="role" value="<?= htmlspecialchars( $filter_role, ENT_QUOTES, 'UTF-8' ); ?>" />
-        <?php endif; ?>
-        <?php if ( ! empty( $filter_letter ) ) : ?>
-          <input type="hidden" name="letter" value="<?= htmlspecialchars( $filter_letter, ENT_QUOTES, 'UTF-8' ); ?>" />
-        <?php endif; ?>
-        <input type="text" name="q" value="<?= htmlspecialchars( $search_query, ENT_QUOTES, 'UTF-8' ); ?>" placeholder="İsim, unvan veya aforizma ara..." class="form-control" style="font-size:0.85rem; padding:0.4rem 0.75rem;" />
-        <button type="submit" class="btn btn-primary btn-sm" style="padding:0.4rem 0.75rem; white-space:nowrap;">
-          🔍 Ara
-        </button>
-        <?php if ( $has_active_filters ) : ?>
-          <a href="<?= SITE_URL; ?>/admin/authors.php" class="btn btn-sm" style="padding:0.4rem 0.6rem; color:#ef4444; white-space:nowrap;" title="Filtreleri Temizle">
-            ✕ Temizle
-          </a>
-        <?php endif; ?>
-      </form>
+      <div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;">
+        <!-- Sıralama Açılır Menüsü -->
+        <div style="display:inline-flex; align-items:center; gap:0.35rem;">
+          <span style="font-size:0.75rem; font-weight:700; color:var(--admin-muted, #64748b);">Sırala:</span>
+          <select onchange="window.location.href=this.value" class="form-control" style="font-size:0.8rem; padding:0.35rem 0.5rem; width:auto; border-radius:4px; height:auto; cursor:pointer;">
+            <option value="<?= $build_author_url(['sort' => 'name_asc', 'paged' => 1]); ?>" <?= $filter_sort === 'name_asc' ? 'selected' : ''; ?>>🔤 İsim (A-Z)</option>
+            <option value="<?= $build_author_url(['sort' => 'name_desc', 'paged' => 1]); ?>" <?= $filter_sort === 'name_desc' ? 'selected' : ''; ?>>🔤 İsim (Z-A)</option>
+            <option value="<?= $build_author_url(['sort' => 'posts_desc', 'paged' => 1]); ?>" <?= $filter_sort === 'posts_desc' ? 'selected' : ''; ?>>🔥 En Çok Eser</option>
+            <option value="<?= $build_author_url(['sort' => 'posts_asc', 'paged' => 1]); ?>" <?= $filter_sort === 'posts_asc' ? 'selected' : ''; ?>>📉 En Az Eser</option>
+            <option value="<?= $build_author_url(['sort' => 'newest', 'paged' => 1]); ?>" <?= $filter_sort === 'newest' ? 'selected' : ''; ?>>✨ En Yeni Eklenen</option>
+          </select>
+        </div>
+
+        <!-- Arama Formu -->
+        <form method="GET" action="<?= SITE_URL; ?>/admin/authors.php" style="display:flex; gap:0.4rem; align-items:center; min-width:210px;">
+          <?php if ( $filter_role !== 'all' ) : ?>
+            <input type="hidden" name="role" value="<?= htmlspecialchars( $filter_role, ENT_QUOTES, 'UTF-8' ); ?>" />
+          <?php endif; ?>
+          <?php if ( ! empty( $filter_letter ) ) : ?>
+            <input type="hidden" name="letter" value="<?= htmlspecialchars( $filter_letter, ENT_QUOTES, 'UTF-8' ); ?>" />
+          <?php endif; ?>
+          <?php if ( $filter_sort !== 'name_asc' ) : ?>
+            <input type="hidden" name="sort" value="<?= htmlspecialchars( $filter_sort, ENT_QUOTES, 'UTF-8' ); ?>" />
+          <?php endif; ?>
+          <input type="text" name="q" value="<?= htmlspecialchars( $search_query, ENT_QUOTES, 'UTF-8' ); ?>" placeholder="İsim veya unvan ara..." class="form-control" style="font-size:0.82rem; padding:0.35rem 0.65rem;" />
+          <button type="submit" class="btn btn-primary btn-sm" style="padding:0.35rem 0.7rem; white-space:nowrap;">
+            🔍 Ara
+          </button>
+          <?php if ( $has_active_filters ) : ?>
+            <a href="<?= SITE_URL; ?>/admin/authors.php" class="btn btn-sm" style="padding:0.35rem 0.55rem; color:#ef4444; white-space:nowrap;" title="Filtreleri Temizle">
+              ✕
+            </a>
+          <?php endif; ?>
+        </form>
+      </div>
     </div>
 
     <!-- Alt Harf İndeksi (A-Z Baş Harfine Göre Hızlı Filtre) -->
@@ -403,10 +452,32 @@ require PATH_ADMIN . '/layout/header.php';
       <thead>
         <tr>
           <th style="width:55px;">Portre</th>
-          <th>Yazar / Şair Adı (A-Z)</th>
+          <th>
+            <a href="<?= $build_author_url(['sort' => $next_name_sort, 'paged' => 1]); ?>" style="color:inherit; text-decoration:none; display:inline-flex; align-items:center; gap:0.35rem;" title="İsme göre alfabetik sırala">
+              <span>Yazar / Şair Adı</span>
+              <?php if ( $filter_sort === 'name_asc' ) : ?>
+                <span style="color:var(--adm-primary, #d94e34); font-size:0.75rem; font-weight:700;">▲ (A-Z)</span>
+              <?php elseif ( $filter_sort === 'name_desc' ) : ?>
+                <span style="color:var(--adm-primary, #d94e34); font-size:0.75rem; font-weight:700;">▼ (Z-A)</span>
+              <?php else : ?>
+                <span style="color:#94a3b8; font-size:0.75rem;">⇅</span>
+              <?php endif; ?>
+            </a>
+          </th>
           <th>Rol / Unvan</th>
           <th>Aforizma & Biyografi</th>
-          <th style="text-align:center;">Yayınlanan Eser</th>
+          <th style="text-align:center;">
+            <a href="<?= $build_author_url(['sort' => $next_posts_sort, 'paged' => 1]); ?>" style="color:inherit; text-decoration:none; display:inline-flex; align-items:center; gap:0.35rem;" title="Yayınlanan eser sayısına göre sırala">
+              <span>Yayınlanan Eser</span>
+              <?php if ( $filter_sort === 'posts_desc' ) : ?>
+                <span style="color:var(--adm-primary, #d94e34); font-size:0.75rem; font-weight:700;">▼ (En Çok)</span>
+              <?php elseif ( $filter_sort === 'posts_asc' ) : ?>
+                <span style="color:var(--adm-primary, #d94e34); font-size:0.75rem; font-weight:700;">▲ (En Az)</span>
+              <?php else : ?>
+                <span style="color:#94a3b8; font-size:0.75rem;">⇅</span>
+              <?php endif; ?>
+            </a>
+          </th>
           <th style="text-align:right;">İşlemler</th>
         </tr>
       </thead>

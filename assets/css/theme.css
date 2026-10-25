@@ -325,9 +325,9 @@ html.dark .tape-badge.tape-peach {
    2. ÜST DUYURU BANDI (TICKER & MARQUEE)
    -------------------------------------------------------------------------- */
 .pratfall-ticker-wrapper {
-  background-color: var(--text-main);
-  color: var(--bg-page);
-  padding: 0.4rem 0;
+  background-color: #141416;
+  color: #f6f3eb;
+  padding: 0.42rem 0;
   font-family: var(--font-mono);
   font-size: 0.75rem;
   letter-spacing: 0.04em;
@@ -336,6 +336,12 @@ html.dark .tape-badge.tape-peach {
   display: flex;
   align-items: center;
   border-bottom: 2px solid var(--border-color);
+}
+
+html.dark .pratfall-ticker-wrapper {
+  background-color: #09090b;
+  color: #f3efe6;
+  border-bottom: 2px solid #27272a;
 }
 
 .pratfall-ticker-track {
