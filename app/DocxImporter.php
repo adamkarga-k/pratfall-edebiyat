@@ -123,10 +123,8 @@ class DocxImporter {
             $doc_content = Helpers::format_poem_content( $doc_content );
         }
 
-        // 8. Önerilen Etiketler (Tags)
-        $tags = ! empty( $parsed['detected_tags'] )
-            ? $parsed['detected_tags']
-            : self::suggest_tags( $parsed['raw_text'] );
+        // 8. Etiketler (Kullanıcı talebiyle otomatik anlamsız etiket üretimi tamamen kaldırıldı)
+        $tags = '';
 
         // 9. Özet ve Okuma Süresi
         $clean_text = $parsed['raw_text'];
@@ -446,42 +444,10 @@ class DocxImporter {
     }
 
     /**
-     * Metinden Otomatik Akıllı Etiket (Tags) Önerisi
+     * Metinden Otomatik Akıllı Etiket (Tags) Önerisi (Kullanıcı talebiyle devre dışı bırakılmıştır)
      */
     public static function suggest_tags( string $text ): string {
-        $stop_words = [
-            'bir', 've', 'veya', 'ile', 'bu', 'şu', 'o', 'de', 'da', 'ki', 'için', 'gibi', 'kadar', 'daha',
-            'çok', 'en', 'ama', 'fakat', 'ancak', 'çünkü', 'ise', 'mi', 'mu', 'mü', 'mısın', 'misin',
-            'olan', 'olarak', 'her', 'şey', 'zaman', 'sonra', 'önce', 'göre', 'ben', 'sen', 'biz', 'siz',
-            'onlar', 'kendi', 'ya', 'hem', 'yok', 'var', 'bunu', 'buna', 'bunun', 'onu', 'ona', 'onun',
-            'öyle', 'böyle', 'şöyle', 'tüm', 'bazı', 'hiç', 'biri', 'bütün', 'diye', 'üzere', 'karşı',
-            'artık', 'yani', 'bile', 'hep', 'aynı', 'kendi', 'nasıl', 'neden', 'niçin', 'nerede',
-        ];
-
-        // Kelimeleri ayıkla
-        $words = preg_split( '/[^\p{L}\p{N}]+/u', mb_strtolower( $text, 'UTF-8' ) );
-        $freq = [];
-
-        foreach ( $words as $w ) {
-            $w = trim( $w );
-            if ( mb_strlen( $w ) < 4 || mb_strlen( $w ) > 20 ) {
-                continue;
-            }
-            if ( in_array( $w, $stop_words ) ) {
-                continue;
-            }
-            $freq[$w] = ( $freq[$w] ?? 0 ) + 1;
-        }
-
-        arsort( $freq );
-        $top_words = array_slice( array_keys( $freq ), 0, 4 );
-
-        // Temel edebi etiketle zenginleştir
-        if ( ! in_array( 'edebiyat', $top_words ) && count( $top_words ) < 5 ) {
-            $top_words[] = 'edebiyat';
-        }
-
-        return implode( ', ', $top_words );
+        return '';
     }
 
     /**

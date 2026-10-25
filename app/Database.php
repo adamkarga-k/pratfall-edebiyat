@@ -44,6 +44,7 @@ class Database {
             self::ensure_subscribers();
             self::clean_mecmua_settings();
             self::normalize_existing_poems();
+            self::clear_all_post_tags_once();
         }
         return self::$pdo;
     }
@@ -575,6 +576,23 @@ class Database {
             }
         } catch ( Throwable $e ) {
             // Arka plan otomatik iyileştirmesi sitenin açılışını asla aksatmamalıdır
+        }
+    }
+
+    /**
+     * Kullanıcı isteği doğrultusunda mevcut yazılardaki tüm anlamsız/otomatik etiketleri temizle.
+     * Bu işlem 1 defa çalışır (flag ile korunur), böylece kullanıcının sonradan ekleyeceği SEO etiketleri silinmez.
+     */
+    public static function clear_all_post_tags_once(): void {
+        try {
+            $stmt = self::$pdo->query( "SELECT value FROM settings WHERE key = 'post_tags_cleaned_once_v2'" );
+            $row = $stmt ? $stmt->fetch() : null;
+            if ( ! $row ) {
+                self::$pdo->exec( "UPDATE posts SET tags = '' WHERE tags IS NOT NULL AND tags != ''" );
+                self::$pdo->exec( "INSERT OR REPLACE INTO settings (key, value) VALUES ('post_tags_cleaned_once_v2', '1')" );
+            }
+        } catch ( Throwable $e ) {
+            // sessizce geç
         }
     }
 }

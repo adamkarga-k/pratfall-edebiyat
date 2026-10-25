@@ -218,7 +218,7 @@ require PATH_ADMIN . '/layout/header.php';
       <span>📥</span> Word (.docx) Toplu İçe Aktarma & Düzenleme Masası
     </h1>
     <p style="margin:0.25rem 0 0 0; color:var(--adm-muted); font-size:0.87rem;">
-      Bilgisayarınızdaki Word belgelerini seçin; başlıklar, kategoriler, önerilen etiketler, özetler ve tam içerikler otomatik çıkarılsın. Topluca düzenleyip tek tıkla yayına alın.
+      Bilgisayarınızdaki Word belgelerini seçin; başlıklar, kategoriler, özetler ve tam içerikler otomatik çıkarılsın. Topluca düzenleyip tek tıkla yayına alın.
     </p>
   </div>
 </div>
@@ -247,7 +247,7 @@ require PATH_ADMIN . '/layout/header.php';
             Tebrikler! <?= count( $results ); ?> Adet Eser Başarıyla İçe Aktarıldı
           </h2>
           <div style="font-size:0.85rem; color:var(--adm-muted);">
-            Tüm içerikler, biçimlendirmeler, kategoriler ve etiketler eksiksiz olarak kaydedildi.
+            Tüm içerikler, biçimlendirmeler ve kategoriler eksiksiz olarak kaydedildi.
           </div>
         </div>
       </div>
@@ -258,7 +258,6 @@ require PATH_ADMIN . '/layout/header.php';
             <tr>
               <th>Başlık</th>
               <th>Kategori</th>
-              <th>Etiketler</th>
               <th>Yazar</th>
               <th>Süre</th>
               <th style="text-align:right;">İşlem</th>
@@ -269,7 +268,6 @@ require PATH_ADMIN . '/layout/header.php';
               <tr>
                 <td><strong><?= htmlspecialchars( $r['title'], ENT_QUOTES, 'UTF-8' ); ?></strong></td>
                 <td><span class="pill-badge pill-purple"><?= htmlspecialchars( $r['category'], ENT_QUOTES, 'UTF-8' ); ?></span></td>
-                <td style="font-size:0.8rem; color:var(--adm-muted);"><?= htmlspecialchars( $r['tags'] ?: '—', ENT_QUOTES, 'UTF-8' ); ?></td>
                 <td><?= htmlspecialchars( $r['author'], ENT_QUOTES, 'UTF-8' ); ?></td>
                 <td><?= $r['reading_time']; ?> dk</td>
                 <td style="text-align:right;">
@@ -313,7 +311,7 @@ require PATH_ADMIN . '/layout/header.php';
               <?= count( $parsed_items ); ?> Adet Word Belgesi İncelenmek Üzere Çözümlendi
             </div>
             <div style="font-size:0.8rem; color:var(--adm-muted);">
-              Aşağıdaki listeden başlıkları, kategorileri, önerilen etiketleri ve kısa açıklamaları dilediğiniz gibi düzenleyebilir, "İçeriği Gör" butonuyla metni kontrol edebilirsiniz.
+              Aşağıdaki listeden başlıkları, kategorileri ve kısa açıklamaları dilediğiniz gibi düzenleyebilir, "İçeriği Gör" butonuyla metni kontrol edebilirsiniz.
             </div>
           </div>
         </div>
@@ -409,20 +407,12 @@ require PATH_ADMIN . '/layout/header.php';
 
             </div>
 
-            <div style="display:grid; grid-template-columns: 1fr 1.6fr 1fr 1fr; gap:1rem; align-items:start;">
+            <div style="display:grid; grid-template-columns: 2fr 1fr 1.2fr; gap:1rem; align-items:start;">
               
-              <!-- Önerilen Etiketler -->
+              <!-- Kısa Açıklama (Özet / Excerpt) -->
               <div>
                 <label class="form-label" style="font-weight:600; margin-bottom:0.3rem;">
-                  Önerilen Etiketler <span style="font-size:0.75rem; color:var(--adm-muted);">(Virgülle)</span>
-                </label>
-                <input type="text" name="items[<?= $idx; ?>][tags]" class="form-control" value="<?= htmlspecialchars( $item['tags'], ENT_QUOTES, 'UTF-8' ); ?>" placeholder="edebiyat, felsefe, şiir" />
-              </div>
-
-              <!-- Önerilen Kısa Açıklama (Özet) -->
-              <div>
-                <label class="form-label" style="font-weight:600; margin-bottom:0.3rem;">
-                  Önerilen Kısa Açıklama (Özet / Excerpt)
+                  Kısa Açıklama (Özet / Excerpt)
                 </label>
                 <textarea name="items[<?= $idx; ?>][excerpt]" class="form-control" rows="2" style="font-size:0.85rem; line-height:1.4; resize:vertical;"><?= htmlspecialchars( $item['excerpt'], ENT_QUOTES, 'UTF-8' ); ?></textarea>
               </div>
@@ -454,6 +444,7 @@ require PATH_ADMIN . '/layout/header.php';
                   </button>
                 </div>
                 <input type="hidden" name="items[<?= $idx; ?>][featured_image]" id="item_featured_image_<?= $idx; ?>" value="<?= htmlspecialchars( $item['featured_image'], ENT_QUOTES, 'UTF-8' ); ?>" />
+                <input type="hidden" name="items[<?= $idx; ?>][tags]" value="" />
               </div>
 
             </div>
@@ -586,10 +577,6 @@ require PATH_ADMIN . '/layout/header.php';
         <div>Paragraflar, başlıklar, kalın (bold), italik, altı çizili metinler ve Word içine gömülü tüm fotoğraflar sıfır kayıpla aktarılır.</div>
       </div>
 
-      <div style="margin-bottom:1rem;">
-        <strong style="color:var(--adm-text);">✦ Otomatik Etiket Önerisi:</strong>
-        <div>Metin içi edebi frekans analiziyle yazının anahtar kavramları tespit edilir ve etiket olarak önerilir.</div>
-      </div>
 
       <div style="margin-bottom:1rem;">
         <strong style="color:var(--adm-text);">✦ Edebi Tür Tespiti:</strong>
@@ -947,13 +934,26 @@ require PATH_ADMIN . '/layout/header.php';
 
     let postTitle = titleInput ? titleInput.value.trim() : 'Eser Başlığı';
     let authorName = 'Pratfall Yazarı';
+    let isPoet = false;
     if (authorSelect && authorSelect.selectedIndex >= 0) {
-      const selText = authorSelect.options[authorSelect.selectedIndex].text.trim();
+      const selOpt = authorSelect.options[authorSelect.selectedIndex];
+      const selText = selOpt.text.trim();
       if (selText && !selText.startsWith('✦')) {
-        authorName = selText.replace(/\s*\([^)]*\)$/, '');
+        authorName = selText.replace(/\s*\([^)]*\)$/, '').trim();
+      }
+      if (selOpt.dataset && selOpt.dataset.isPoet === '1') {
+        isPoet = true;
       }
     }
     let categoryName = catSelect ? catSelect.value.trim() : 'Deneme';
+    if (categoryName.toLowerCase().includes('şiir') || categoryName.toLowerCase().includes('siir')) {
+      isPoet = true;
+    }
+
+    const roleSelect = document.getElementById('coverGenRole');
+    if (roleSelect) {
+      roleSelect.value = isPoet ? 'poet' : 'writer';
+    }
 
     document.getElementById('coverGenTitle').value = postTitle;
     document.getElementById('coverGenAuthor').value = authorName;
@@ -1681,18 +1681,6 @@ require PATH_ADMIN . '/layout/header.php';
     setTimeout(() => {
       btn.innerHTML = origBtnText;
     }, 3000);
-  }
-      } else {
-        msg.style.color = '#ef4444';
-        msg.innerText = data.message || 'Hata oluştu.';
-      }
-    })
-    .catch(err => {
-      btn.disabled = false;
-      btn.innerText = '✓ Yazarı Kaydet ve Seç';
-      msg.style.color = '#ef4444';
-      msg.innerText = 'Bağlantı hatası: ' + err;
-    });
   }
 
   // Türkçe Title Case JavaScript Yardımcısı
