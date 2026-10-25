@@ -10,7 +10,7 @@
 class Database {
 
     private static ?PDO $pdo = null;
-    const DB_SYSTEM_VERSION = '1.4.5';
+    const DB_SYSTEM_VERSION = '1.4.6';
 
     /**
      * PDO Bağlantısını Getir (Singleton)

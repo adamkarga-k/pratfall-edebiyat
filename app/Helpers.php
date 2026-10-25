@@ -221,21 +221,16 @@ class Helpers {
     }
 
     /**
-     * Diziyi Türkçe Harf Sırasına (A'dan Z'ye) Göre Sırala
-     * A, B, C, Ç, D, E, F, G, Ğ, H, I, İ, J, K, L, M, N, O, Ö, P, R, S, Ş, T, U, Ü, V, Y, Z
+     * İki Türkçe Metni Alfabetik Sıraya Göre Karşılaştır (strcoll eşdeğeri)
+     * Negatif dönerse $strA önce gelir, pozitif dönerse $strB önce gelir, 0 ise eşittir.
      */
-    public static function sort_turkish_alphabetical( array &$list, string $key = 'name' ): void {
+    public static function turkish_strcoll( string $strA, string $strB ): int {
         if ( class_exists( 'Collator' ) ) {
             $c = new Collator( 'tr_TR' );
-            usort( $list, function( $a, $b ) use ( $c, $key ) {
-                $valA = is_array( $a ) ? ( $a[$key] ?? '' ) : ( $a->$key ?? '' );
-                $valB = is_array( $b ) ? ( $b[$key] ?? '' ) : ( $b->$key ?? '' );
-                return $c->compare( (string) $valA, (string) $valB );
-            } );
-            return;
+            return $c->compare( $strA, $strB );
         }
 
-        $alphabet = [
+        static $alphabet = [
             'a'=>1, 'A'=>1, 'b'=>2, 'B'=>2, 'c'=>3, 'C'=>3, 'ç'=>4, 'Ç'=>4,
             'd'=>5, 'D'=>5, 'e'=>6, 'E'=>6, 'f'=>7, 'F'=>7, 'g'=>8, 'G'=>8,
             'ğ'=>9, 'Ğ'=>9, 'h'=>10, 'H'=>10, 'ı'=>11, 'I'=>11, 'i'=>12, 'İ'=>12,
@@ -246,26 +241,33 @@ class Helpers {
             'z'=>29, 'Z'=>29
         ];
 
-        usort( $list, function( $a, $b ) use ( $alphabet, $key ) {
+        $sA = self::turkish_lower( trim( $strA ) );
+        $sB = self::turkish_lower( trim( $strB ) );
+        $lenA = mb_strlen( $sA, 'UTF-8' );
+        $lenB = mb_strlen( $sB, 'UTF-8' );
+        $minLen = min( $lenA, $lenB );
+
+        for ( $i = 0; $i < $minLen; $i++ ) {
+            $charA = mb_substr( $sA, $i, 1, 'UTF-8' );
+            $charB = mb_substr( $sB, $i, 1, 'UTF-8' );
+            $wA = $alphabet[$charA] ?? ( 100 + ord( $charA ) );
+            $wB = $alphabet[$charB] ?? ( 100 + ord( $charB ) );
+            if ( $wA !== $wB ) {
+                return $wA - $wB;
+            }
+        }
+        return $lenA - $lenB;
+    }
+
+    /**
+     * Diziyi Türkçe Harf Sırasına (A'dan Z'ye) Göre Sırala
+     * A, B, C, Ç, D, E, F, G, Ğ, H, I, İ, J, K, L, M, N, O, Ö, P, R, S, Ş, T, U, Ü, V, Y, Z
+     */
+    public static function sort_turkish_alphabetical( array &$list, string $key = 'name' ): void {
+        usort( $list, function( $a, $b ) use ( $key ) {
             $valA = is_array( $a ) ? ( $a[$key] ?? '' ) : ( $a->$key ?? '' );
             $valB = is_array( $b ) ? ( $b[$key] ?? '' ) : ( $b->$key ?? '' );
-
-            $strA = self::turkish_lower( trim( (string) $valA ) );
-            $strB = self::turkish_lower( trim( (string) $valB ) );
-            $lenA = mb_strlen( $strA, 'UTF-8' );
-            $lenB = mb_strlen( $strB, 'UTF-8' );
-            $minLen = min( $lenA, $lenB );
-
-            for ( $i = 0; $i < $minLen; $i++ ) {
-                $charA = mb_substr( $strA, $i, 1, 'UTF-8' );
-                $charB = mb_substr( $strB, $i, 1, 'UTF-8' );
-                $wA = $alphabet[$charA] ?? ( 100 + ord( $charA ) );
-                $wB = $alphabet[$charB] ?? ( 100 + ord( $charB ) );
-                if ( $wA !== $wB ) {
-                    return $wA - $wB;
-                }
-            }
-            return $lenA - $lenB;
+            return self::turkish_strcoll( (string) $valA, (string) $valB );
         } );
     }
 

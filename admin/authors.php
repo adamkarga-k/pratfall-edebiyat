@@ -318,7 +318,7 @@ require PATH_ADMIN . '/layout/header.php';
           $cA = (int) ( $a['post_count'] ?? 0 );
           $cB = (int) ( $b['post_count'] ?? 0 );
           if ( $cA === $cB ) {
-              return Helpers::turkish_strcoll( $a['name'], $b['name'] );
+              return Helpers::turkish_strcoll( (string) ( $a['name'] ?? '' ), (string) ( $b['name'] ?? '' ) );
           }
           return $cB <=> $cA;
       } );
@@ -327,7 +327,7 @@ require PATH_ADMIN . '/layout/header.php';
           $cA = (int) ( $a['post_count'] ?? 0 );
           $cB = (int) ( $b['post_count'] ?? 0 );
           if ( $cA === $cB ) {
-              return Helpers::turkish_strcoll( $a['name'], $b['name'] );
+              return Helpers::turkish_strcoll( (string) ( $a['name'] ?? '' ), (string) ( $b['name'] ?? '' ) );
           }
           return $cA <=> $cB;
       } );
@@ -335,7 +335,7 @@ require PATH_ADMIN . '/layout/header.php';
       Helpers::sort_turkish_alphabetical( $filtered_authors, 'name' );
       $filtered_authors = array_reverse( $filtered_authors );
   } elseif ( $filter_sort === 'newest' ) {
-      usort( $filtered_authors, fn( $a, $b ) => ( (int)$b['id'] <=> (int)$a['id'] ) );
+      usort( $filtered_authors, fn( $a, $b ) => ( (int)($b['id'] ?? 0) <=> (int)($a['id'] ?? 0) ) );
   } else {
       // Varsayılan: A-Z İsim Sıralaması
       Helpers::sort_turkish_alphabetical( $filtered_authors, 'name' );
@@ -530,9 +530,9 @@ require PATH_ADMIN . '/layout/header.php';
                 <?= ! empty( $a['quote'] ) ? '"' . htmlspecialchars( $a['quote'], ENT_QUOTES, 'UTF-8' ) . '"' : ( ! empty( $a['bio'] ) ? htmlspecialchars( mb_strimwidth( strip_tags( $a['bio'] ), 0, 60, '...' ), ENT_QUOTES, 'UTF-8' ) : '—' ); ?>
               </td>
               <td style="text-align:center;">
-                <span class="pill-badge <?= (int)$a['post_count'] > 0 ? 'pill-green' : 'pill-yellow'; ?>" style="font-size:0.75rem; font-weight:700;">
-                  <?= (int) $a['post_count']; ?> eser
-                </span>
+                <a href="<?= SITE_URL; ?>/admin/posts.php?author_id=<?= $a['id']; ?>" class="pill-badge <?= (int)$a['post_count'] > 0 ? 'pill-green' : 'pill-yellow'; ?>" style="font-size:0.75rem; font-weight:700; text-decoration:none;" title="Bu yazarın yayınlanan tüm eserlerini listele">
+                  <?= (int) $a['post_count']; ?> eser ↗
+                </a>
               </td>
               <td style="text-align:right; white-space:nowrap;">
                 <a href="<?= Helpers::author_url( $a ); ?>" target="_blank" class="btn btn-sm" style="padding:0.25rem 0.55rem; font-size:0.75rem;">
