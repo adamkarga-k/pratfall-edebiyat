@@ -66,6 +66,13 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
             } else {
                 $err = $opt['message'];
             }
+        } elseif ( $action_type === 'reset_content' ) {
+            $res = Database::reset_all_content();
+            if ( $res['success'] ) {
+                $msg = $res['message'];
+            } else {
+                $err = $res['message'];
+            }
         }
     }
 }
@@ -339,6 +346,21 @@ $authors_cnt = (int) $db_conn->query( "SELECT COUNT(*) FROM authors" )->fetchCol
       <span style="color:var(--admin-muted); display:block; font-size:0.75rem;">Kayıtlı Yazar & Şair:</span>
       <strong><?= $authors_cnt; ?> kişi</strong>
     </div>
+  </div>
+
+  <!-- Tehlikeli Bölge: Tüm İçerikleri Sıfırla -->
+  <div style="margin-top:1.25rem; padding-top:1.25rem; border-top:1px dashed #cbd5e1; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+    <div>
+      <strong style="color:#b91c1c; font-size:0.9rem; display:block;">⚠️ Tüm Yazıları, Yazarları ve Görselleri Temizle (Sıfırdan Başlangıç)</strong>
+      <span style="font-size:0.78rem; color:var(--admin-muted);">Tüm eserleri, şairleri, yazarları ve yüklenen kapak dosyalarını kalıcı olarak siler. Öncesinde otomatik veritabanı yedeği (.sqlite) alır.</span>
+    </div>
+    <form method="POST" action="<?= SITE_URL; ?>/admin/settings.php" onsubmit="return confirm('DİKKAT: Sitedeki tüm yazılar, şair/yazarlar ve kapak görselleri kalıcı olarak silinecektir. Öncesinde otomatik tam yedek alınacaktır. Sıfırdan başlamak için onaylıyor musunuz?');" style="margin:0;">
+      <input type="hidden" name="csrf_token" value="<?= Auth::csrf_token(); ?>" />
+      <input type="hidden" name="action_type" value="reset_content" />
+      <button type="submit" class="btn btn-danger btn-sm" style="background:#dc2626; border-color:#dc2626; color:#fff; font-weight:700; padding:0.5rem 1rem;">
+        🗑️ Tüm Yazı ve Yazarları Temizle
+      </button>
+    </form>
   </div>
 </div>
 

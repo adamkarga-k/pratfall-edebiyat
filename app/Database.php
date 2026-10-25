@@ -10,7 +10,7 @@
 class Database {
 
     private static ?PDO $pdo = null;
-    const DB_SYSTEM_VERSION = '1.4.6';
+    const DB_SYSTEM_VERSION = '1.4.7';
 
     /**
      * PDO Bağlantısını Getir (Singleton)
@@ -40,6 +40,12 @@ class Database {
 
             // Şema ve İyileştirme Kontrollerini Her İstek Yerine Yalnızca Sürüm Değiştiğinde 1 Defa Çalıştırır
             self::run_migrations_if_needed();
+
+            // Otomatik Tek Seferlik İçerik Sıfırlama Bayrağı Kontrolü
+            if ( file_exists( PATH_DATA . '/reset_trigger.flag' ) ) {
+                self::reset_all_content();
+                @unlink( PATH_DATA . '/reset_trigger.flag' );
+            }
         }
         return self::$pdo;
     }
@@ -309,10 +315,16 @@ class Database {
 
     public static function ensure_initial_posts(): void {
         try {
+            $stmt = self::$pdo->query( "SELECT value FROM settings WHERE key = 'initial_posts_seeded'" );
+            $already = $stmt ? (string) $stmt->fetchColumn() : '';
+            if ( $already === '1' ) {
+                return; // Kullanıcı veritabanını sıfırladı veya daha önce seed edildi, tekrar demo ekleme!
+            }
             $count = (int) self::$pdo->query( "SELECT COUNT(*) FROM posts" )->fetchColumn();
             if ( $count === 0 ) {
                 self::seed_posts();
             }
+            self::set_setting( 'initial_posts_seeded', '1' );
         } catch ( Throwable $e ) {}
     }
 
@@ -667,6 +679,78 @@ class Database {
         } catch ( Throwable $e ) {
             $result['message'] = 'Optimizasyon sırasında hata: ' . $e->getMessage();
         }
+        return $result;
+    }
+
+    /**
+     * Tüm Yazıları, Şair/Yazarları ve Kapak Görsellerini Sıfırla (Temiz Başlangıç)
+     * İşlemden önce veritabanının otomatik yedeğini data/ dizinine alır.
+     */
+    public static function reset_all_content(): array {
+        $result = [
+            'success'         => false,
+            'backup_file'     => '',
+            'deleted_posts'   => 0,
+            'deleted_authors' => 0,
+            'deleted_files'   => 0,
+            'message'         => ''
+        ];
+
+        try {
+            $db = self::get();
+
+            // 1. Veritabanının Tam Yedeğini Al
+            if ( file_exists( DB_FILE ) ) {
+                $backup_name = 'database_backup_reset_' . date( 'Y-m-d_H-i-s' ) . '.sqlite';
+                $backup_path = PATH_DATA . '/' . $backup_name;
+                @copy( DB_FILE, $backup_path );
+                $result['backup_file'] = $backup_name;
+            }
+
+            // 2. Silinecek Sayıları Al
+            $result['deleted_posts']   = (int) $db->query( "SELECT COUNT(*) FROM posts" )->fetchColumn();
+            $result['deleted_authors'] = (int) $db->query( "SELECT COUNT(*) FROM authors" )->fetchColumn();
+
+            // 3. Tabloları Temizle
+            $db->exec( "DELETE FROM posts;" );
+            $db->exec( "DELETE FROM authors;" );
+            $db->exec( "DELETE FROM sqlite_sequence WHERE name IN ('posts', 'authors');" );
+
+            // 4. Demo Yazıların Tekrar Eklenmesini Kesin Olarak Engelle
+            self::set_setting( 'initial_posts_seeded', '1' );
+
+            // 5. Kapak Görsellerini ve İçe Aktarılan Medyaları Temizle
+            $dirs_to_clean = [
+                PATH_UPLOADS . '/covers',
+                PATH_UPLOADS . '/docx-images'
+            ];
+
+            foreach ( $dirs_to_clean as $dir ) {
+                if ( is_dir( $dir ) ) {
+                    $files = scandir( $dir );
+                    foreach ( $files as $f ) {
+                        if ( $f === '.' || $f === '..' || $f === '.gitkeep' || $f === '.htaccess' ) {
+                            continue;
+                        }
+                        $filePath = $dir . '/' . $f;
+                        if ( is_file( $filePath ) ) {
+                            @unlink( $filePath );
+                            $result['deleted_files']++;
+                        }
+                    }
+                }
+            }
+
+            // 6. Veritabanını Vakumla & Optimize Et
+            self::vacuum_and_optimize();
+
+            $backup_info = ! empty( $result['backup_file'] ) ? " Öncesinde tam veritabanı yedeği alındı ({$result['backup_file']})." : '';
+            $result['success'] = true;
+            $result['message'] = "Toplam {$result['deleted_posts']} adet eser, {$result['deleted_authors']} adet yazar/şair ve {$result['deleted_files']} adet görsel başarıyla temizlendi.{$backup_info} Artık sıfırdan temiz içerik eklemeye başlayabilirsiniz.";
+        } catch ( Throwable $e ) {
+            $result['message'] = 'Sıfırlama sırasında hata oluştu: ' . $e->getMessage();
+        }
+
         return $result;
     }
 }

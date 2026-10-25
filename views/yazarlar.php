@@ -17,40 +17,7 @@ $authors = $db->query( "
 " )->fetchAll();
 
 // Türkçe Karakterlere Tam Uyumlu Alfabetik Sıralama (A-Z)
-usort( $authors, function( $a, $b ) {
-    if ( class_exists( 'Collator' ) ) {
-        $c = new Collator( 'tr_TR' );
-        return $c->compare( $a['name'], $b['name'] );
-    }
-
-    $alphabet = [
-        'a'=>1, 'A'=>1, 'b'=>2, 'B'=>2, 'c'=>3, 'C'=>3, 'ç'=>4, 'Ç'=>4,
-        'd'=>5, 'D'=>5, 'e'=>6, 'E'=>6, 'f'=>7, 'F'=>7, 'g'=>8, 'G'=>8,
-        'ğ'=>9, 'Ğ'=>9, 'h'=>10, 'H'=>10, 'ı'=>11, 'I'=>11, 'i'=>12, 'İ'=>12,
-        'j'=>13, 'J'=>13, 'k'=>14, 'K'=>14, 'l'=>15, 'L'=>15, 'm'=>16, 'M'=>16,
-        'n'=>17, 'N'=>17, 'o'=>18, 'O'=>18, 'ö'=>19, 'Ö'=>19, 'p'=>20, 'P'=>20,
-        'r'=>21, 'R'=>21, 's'=>22, 'S'=>22, 'ş'=>23, 'Ş'=>23, 't'=>24, 'T'=>24,
-        'u'=>25, 'U'=>25, 'ü'=>26, 'Ü'=>26, 'v'=>27, 'V'=>27, 'y'=>28, 'Y'=>28,
-        'z'=>29, 'Z'=>29
-    ];
-
-    $strA = mb_strtolower( trim( $a['name'] ), 'UTF-8' );
-    $strB = mb_strtolower( trim( $b['name'] ), 'UTF-8' );
-    $lenA = mb_strlen( $strA, 'UTF-8' );
-    $lenB = mb_strlen( $strB, 'UTF-8' );
-    $minLen = min( $lenA, $lenB );
-
-    for ( $i = 0; $i < $minLen; $i++ ) {
-        $charA = mb_substr( $strA, $i, 1, 'UTF-8' );
-        $charB = mb_substr( $strB, $i, 1, 'UTF-8' );
-        $wA = $alphabet[$charA] ?? ( 100 + ord( $charA ) );
-        $wB = $alphabet[$charB] ?? ( 100 + ord( $charB ) );
-        if ( $wA !== $wB ) {
-            return $wA - $wB;
-        }
-    }
-    return $lenA - $lenB;
-} );
+Helpers::sort_turkish_alphabetical( $authors, 'name' );
 
 // İlk Harflerine Göre Grupla
 $grouped = [];

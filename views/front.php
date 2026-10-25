@@ -346,26 +346,32 @@ require PATH_VIEWS . '/layout/header.php';
             </div>
 
             <div class="hero-authors-list" style="display:flex; flex-direction:column; gap:0.55rem;">
-              <?php foreach ( $authors as $author ) : ?>
-              <a href="<?= Helpers::author_url( $author ); ?>" class="hero-author-item" style="display:flex; align-items:center; justify-content:space-between; padding:0.5rem 0.75rem; background:var(--bg-surface); border:1.5px solid var(--border-color); text-decoration:none; color:var(--text-main); transition:all 0.15s ease; box-shadow:2px 2px 0 var(--border-color);">
-                <div style="display:flex; align-items:center; gap:0.65rem; min-width:0;">
-                  <div style="flex-shrink:0;">
-                    <?= Helpers::author_avatar( $author, 36 ); ?>
-                  </div>
-                  <div style="min-width:0;">
-                    <div style="font-family:var(--font-serif); font-size:0.92rem; font-weight:700; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                      <?= htmlspecialchars( $author['name'] ); ?>
+              <?php if ( ! empty( $authors ) ) : ?>
+                <?php foreach ( $authors as $author ) : ?>
+                <a href="<?= Helpers::author_url( $author ); ?>" class="hero-author-item" style="display:flex; align-items:center; justify-content:space-between; padding:0.5rem 0.75rem; background:var(--bg-surface); border:1.5px solid var(--border-color); text-decoration:none; color:var(--text-main); transition:all 0.15s ease; box-shadow:2px 2px 0 var(--border-color);">
+                  <div style="display:flex; align-items:center; gap:0.65rem; min-width:0;">
+                    <div style="flex-shrink:0;">
+                      <?= Helpers::author_avatar( $author, 36 ); ?>
                     </div>
-                    <div style="font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                      <?= htmlspecialchars( ! empty($author['title']) ? $author['title'] : ( Helpers::is_poet( $author ) ? 'Şair' : 'Yazar' ) ); ?>
+                    <div style="min-width:0;">
+                      <div style="font-family:var(--font-serif); font-size:0.92rem; font-weight:700; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                        <?= htmlspecialchars( $author['name'] ); ?>
+                      </div>
+                      <div style="font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                        <?= htmlspecialchars( ! empty($author['title']) ? $author['title'] : ( Helpers::is_poet( $author ) ? 'Şair' : 'Yazar' ) ); ?>
+                      </div>
                     </div>
                   </div>
+                  <span class="stamp-tag" style="font-size:0.62rem; padding:0.15rem 0.45rem; background:var(--bg-card); color:var(--text-muted); border:1px solid var(--border-color); flex-shrink:0;">
+                    ✦ <?= (int) $author['post_count']; ?> Eser
+                  </span>
+                </a>
+                <?php endforeach; ?>
+              <?php else : ?>
+                <div style="padding:1rem; text-align:center; font-size:0.8rem; color:var(--text-muted); font-style:italic;">
+                  Henüz kayıtlı yazar bulunmuyor.
                 </div>
-                <span class="stamp-tag" style="font-size:0.62rem; padding:0.15rem 0.45rem; background:var(--bg-card); color:var(--text-muted); border:1px solid var(--border-color); flex-shrink:0;">
-                  ✦ <?= (int) $author['post_count']; ?> Eser
-                </span>
-              </a>
-              <?php endforeach; ?>
+              <?php endif; ?>
             </div>
           </div>
 
@@ -390,39 +396,47 @@ require PATH_VIEWS . '/layout/header.php';
       </div>
 
       <div class="asymmetric-feed-grid">
-        <?php foreach ( $feed_posts as $post ) : ?>
-        <article class="brutal-card post-card rot-hover-straight">
-          <div class="post-card-thumb">
-            <a href="<?= SITE_URL; ?>/kategori/<?= Database::slugify( $post['category'] ?? 'yazi' ); ?>" class="tape-badge post-card-tag rot-n1" style="text-decoration:none; color:inherit;">
-              <?= htmlspecialchars( $post['category'] ?? 'YAZI' ); ?>
-            </a>
-            <a href="<?= SITE_URL; ?>/eser/<?= $post['slug']; ?>">
-              <img src="<?= ! empty( $post['featured_image'] ) ? htmlspecialchars( $post['featured_image'] ) : 'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=600&q=80'; ?>" alt="<?= htmlspecialchars( $post['title'] ); ?>" loading="lazy" />
-            </a>
-          </div>
-          <div class="post-card-meta">
-            <time><?= Helpers::format_date( $post['published_at'] ); ?></time>
-          </div>
-          <h3 class="post-card-title">
-            <a href="<?= SITE_URL; ?>/eser/<?= $post['slug']; ?>"><?= htmlspecialchars( $post['title'] ); ?></a>
-          </h3>
-          <div class="post-card-excerpt">
-            <p><?= htmlspecialchars( $post['excerpt'] ); ?></p>
-          </div>
-          <div class="post-card-author">
-            <a href="<?= Helpers::author_url( $post ); ?>" class="post-card-author-img">
-              <?= Helpers::author_avatar( [ 'photo' => $post['author_photo'], 'name' => $post['author_name'] ], 36 ); ?>
-            </a>
-            <div>
-              <span class="post-card-author-name">
-                <a href="<?= Helpers::author_url( $post ); ?>" style="text-decoration:none; color:inherit;">
-                  <?= htmlspecialchars( $post['author_name'] ); ?>
-                </a>
-              </span>
+        <?php if ( ! empty( $feed_posts ) ) : ?>
+          <?php foreach ( $feed_posts as $post ) : ?>
+          <article class="brutal-card post-card rot-hover-straight">
+            <div class="post-card-thumb">
+              <a href="<?= SITE_URL; ?>/kategori/<?= Database::slugify( $post['category'] ?? 'yazi' ); ?>" class="tape-badge post-card-tag rot-n1" style="text-decoration:none; color:inherit;">
+                <?= htmlspecialchars( $post['category'] ?? 'YAZI' ); ?>
+              </a>
+              <a href="<?= SITE_URL; ?>/eser/<?= $post['slug']; ?>">
+                <img src="<?= ! empty( $post['featured_image'] ) ? htmlspecialchars( $post['featured_image'] ) : 'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=600&q=80'; ?>" alt="<?= htmlspecialchars( $post['title'] ); ?>" loading="lazy" />
+              </a>
             </div>
+            <div class="post-card-meta">
+              <time><?= Helpers::format_date( $post['published_at'] ); ?></time>
+            </div>
+            <h3 class="post-card-title">
+              <a href="<?= SITE_URL; ?>/eser/<?= $post['slug']; ?>"><?= htmlspecialchars( $post['title'] ); ?></a>
+            </h3>
+            <div class="post-card-excerpt">
+              <p><?= htmlspecialchars( $post['excerpt'] ); ?></p>
+            </div>
+            <div class="post-card-author">
+              <a href="<?= Helpers::author_url( $post ); ?>" class="post-card-author-img">
+                <?= Helpers::author_avatar( [ 'photo' => $post['author_photo'], 'name' => $post['author_name'] ], 36 ); ?>
+              </a>
+              <div>
+                <span class="post-card-author-name">
+                  <a href="<?= Helpers::author_url( $post ); ?>" style="text-decoration:none; color:inherit;">
+                    <?= htmlspecialchars( $post['author_name'] ); ?>
+                  </a>
+                </span>
+              </div>
+            </div>
+          </article>
+          <?php endforeach; ?>
+        <?php else : ?>
+          <div style="grid-column: 1 / -1; padding: 3.5rem 1.5rem; text-align: center; background: var(--bg-card); border: 2px dashed var(--border-color); border-radius: 4px;">
+            <span style="font-size: 2.2rem; display: block; margin-bottom: 0.6rem;">✒️</span>
+            <h3 style="font-family: var(--font-serif); font-size: 1.3rem; margin: 0 0 0.5rem 0;">Henüz Yayınlanmış Eser Bulunmuyor</h3>
+            <p style="font-size: 0.88rem; color: var(--text-muted); margin: 0; max-width: 480px; margin: 0 auto;">Matbaamız yeni eserler için hazır bekliyor. Admin panelinden ilk yazar ve eserlerinizi ekleyebilirsiniz.</p>
           </div>
-        </article>
-        <?php endforeach; ?>
+        <?php endif; ?>
       </div>
 
       <!-- Sayfalama -->
