@@ -38,6 +38,7 @@ $btn_text    = trim( (string) ( $_POST['btn_text'] ?? '' ) );
 $btn_url     = trim( (string) ( $_POST['btn_url'] ?? '' ) );
 $test_email  = trim( (string) ( $_POST['test_email'] ?? ( Auth::user()['email'] ?? 'adamkarga.net@gmail.com' ) ) );
 $send_mode   = $_POST['send_mode'] ?? 'test';
+$action      = $_POST['action'] ?? 'send';
 
 // Şablon Başlık, İmzaları ve Teması (Kullanıcının belirlediği kalıcı varsayılanlar)
 $top_badge   = trim( (string) ( $_POST['top_badge'] ?? Database::get_setting( 'newsletter_top_badge', '✦' ) ) );
@@ -46,14 +47,39 @@ $slogan      = trim( (string) ( $_POST['slogan'] ?? Database::get_setting( 'news
 $footer_note = trim( (string) ( $_POST['footer_note'] ?? Database::get_setting( 'newsletter_footer_note', 'Bu e-posta, Pratfall Dergimize eser gönderdiğiniz için gelmektedir. Rahatsızlık verdiysek aşağıdaki bağlantıyı ziyaret edebilirsin.' ) ) );
 $tpl_style   = trim( (string) ( $_POST['template_style'] ?? Database::get_setting( 'newsletter_template_style', 'brutalist' ) ) );
 
-// GÖNDERİM İŞLEMİ
+// İŞLEM YÖNETİMİ
 if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
+    $is_ajax = ! empty( $_POST['ajax'] ) || ( isset( $_SERVER['HTTP_X_REQUESTED_WITH'] ) && strtolower( $_SERVER['HTTP_X_REQUESTED_WITH'] ) === 'xmlhttprequest' );
+
     if ( ! Auth::verify_csrf( $_POST['csrf_token'] ?? '' ) ) {
+        if ( $is_ajax ) {
+            header( 'Content-Type: application/json; charset=utf-8' );
+            echo json_encode( [ 'success' => false, 'message' => 'Güvenlik doğrulaması başarısız oldu. Lütfen sayfayı yenileyip tekrar deneyin.' ] );
+            exit;
+        }
         $err = 'Güvenlik doğrulaması başarısız oldu. Lütfen sayfayı yenileyip tekrar deneyin.';
+    } elseif ( $action === 'save_template' ) {
+        // YALNIZCA ŞABLON METİNLERİNİ VE SEÇİLİ TEMAYI KALICI OLARAK KAYDET (E-posta göndermez)
+        Database::set_setting( 'newsletter_top_badge', $top_badge );
+        Database::set_setting( 'newsletter_brand_name', $brand_name );
+        Database::set_setting( 'newsletter_slogan', $slogan );
+        Database::set_setting( 'newsletter_footer_note', $footer_note );
+        Database::set_setting( 'newsletter_template_style', $tpl_style );
+
+        if ( $is_ajax ) {
+            header( 'Content-Type: application/json; charset=utf-8' );
+            echo json_encode( [
+                'success' => true,
+                'message' => 'Şablon başlıkları, imzaları ve seçtiğiniz tema kalıcı olarak veritabanına kaydedildi!'
+            ] );
+            exit;
+        }
+
+        $msg = '✦ E-posta şablon başlıkları, imzaları ve seçilen tema kalıcı olarak başarıyla kaydedildi.';
     } elseif ( empty( $subject ) || empty( $title ) || empty( $content ) ) {
         $err = 'Lütfen Konu, E-Posta Başlığı ve İçerik alanlarını eksiksiz doldurun.';
     } else {
-        // Şablon ayarlarını kalıcı olarak veritabanına kaydet
+        // Gönderim sırasında da şablon ayarlarını güncel tut ve kaydet
         Database::set_setting( 'newsletter_top_badge', $top_badge );
         Database::set_setting( 'newsletter_brand_name', $brand_name );
         Database::set_setting( 'newsletter_slogan', $slogan );
@@ -342,6 +368,16 @@ require PATH_ADMIN . '/layout/header.php';
           <div>
             <label class="form-label" style="font-size:0.78rem; font-weight:600;">En Alttaki Bilgilendirme Notu:</label>
             <textarea name="footer_note" id="inputFooterNote" rows="2" class="form-control" placeholder="Bu e-posta, Pratfall Dergimize eser gönderdiğiniz için gelmektedir..." style="font-size:0.85rem; line-height:1.5;"><?= htmlspecialchars( $footer_note, ENT_QUOTES, 'UTF-8' ); ?></textarea>
+          </div>
+
+          <!-- ŞABLONU KALICI KAYDETME BUTONU & BİLDİRİMİ -->
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1.25rem; padding-top:0.85rem; border-top:1px dashed var(--adm-border); flex-wrap:wrap; gap:0.75rem;">
+            <div id="saveTemplateFeedback" style="font-size:0.82rem; font-weight:700; color:var(--adm-green); display:none;">
+              ✓ Şablon başlıkları ve seçili tema kalıcı olarak kaydedildi!
+            </div>
+            <button type="button" id="btnSaveTemplate" onclick="saveTemplateDefaults()" class="btn btn-secondary" style="font-size:0.85rem; font-weight:700; display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1.1rem; margin-left:auto; background:var(--adm-surface); cursor:pointer;">
+              <span>💾</span> Bu Şablonu Kalıcı Olarak Kaydet
+            </button>
           </div>
         </details>
       </div>
@@ -799,6 +835,91 @@ document.getElementById('bultenSendForm')?.addEventListener('submit', function(e
   btn.disabled = true;
   document.getElementById('btnLabel').innerText = 'Gönderiliyor, lütfen bekleyin...';
 });
+
+// Şablon Ayarlarını Kalıcı Olarak Kaydetme (AJAX / POST)
+function saveTemplateDefaults() {
+  var btn = document.getElementById('btnSaveTemplate');
+  var feedback = document.getElementById('saveTemplateFeedback');
+  var origHtml = btn ? btn.innerHTML : '';
+  
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span>⏳</span> Kaydediliyor...';
+  }
+  if (feedback) feedback.style.display = 'none';
+
+  var topBadge = inTopBadge ? inTopBadge.value.trim() : '✦';
+  var brandName = inBrandName ? inBrandName.value.trim() : 'PRATFALL';
+  var slogan = inSlogan ? inSlogan.value.trim() : 'Kusurlu Kalma Çabası';
+  var footerNote = inFooterNote ? inFooterNote.value.trim() : '';
+  var templateStyle = document.getElementById('inputTemplateStyle') ? document.getElementById('inputTemplateStyle').value : 'brutalist';
+
+  var formData = new FormData();
+  formData.append('csrf_token', '<?= Auth::csrf_token(); ?>');
+  formData.append('action', 'save_template');
+  formData.append('ajax', '1');
+  formData.append('top_badge', topBadge);
+  formData.append('brand_name', brandName);
+  formData.append('slogan', slogan);
+  formData.append('footer_note', footerNote);
+  formData.append('template_style', templateStyle);
+
+  fetch('<?= SITE_URL; ?>/admin/newsletter-send.php', {
+    method: 'POST',
+    body: formData
+  })
+  .then(function(res) {
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+  })
+  .then(function(data) {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<span>✓</span> Kaydedildi!';
+      setTimeout(function() { btn.innerHTML = origHtml; }, 2500);
+    }
+    if (data.success) {
+      if (feedback) {
+        feedback.innerText = '✓ ' + (data.message || 'Şablon başarıyla ve kalıcı olarak kaydedildi!');
+        feedback.style.color = 'var(--adm-green)';
+        feedback.style.display = 'inline-block';
+        setTimeout(function() { feedback.style.display = 'none'; }, 6000);
+      }
+    } else {
+      alert('Hata: ' + (data.message || 'Kaydedilemedi.'));
+    }
+  })
+  .catch(function(err) {
+    // Fallback: Standart form POST
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = origHtml;
+    }
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '<?= SITE_URL; ?>/admin/newsletter-send.php';
+    
+    var fields = {
+      'csrf_token': '<?= Auth::csrf_token(); ?>',
+      'action': 'save_template',
+      'top_badge': topBadge,
+      'brand_name': brandName,
+      'slogan': slogan,
+      'footer_note': footerNote,
+      'template_style': templateStyle
+    };
+
+    for (var k in fields) {
+      var inp = document.createElement('input');
+      inp.type = 'hidden';
+      inp.name = k;
+      inp.value = fields[k];
+      form.appendChild(inp);
+    }
+    document.body.appendChild(form);
+    form.submit();
+  });
+}
 
 // İlk Yükleme
 var currentTpl = '<?= htmlspecialchars( $tpl_style, ENT_QUOTES, 'UTF-8' ); ?>' || 'brutalist';

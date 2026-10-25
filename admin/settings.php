@@ -274,6 +274,37 @@ require PATH_ADMIN . '/layout/header.php';
       </div>
     </div>
 
+    <!-- 5.1 E-POSTA ŞABLON VE İMZA METİNLERİ (BÜLTEN BAŞLIKLARI) -->
+    <div style="margin-top:1.5rem; background:var(--admin-surface-alt, #fafaf9); padding:1.25rem; border-radius:6px; border:1px solid var(--admin-border, #e7e5e4);">
+      <h3 style="margin-top:0; font-family:var(--admin-serif); font-size:1.05rem; margin-bottom:0.35rem; color:var(--admin-text);">
+        🖋️ E-Posta Şablon Başlıkları ve İmzaları (Varsayılanlar)
+      </h3>
+      <p style="font-size:0.8rem; color:var(--admin-muted); margin-bottom:1rem;">
+        Bülten Dağıtım Masası'nda gönderilen e-postaların tepesindeki rozet, dergi adı, sloganı ve altbilgi notunun varsayılan metinleri:
+      </p>
+
+      <div style="display:grid; grid-template-columns: 1fr 2fr; gap:1.25rem; margin-bottom:1rem;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">En Üst Rozet / İşaret</label>
+          <input type="text" name="newsletter_top_badge" class="form-control" value="<?= htmlspecialchars( Database::get_setting('newsletter_top_badge', '✦'), ENT_QUOTES, 'UTF-8' ); ?>" placeholder="✦" />
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Dergi / Marka Adı</label>
+          <input type="text" name="newsletter_brand_name" class="form-control" value="<?= htmlspecialchars( Database::get_setting('newsletter_brand_name', 'PRATFALL'), ENT_QUOTES, 'UTF-8' ); ?>" placeholder="PRATFALL" style="font-weight:700;" />
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:1rem;">
+        <label class="form-label">Başlık Altındaki Slogan / Açıklama</label>
+        <input type="text" name="newsletter_slogan" class="form-control" value="<?= htmlspecialchars( Database::get_setting('newsletter_slogan', 'Kusurlu Kalma Çabası'), ENT_QUOTES, 'UTF-8' ); ?>" placeholder="Kusurlu Kalma Çabası" />
+      </div>
+
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">En Alttaki Bilgilendirme Notu</label>
+        <textarea name="newsletter_footer_note" rows="2" class="form-control" placeholder="Bu e-posta, Pratfall Dergimize eser gönderdiğiniz için gelmektedir..."><?= htmlspecialchars( Database::get_setting('newsletter_footer_note', 'Bu e-posta, Pratfall Dergimize eser gönderdiğiniz için gelmektedir. Rahatsızlık verdiysek aşağıdaki bağlantıyı ziyaret edebilirsin.'), ENT_QUOTES, 'UTF-8' ); ?></textarea>
+      </div>
+    </div>
+
     <!-- 6. ARAMA MOTORU & İSTATİSTİK (GOOGLE SEARCH CONSOLE & ANALYTICS) -->
     <h2 style="font-family:var(--admin-serif); font-size:1.3rem; margin-top:2.5rem; margin-bottom:0.75rem; border-bottom:2px dashed var(--admin-border); padding-bottom:0.5rem;">
       🔍 Arama Motoru & Ziyaretçi İstatistikleri (Google)
