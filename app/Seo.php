@@ -82,7 +82,17 @@ class Seo {
         $type = $page_data['type'] ?? 'website';
 
         if ( $type === 'article' ) {
-            return [
+            $author = [
+                '@type'    => 'Person',
+                'name'     => $page_data['author_name'] ?? 'Pratfall Yazarı',
+                'url'      => $page_data['author_url'] ?? SITE_URL,
+                'jobTitle' => $page_data['author_title'] ?? 'Yazar',
+            ];
+            if ( ! empty( $page_data['author_photo'] ) ) {
+                $author['image'] = $page_data['author_photo'];
+            }
+
+            $article = [
                 '@context'         => 'https://schema.org',
                 '@type'            => 'Article',
                 'headline'         => $page_data['title'] ?? '',
@@ -90,34 +100,62 @@ class Seo {
                 'image'            => $image,
                 'datePublished'    => $page_data['published_at'] ?? date( 'c' ),
                 'dateModified'     => $page_data['updated_at'] ?? date( 'c' ),
+                'inLanguage'       => 'tr-TR',
                 'mainEntityOfPage' => [
                     '@type' => 'WebPage',
                     '@id'   => $url,
                 ],
-                'author'           => [
-                    '@type' => 'Person',
-                    'name'  => $page_data['author_name'] ?? 'Pratfall Yazarı',
-                    'url'   => $page_data['author_url'] ?? SITE_URL,
-                ],
+                'author'           => $author,
                 'publisher'        => [
                     '@type' => 'Organization',
                     'name'  => $site_name,
                     'url'   => SITE_URL,
+                    'logo'  => [
+                        '@type' => 'ImageObject',
+                        'url'   => SITE_URL . '/assets/images/og-share.jpg',
+                    ],
                 ],
             ];
+
+            if ( ! empty( $page_data['category'] ) ) {
+                $article['articleSection'] = $page_data['category'];
+            }
+            if ( ! empty( $page_data['tags'] ) ) {
+                $article['keywords'] = $page_data['tags'];
+            }
+
+            return $article;
         }
 
         if ( $type === 'profile' ) {
-            return [
-                '@context'    => 'https://schema.org',
-                '@type'       => 'ProfilePage',
-                'mainEntity'  => [
-                    '@type'       => 'Person',
-                    'name'        => $page_data['author_name'] ?? '',
-                    'description' => $desc,
-                    'jobTitle'    => $page_data['author_title'] ?? 'Yazar',
-                    'url'         => $url,
+            $person = [
+                '@type'       => 'Person',
+                'name'        => $page_data['author_name'] ?? '',
+                'description' => $desc,
+                'jobTitle'    => $page_data['author_title'] ?? 'Yazar',
+                'url'         => $url,
+                'affiliation' => [
+                    '@type' => 'Organization',
+                    'name'  => $site_name,
+                    'url'   => SITE_URL,
                 ],
+                'knowsAbout'  => [ 'Edebiyat', 'Türk Edebiyatı', 'Şiir', 'Kültür & Sanat' ],
+            ];
+
+            if ( ! empty( $page_data['image'] ) ) {
+                $person['image'] = $page_data['image'];
+            }
+            if ( ! empty( $page_data['same_as'] ) ) {
+                $person['sameAs'] = $page_data['same_as'];
+            }
+            if ( ! empty( $page_data['works'] ) ) {
+                $person['subjectOf'] = $page_data['works'];
+            }
+
+            return [
+                '@context'   => 'https://schema.org',
+                '@type'      => 'ProfilePage',
+                'mainEntity' => $person,
             ];
         }
 
@@ -130,6 +168,15 @@ class Seo {
             'url'             => SITE_URL,
             'description'     => $desc,
             'inLanguage'      => 'tr-TR',
+            'publisher'       => [
+                '@type' => 'Organization',
+                'name'  => $site_name,
+                'url'   => SITE_URL,
+                'logo'  => [
+                    '@type' => 'ImageObject',
+                    'url'   => SITE_URL . '/assets/images/og-share.jpg',
+                ],
+            ],
         ];
     }
 

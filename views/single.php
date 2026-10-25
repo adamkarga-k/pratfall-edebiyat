@@ -45,6 +45,10 @@ $seo_data = [
     'updated_at'    => date( 'c', strtotime( $post['updated_at'] ?? $post['published_at'] ) ),
     'author_name'   => $post['author_name'] ?? ( Helpers::is_poet( $post ) ? 'Pratfall Şairi' : 'Pratfall Yazarı' ),
     'author_url'    => Helpers::author_url( $post ),
+    'author_title'  => $post['author_title'] ?? ( Helpers::is_poet( $post ) ? 'Şair' : 'Yazar' ),
+    'author_photo'  => $post['author_photo'] ?? '',
+    'category'      => $post['category'] ?? 'Edebiyat',
+    'tags'          => $post['tags'] ?? '',
 ];
 
 require PATH_VIEWS . '/layout/header.php';

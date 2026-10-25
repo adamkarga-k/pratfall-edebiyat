@@ -46,6 +46,38 @@ if ( $is_poet && preg_match( '#/yazar/' . preg_quote( $author['slug'], '#' ) . '
     exit;
 }
 
+// Google & Yapay Zeka (AI) Varlık İlişkilendirmesi (Entity Linking)
+$same_as = [];
+if ( ! empty( $author['twitter'] ) ) {
+    $clean_tw = ltrim( trim( $author['twitter'] ), '@' );
+    if ( strpos( $clean_tw, 'http' ) === 0 ) {
+        $same_as[] = $clean_tw;
+    } else {
+        $same_as[] = 'https://twitter.com/' . $clean_tw;
+    }
+}
+if ( ! empty( $author['instagram'] ) ) {
+    $clean_ig = ltrim( trim( $author['instagram'] ), '@' );
+    if ( strpos( $clean_ig, 'http' ) === 0 ) {
+        $same_as[] = $clean_ig;
+    } else {
+        $same_as[] = 'https://instagram.com/' . $clean_ig;
+    }
+}
+if ( ! empty( $author['website'] ) ) {
+    $same_as[] = ( strpos( $author['website'], 'http' ) === 0 ) ? $author['website'] : 'https://' . $author['website'];
+}
+
+// Yazarın Eserleri (Schema subjectOf / CreativeWork)
+$author_works = [];
+foreach ( array_slice( $posts, 0, 15 ) as $p ) {
+    $author_works[] = [
+        '@type' => ( mb_stripos( $p['category'] ?? '', 'şiir' ) !== false || mb_stripos( $p['category'] ?? '', 'siir' ) !== false ) ? 'CreativeWork' : 'Article',
+        'name'  => $p['title'],
+        'url'   => SITE_URL . '/eser/' . $p['slug'],
+    ];
+}
+
 // SEO Bilgileri
 $seo_data = [
     'title'        => $author['name'] . ( $is_poet ? ' Şiirleri & Masası' : ' Masası' ),
@@ -55,6 +87,8 @@ $seo_data = [
     'type'         => 'profile',
     'author_name'  => $author['name'],
     'author_title' => $author['title'] ?? ( $is_poet ? 'Şair' : 'Yazar' ),
+    'same_as'      => $same_as,
+    'works'        => $author_works,
 ];
 
 require PATH_VIEWS . '/layout/header.php';
