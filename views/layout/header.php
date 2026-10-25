@@ -31,6 +31,34 @@ $ticker_items = array_filter( $ticker_items );
   <!-- SEO & Meta Verileri (Schema.org, OpenGraph, Canonical) -->
   <?= Seo::render_head( $seo_data ?? [] ); ?>
 
+  <?php 
+  // Google Search Console Doğrulama Meta Etiketi
+  $g_search_console = Database::get_setting( 'google_search_console_code' );
+  if ( ! empty( $g_search_console ) ) : 
+      if ( preg_match( '/content=["\']([^"\']+)["\']/', $g_search_console, $m ) ) {
+          $g_code = $m[1];
+      } else {
+          $g_code = trim( strip_tags( $g_search_console ) );
+      }
+  ?>
+  <meta name="google-site-verification" content="<?= htmlspecialchars( $g_code, ENT_QUOTES, 'UTF-8' ); ?>" />
+  <?php endif; ?>
+
+  <?php 
+  // Google Analytics 4 (GA4) İstatistik Kodu
+  $ga_id = trim( Database::get_setting( 'google_analytics_id' ) );
+  if ( ! empty( $ga_id ) ) : 
+  ?>
+  <!-- Google Analytics (GA4) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=<?= htmlspecialchars( $ga_id, ENT_QUOTES, 'UTF-8' ); ?>"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', '<?= htmlspecialchars( $ga_id, ENT_QUOTES, 'UTF-8' ); ?>');
+  </script>
+  <?php endif; ?>
+
   <!-- Google Fonts: Newsreader, Inter, JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

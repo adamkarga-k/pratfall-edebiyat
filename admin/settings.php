@@ -30,7 +30,8 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
                 'feed_badge', 'feed_title',
                 'manifesto_title', 'manifesto_badge', 'manifesto_tag', 'manifesto_p1', 'manifesto_p2',
                 'footer_slogan', 'footer_desc', 'footer_newsletter_title', 'footer_newsletter_desc', 'footer_copyright',
-                'smtp_host', 'smtp_port', 'smtp_secure', 'smtp_user', 'smtp_pass', 'smtp_from_email', 'smtp_from_name'
+                'smtp_host', 'smtp_port', 'smtp_secure', 'smtp_user', 'smtp_pass', 'smtp_from_email', 'smtp_from_name',
+                'google_search_console_code', 'google_analytics_id'
             ];
 
             foreach ( $settings_keys as $k ) {
@@ -269,6 +270,28 @@ require PATH_ADMIN . '/layout/header.php';
       <div class="form-group">
         <label class="form-label">Gönderen Adı</label>
         <input type="text" name="smtp_from_name" class="form-control" value="<?= htmlspecialchars( Database::get_setting('smtp_from_name', 'Pratfall Edebiyat & Matbaa Bülteni'), ENT_QUOTES, 'UTF-8' ); ?>" placeholder="Pratfall Edebiyat Bülteni" />
+      </div>
+    </div>
+
+    <!-- 6. ARAMA MOTORU & İSTATİSTİK (GOOGLE SEARCH CONSOLE & ANALYTICS) -->
+    <h2 style="font-family:var(--admin-serif); font-size:1.3rem; margin-top:2.5rem; margin-bottom:0.75rem; border-bottom:2px dashed var(--admin-border); padding-bottom:0.5rem;">
+      🔍 Arama Motoru & Ziyaretçi İstatistikleri (Google)
+    </h2>
+    <p style="font-size:0.85rem; color:var(--admin-muted); margin-top:-0.5rem; margin-bottom:1.25rem;">
+      Google Search Console doğrulama kodunuzu ve Google Analytics 4 (GA4) kimliğinizi buraya girdiğinizde sistem tüm sayfalara otomatik olarak entegre eder.
+    </p>
+
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.25rem;">
+      <div class="form-group">
+        <label class="form-label">Google Search Console Doğrulama Kodu</label>
+        <input type="text" name="google_search_console_code" class="form-control" value="<?= htmlspecialchars( Database::get_setting('google_search_console_code', ''), ENT_QUOTES, 'UTF-8' ); ?>" placeholder="Örn: google-site-verification veya meta etiketi" />
+        <small style="font-size:0.75rem; color:var(--admin-muted); display:block; margin-top:0.35rem;">HTML etiketi veya sadece tırnak içindeki doğrulama kodunu yapıştırabilirsiniz.</small>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Google Analytics 4 Ölçüm Kimliği (Measurement ID)</label>
+        <input type="text" name="google_analytics_id" class="form-control" value="<?= htmlspecialchars( Database::get_setting('google_analytics_id', ''), ENT_QUOTES, 'UTF-8' ); ?>" placeholder="Örn: G-XXXXXXXXXX" />
+        <small style="font-size:0.75rem; color:var(--admin-muted); display:block; margin-top:0.35rem;">Google Analytics panelinden aldığınız "G-" ile başlayan ölçüm kimliği.</small>
       </div>
     </div>
 
