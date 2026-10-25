@@ -13,12 +13,11 @@ if ( ! defined( 'PRATFALL_ROOT' ) ) {
 Auth::require_login();
 
 $db = Database::get();
-$page_title = 'Yeni E-Posta Bülteni Gönder';
+$page_title = 'Bülten Dağıtım Masası';
 $active_tab = 'subscribers';
 
 $msg = '';
 $err = '';
-$info = '';
 
 // Aktif Abone Sayısı
 $active_count = (int) $db->query( "SELECT COUNT(*) FROM subscribers WHERE status = 'active'" )->fetchColumn();
@@ -26,6 +25,8 @@ $active_count = (int) $db->query( "SELECT COUNT(*) FROM subscribers WHERE status
 // SMTP Ayar Kontrolü
 $smtp_host = Database::get_setting( 'smtp_host', '' );
 $smtp_user = Database::get_setting( 'smtp_user', '' );
+$smtp_port = Database::get_setting( 'smtp_port', '465' );
+$smtp_sec  = Database::get_setting( 'smtp_secure', 'ssl' );
 $has_smtp  = ( ! empty( $smtp_host ) && ! empty( $smtp_user ) );
 
 // Form Değerleri
@@ -34,7 +35,7 @@ $title       = trim( (string) ( $_POST['title'] ?? '' ) );
 $content     = trim( (string) ( $_POST['content'] ?? '' ) );
 $btn_text    = trim( (string) ( $_POST['btn_text'] ?? '' ) );
 $btn_url     = trim( (string) ( $_POST['btn_url'] ?? '' ) );
-$test_email  = trim( (string) ( $_POST['test_email'] ?? ( Auth::user()['email'] ?? '' ) ) );
+$test_email  = trim( (string) ( $_POST['test_email'] ?? ( Auth::user()['email'] ?? 'mail@pratfall.com.tr' ) ) );
 $send_mode   = $_POST['send_mode'] ?? 'test';
 
 // GÖNDERİM İŞLEMİ
@@ -57,9 +58,9 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
                 $res = Mailer::send( $test_email, '[TEST] ' . $subject, $html );
 
                 if ( $res['success'] ) {
-                    $msg = "Test bülteni <strong>{$test_email}</strong> adresine başarıyla iletildi! Gelen kutunuzu (ve gereksiz kutusunu) kontrol edin.";
+                    $msg = "✦ Test bülteni <strong>{$test_email}</strong> adresine başarıyla iletildi! Gelen kutunuzu (ve varsa spam/tanıtım kutusunu) kontrol edebilirsiniz.";
                 } else {
-                    $err = 'Test gönderimi başarısız oldu: ' . htmlspecialchars( $res['message'] );
+                    $err = 'Test gönderimi başarısız oldu: ' . htmlspecialchars( $res['message'], ENT_QUOTES, 'UTF-8' );
                 }
             }
         } elseif ( $send_mode === 'all' ) {
@@ -88,11 +89,11 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
                         $fail_count++;
                     }
 
-                    // Sunucu kaynaklarını korumak için mikro gecikme
-                    usleep( 40000 ); // 0.04 saniye
+                    // Sunucu kaynaklarını korumak için mikro gecikme (Spam filtresi koruması)
+                    usleep( 50000 ); // 0.05 saniye
                 }
 
-                $msg = "Bülten dağıtımı tamamlandı! <strong>{$sent_count}</strong> aboneye başarıyla iletildi." . ( $fail_count > 0 ? " ({$fail_count} adreste iletim hatası yaşandı)." : "" );
+                $msg = "✦ Bülten dağıtımı tamamlandı! <strong>{$sent_count}</strong> edebiyat severe başarıyla iletildi." . ( $fail_count > 0 ? " ({$fail_count} adreste iletim hatası yaşandı)." : "" );
             }
         }
     }
@@ -101,160 +102,377 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 require PATH_ADMIN . '/layout/header.php';
 ?>
 
-<!-- ÜST BAŞLIK VE GEZİNME -->
-<div class="content-header">
+<!-- ÜST BAŞLIK VE AKSİYONLAR -->
+<div class="admin-header-row">
   <div>
-    <h1 class="page-title">✍️ Yeni E-Posta Bülteni Gönder</h1>
-    <p class="page-subtitle">Kayıtlı edebiyat severlere şık, brutalist matbaa şablonuyla e-posta mektubu gönderin.</p>
+    <h1 class="admin-title">📬 Bülten Dağıtım Masası</h1>
+    <p style="margin:0.25rem 0 0 0; color:var(--adm-muted); font-size:0.9rem;">
+      Kayıtlı edebiyat severlere şık, neo-brutalist matbaa şablonuyla e-posta mektubu gönderin.
+    </p>
   </div>
-  <div class="header-actions">
-    <a href="<?= SITE_URL; ?>/admin/subscribers.php" class="btn btn-secondary">
-      ← Abone Listesine Dön
+  <div style="display:flex; gap:0.75rem; align-items:center;">
+    <a href="<?= SITE_URL; ?>/admin/settings.php#smtp" class="btn btn-secondary" style="font-size:0.85rem;">
+      ⚙️ SMTP Ayarları
+    </a>
+    <a href="<?= SITE_URL; ?>/admin/subscribers.php" class="btn btn-secondary" style="font-size:0.85rem;">
+      ← Abone Listesi
     </a>
   </div>
 </div>
 
-<?php if ( ! $has_smtp ) : ?>
-  <div class="card" style="margin-bottom:1.5rem; padding:1.25rem 1.5rem; background:rgba(234,179,8,0.08); border:1px solid rgba(234,179,8,0.3); border-radius:8px;">
-    <div style="display:flex; align-items:flex-start; gap:0.75rem;">
-      <div style="font-size:1.4rem; line-height:1;">⚠️</div>
-      <div style="font-size:0.86rem; line-height:1.5;">
-        <strong>cPanel SMTP Yapılandırılmamış:</strong> Şu an yerel sunucu <code>mail()</code> fonksiyonu devrededir. E-postalarınızın spam kutusuna düşmeden %100 gelen kutusuna ulaşması için <a href="<?= SITE_URL; ?>/admin/settings.php" style="font-weight:700; text-decoration:underline;">Site Ayarları</a> sayfasından kurumsal cPanel e-posta bilgilerinizi (SMTP Host, Port, Şifre) girmeniz tavsiye edilir.
+<!-- DURUM ROZETLERİ -->
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
+  <div class="admin-card" style="margin:0; padding:1rem 1.25rem; display:flex; align-items:center; gap:0.85rem;">
+    <div style="width:38px; height:38px; border-radius:8px; background:var(--adm-green-soft); color:var(--adm-green); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:700;">
+      👥
+    </div>
+    <div>
+      <div style="font-size:0.75rem; color:var(--adm-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Aktif Aboneler</div>
+      <div style="font-size:1.25rem; font-weight:700; color:var(--adm-text);"><?= number_format( $active_count, 0, ',', '.' ); ?> Okur</div>
+    </div>
+  </div>
+
+  <div class="admin-card" style="margin:0; padding:1rem 1.25rem; display:flex; align-items:center; gap:0.85rem;">
+    <div style="width:38px; height:38px; border-radius:8px; background:var(--adm-accent-soft); color:var(--adm-accent); display:flex; align-items:center; justify-content:center; font-size:1.1rem;">
+      🔒
+    </div>
+    <div>
+      <div style="font-size:0.75rem; color:var(--adm-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Kasa Güvenliği</div>
+      <div style="font-size:0.95rem; font-weight:700; color:var(--adm-text);">AES-256 Şifreli</div>
+    </div>
+  </div>
+
+  <div class="admin-card" style="margin:0; padding:1rem 1.25rem; display:flex; align-items:center; gap:0.85rem;">
+    <div style="width:38px; height:38px; border-radius:8px; background:<?= $has_smtp ? 'var(--adm-green-soft)' : 'var(--adm-yellow-soft)'; ?>; color:<?= $has_smtp ? 'var(--adm-green)' : 'var(--adm-yellow)'; ?>; display:flex; align-items:center; justify-content:center; font-size:1.1rem;">
+      <?= $has_smtp ? '⚡' : '⚠️'; ?>
+    </div>
+    <div>
+      <div style="font-size:0.75rem; color:var(--adm-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Gönderim Motoru</div>
+      <div style="font-size:0.95rem; font-weight:700; color:var(--adm-text);">
+        <?= $has_smtp ? htmlspecialchars( $smtp_user ) . ' (' . strtoupper($smtp_sec) . ')' : 'Yerel mail()'; ?>
       </div>
+    </div>
+  </div>
+</div>
+
+<?php if ( ! $has_smtp ) : ?>
+  <div class="alert" style="background:#fffbeb; border:1px solid #fef3c7; color:#92400e; margin-bottom:1.5rem;">
+    <span style="font-size:1.2rem;">⚠️</span>
+    <div>
+      <strong>Kurumsal SMTP Yapılandırılmamış:</strong> E-postalarınızın spam kutusuna düşmeden %100 gelen kutusuna ulaşması için 
+      <a href="<?= SITE_URL; ?>/admin/settings.php" style="color:#92400e; font-weight:700; text-decoration:underline;">Site Ayarları</a> sayfasından kurumsal posta bilgilerinizi kaydedin.
     </div>
   </div>
 <?php endif; ?>
 
 <?php if ( ! empty( $msg ) ) : ?>
-  <div class="alert alert-success" style="margin-bottom:1.5rem; background:rgba(30,130,76,0.1); border-left:4px solid var(--adm-green); color:var(--adm-green); padding:1rem; border-radius:6px;">
-    <?= $msg; ?>
+  <div class="alert alert-success">
+    <span>✦</span>
+    <div><?= $msg; ?></div>
   </div>
 <?php endif; ?>
 
 <?php if ( ! empty( $err ) ) : ?>
-  <div class="alert alert-danger" style="margin-bottom:1.5rem; background:rgba(214,48,49,0.1); border-left:4px solid var(--adm-red); color:var(--adm-red); padding:1rem; border-radius:6px;">
-    <?= $err; ?>
+  <div class="alert alert-error">
+    <span>⚠️</span>
+    <div><?= $err; ?></div>
   </div>
 <?php endif; ?>
 
-<div style="display:grid; grid-template-columns:1fr 340px; gap:1.75rem; align-items:start;">
+<!-- ANA DÜZEN: FORM VE CANLI ÖNİZLEME -->
+<div style="display:grid; grid-template-columns: minmax(400px, 1.2fr) minmax(360px, 1fr); gap:1.75rem; align-items:start;">
   
-  <!-- 1. SOL: BÜLTEN FORMU -->
-  <div class="card">
+  <!-- 1. SOL SÜTUN: BÜLTEN YAZIM ALANI -->
+  <div class="admin-card" style="margin:0;">
     <form method="POST" action="<?= SITE_URL; ?>/admin/newsletter-send.php" id="bultenSendForm">
       <input type="hidden" name="csrf_token" value="<?= Auth::csrf_token(); ?>" />
 
+      <!-- E-Posta Konusu -->
       <div class="form-group" style="margin-bottom:1.25rem;">
-        <label class="form-label" style="font-weight:600;">E-Posta Konusu (Gelen Kutusunda Görünen Başlık): *</label>
-        <input type="text" name="subject" class="form-control" value="<?= htmlspecialchars( $subject, ENT_QUOTES, 'UTF-8' ); ?>" placeholder="Örn: Pratfall Sayı #19 Matbaadan Çıktı · Kusursuzluğun İflası" required style="font-size:1rem; font-weight:600;" />
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+          <label class="form-label" style="font-weight:700; margin:0;">
+            1. E-Posta Konusu (Gelen Kutusunda Görünen Başlık) *
+          </label>
+          <span id="subjectCharCount" style="font-size:0.75rem; color:var(--adm-muted); font-family:var(--adm-font-mono);">
+            0 / 80
+          </span>
+        </div>
+        <input type="text" name="subject" id="inputSubject" class="form-control" value="<?= htmlspecialchars( $subject, ENT_QUOTES, 'UTF-8' ); ?>" placeholder="Örn: Pratfall Sayı #19 Matbaadan Çıktı · Kusursuzluğun İflası" required style="font-size:1rem; font-weight:600; padding:0.65rem 0.85rem;" />
+        <small style="font-size:0.75rem; color:var(--adm-muted); display:block; margin-top:0.35rem;">
+          💡 İpucu: İlk 40-50 karakter mobil bildirimlerde doğrudan görünür. Merak uyandırıcı ve edebi tutun.
+        </small>
       </div>
 
+      <!-- E-Posta İçi Manşet Başlık -->
       <div class="form-group" style="margin-bottom:1.25rem;">
-        <label class="form-label" style="font-weight:600;">E-Posta İçi Ana Başlık: *</label>
-        <input type="text" name="title" class="form-control" value="<?= htmlspecialchars( $title, ENT_QUOTES, 'UTF-8' ); ?>" placeholder="Örn: Matbaanın Mürekkebi ve Yeni Sayımız Üzerine Birkaç Söz" required />
+        <label class="form-label" style="font-weight:700; margin-bottom:0.4rem;">
+          2. E-Posta İçi Manşet Başlığı *
+        </label>
+        <input type="text" name="title" id="inputTitle" class="form-control" value="<?= htmlspecialchars( $title, ENT_QUOTES, 'UTF-8' ); ?>" placeholder="Örn: Matbaanın Mürekkebi ve Yeni Sayımız Üzerine Birkaç Söz" required style="font-size:0.95rem;" />
       </div>
 
+      <!-- Bülten Mektubu Metni -->
       <div class="form-group" style="margin-bottom:1.25rem;">
-        <label class="form-label" style="font-weight:600;">Bülten Mektubu / Gövde Metni: *</label>
-        <textarea name="content" rows="12" class="form-control" placeholder="Sevgili Pratfall Okuru,&#10;&#10;Bu sayımızda sokakların tereddüdünü ve unutulmuş dizeleri bir araya getirdik..." required style="font-family:Georgia, serif; font-size:0.95rem; line-height:1.7;"><?= htmlspecialchars( $content, ENT_QUOTES, 'UTF-8' ); ?></textarea>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+          <label class="form-label" style="font-weight:700; margin:0;">
+            3. Bülten Mektubu / Gövde Metni *
+          </label>
+          <!-- Hızlı Edebi Tipografi Araçları -->
+          <div style="display:flex; gap:0.35rem;">
+            <button type="button" class="stamp-tag" onclick="insertSnippet('— ')" title="Uzun Tire Ekle" style="cursor:pointer; background:#fff;">— Uzun Tire</button>
+            <button type="button" class="stamp-tag" onclick="insertSnippet('“', '”')" title="Edebi Tırnak" style="cursor:pointer; background:#fff;">“Tırnak”</button>
+            <button type="button" class="stamp-tag" onclick="insertSnippet('✦ ')" title="Yıldız İşareti" style="cursor:pointer; background:#fff;">✦ Kaşe</button>
+          </div>
+        </div>
+        <textarea name="content" id="inputContent" rows="12" class="form-control" placeholder="Sevgili Pratfall Okuru,&#10;&#10;Bu sayımızda sokakların tereddüdünü ve unutulmuş dizeleri bir araya getirdik..." required style="font-family:var(--adm-font-serif); font-size:1.05rem; line-height:1.75; padding:0.85rem;"><?= htmlspecialchars( $content, ENT_QUOTES, 'UTF-8' ); ?></textarea>
       </div>
 
-      <div style="background:var(--adm-bg); padding:1.25rem; border-radius:8px; margin-bottom:1.5rem; border:1px solid var(--adm-border);">
-        <div style="font-size:0.85rem; font-weight:600; margin-bottom:0.75rem;">✦ İsteğe Bağlı Edebi Eylem Butonu (CTA):</div>
+      <!-- Edebi Eylem Butonu (CTA) -->
+      <div style="background:var(--adm-surface-alt); padding:1.25rem; border-radius:var(--adm-radius-sm); margin-bottom:1.5rem; border:1px solid var(--adm-border);">
+        <div style="font-size:0.85rem; font-weight:700; margin-bottom:0.75rem; display:flex; align-items:center; gap:0.5rem;">
+          <span>🎯</span> İsteğe Bağlı Edebi Eylem Butonu (CTA)
+        </div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
           <div>
-            <label class="form-label" style="font-size:0.78rem;">Buton Metni:</label>
-            <input type="text" name="btn_text" class="form-control" value="<?= htmlspecialchars( $btn_text, ENT_QUOTES, 'UTF-8' ); ?>" placeholder="Örn: Yeni Sayıyı İncele" style="font-size:0.85rem;" />
+            <label class="form-label" style="font-size:0.78rem; font-weight:600;">Buton Üzerindeki Yazı:</label>
+            <input type="text" name="btn_text" id="inputBtnText" class="form-control" value="<?= htmlspecialchars( $btn_text, ENT_QUOTES, 'UTF-8' ); ?>" placeholder="Örn: Yeni Sayıyı İncele ↗" style="font-size:0.85rem;" />
           </div>
           <div>
-            <label class="form-label" style="font-size:0.78rem;">Buton Linki:</label>
-            <input type="url" name="btn_url" class="form-control" value="<?= htmlspecialchars( $btn_url, ENT_QUOTES, 'UTF-8' ); ?>" placeholder="https://pratfall.com.tr/dergiler" style="font-size:0.85rem;" />
+            <label class="form-label" style="font-size:0.78rem; font-weight:600;">Hedef Web Bağlantısı (URL):</label>
+            <input type="url" name="btn_url" id="inputBtnUrl" class="form-control" value="<?= htmlspecialchars( $btn_url, ENT_QUOTES, 'UTF-8' ); ?>" placeholder="https://pratfall.com.tr/dergiler" style="font-size:0.85rem;" />
           </div>
         </div>
       </div>
 
+      <!-- Gönderim Seçenekleri -->
       <div style="border-top:1px solid var(--adm-border); padding-top:1.5rem;">
-        <label class="form-label" style="font-weight:700; margin-bottom:0.75rem;">Gönderim Türü Seçin:</label>
+        <label class="form-label" style="font-weight:700; margin-bottom:0.85rem;">
+          4. Gönderim Türü Seçin:
+        </label>
         
-        <div style="display:flex; flex-direction:column; gap:0.75rem; margin-bottom:1.5rem;">
-          <label style="display:flex; align-items:center; gap:0.6rem; cursor:pointer; font-size:0.9rem;">
-            <input type="radio" name="send_mode" value="test" checked onchange="toggleSendMode('test')" />
-            <span><strong>Önce Test E-Postası Gönder</strong> (Gelen kutunuzda şablonu inceleyin)</span>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.5rem;">
+          <!-- Kart 1: Test -->
+          <label id="cardTestMode" style="border:2px solid var(--adm-primary); background:var(--adm-surface); padding:1rem; border-radius:var(--adm-radius-sm); cursor:pointer; display:flex; flex-direction:column; gap:0.5rem; transition:all 0.2s;">
+            <div style="display:flex; align-items:center; gap:0.5rem;">
+              <input type="radio" name="send_mode" value="test" checked onchange="toggleSendMode('test')" />
+              <strong style="font-size:0.9rem;">🧪 Test E-Postası Gönder</strong>
+            </div>
+            <p style="font-size:0.75rem; color:var(--adm-muted); margin:0; line-height:1.4;">
+              Tüm abonelere gitmeden önce bülteni kendi gelen kutunuzda birebir test edin.
+            </p>
           </label>
-          <div id="testEmailBox" style="margin-left:1.8rem;">
-            <input type="email" name="test_email" class="form-control" value="<?= htmlspecialchars( $test_email, ENT_QUOTES, 'UTF-8' ); ?>" placeholder="test-adresiniz@gmail.com" style="max-width:320px; font-size:0.85rem;" />
-          </div>
 
-          <label style="display:flex; align-items:center; gap:0.6rem; cursor:pointer; font-size:0.9rem; margin-top:0.5rem;">
-            <input type="radio" name="send_mode" value="all" onchange="toggleSendMode('all')" />
-            <span><strong>Tüm Aktif Abonelere Gönder</strong> (<span style="color:var(--adm-green); font-weight:700;"><?= $active_count; ?></span> aktif edebiyat sever)</span>
+          <!-- Kart 2: Toplu Dağıtım -->
+          <label id="cardAllMode" style="border:1px solid var(--adm-border); background:var(--adm-surface-alt); padding:1rem; border-radius:var(--adm-radius-sm); cursor:pointer; display:flex; flex-direction:column; gap:0.5rem; transition:all 0.2s;">
+            <div style="display:flex; align-items:center; gap:0.5rem;">
+              <input type="radio" name="send_mode" value="all" onchange="toggleSendMode('all')" />
+              <strong style="font-size:0.9rem;">🚀 Tüm Abonelere Dağıt</strong>
+            </div>
+            <p style="font-size:0.75rem; color:var(--adm-muted); margin:0; line-height:1.4;">
+              Kasada kayıtlı olan <strong style="color:var(--adm-green);"><?= $active_count; ?> aktif</strong> aboneye eşzamanlı gönderilir.
+            </p>
           </label>
         </div>
 
-        <div style="display:flex; justify-content:flex-end; gap:0.75rem;">
-          <button type="submit" id="submitBtn" class="btn btn-primary" style="padding:0.65rem 1.4rem;">
-            <span>📨</span> <span id="btnLabel">Test E-Postasını Gönder</span>
+        <!-- Test E-Posta Giriş Kutusu -->
+        <div id="testEmailBox" style="background:#f8fafc; border:1px dashed var(--adm-border); padding:1rem; border-radius:var(--adm-radius-sm); margin-bottom:1.5rem;">
+          <label class="form-label" style="font-size:0.8rem; font-weight:700; margin-bottom:0.35rem;">
+            Test E-Postasının İletileceği Adres:
+          </label>
+          <div style="display:flex; gap:0.5rem;">
+            <input type="email" name="test_email" class="form-control" value="<?= htmlspecialchars( $test_email, ENT_QUOTES, 'UTF-8' ); ?>" placeholder="ornek@gmail.com" required style="font-size:0.85rem;" />
+          </div>
+          <small style="font-size:0.72rem; color:var(--adm-muted); margin-top:0.35rem; display:block;">
+            * Buraya kendi kişisel Gmail veya şirket mailinizi yazarak önizleme alabilirsiniz.
+          </small>
+        </div>
+
+        <!-- Gönder Butonu -->
+        <div style="display:flex; justify-content:flex-end;">
+          <button type="submit" id="submitBtn" class="btn btn-primary" style="padding:0.75rem 1.8rem; font-size:0.95rem; display:inline-flex; align-items:center; gap:0.5rem;">
+            <span>📨</span>
+            <span id="btnLabel">Test E-Postasını Gönder</span>
           </button>
         </div>
       </div>
     </form>
   </div>
 
-  <!-- 2. SAĞ: CANLI BİLGİ & ŞABLON KURALLARI -->
+  <!-- 2. SAĞ SÜTUN: CANLI E-POSTA ÖNİZLEMESİ (LIVE EMAIL PREVIEW) -->
   <div>
-    
-    <div class="card" style="margin-bottom:1.5rem;">
-      <h3 style="margin:0 0 1rem 0; font-size:1.05rem; font-weight:700;">📬 Gönderim Durumu</h3>
-      
-      <div style="display:flex; justify-content:space-between; align-items:center; padding:0.6rem 0; border-bottom:1px solid var(--adm-border); font-size:0.85rem;">
-        <span style="color:var(--adm-muted);">Aktif Alıcılar:</span>
-        <strong style="color:var(--adm-green);"><?= $active_count; ?> Kişi</strong>
+    <div class="admin-card" style="margin:0; padding:1.25rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid var(--adm-border); padding-bottom:0.75rem;">
+        <div style="font-weight:700; font-size:0.9rem; display:flex; align-items:center; gap:0.5rem;">
+          <span>👁️</span> Canlı E-Posta Önizlemesi
+        </div>
+        <span class="stamp-tag" style="font-size:0.68rem;">Gmail / Apple Mail</span>
       </div>
 
-      <div style="display:flex; justify-content:space-between; align-items:center; padding:0.6rem 0; border-bottom:1px solid var(--adm-border); font-size:0.85rem;">
-        <span style="color:var(--adm-muted);">Kasa Güvenliği:</span>
-        <span>🔒 AES-256 Şifreli</span>
+      <!-- Simüle E-Posta İstemcisi Penceresi -->
+      <div style="background:#f4eee1; border:1px solid #d4ccb8; border-radius:6px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+        
+        <!-- İstemci Başlık Çubuğu -->
+        <div style="background:#e5ded0; padding:0.5rem 0.85rem; border-bottom:1px solid #d4ccb8; font-size:0.75rem; font-family:var(--adm-font-mono); color:#555;">
+          <div><strong>Kimden:</strong> PRATFALL &lt;mail@pratfall.com.tr&gt;</div>
+          <div style="margin-top:2px;"><strong>Konu:</strong> <span id="prevSubject" style="color:#1a1a1a; font-weight:700;">(Konu Başlığı)</span></div>
+        </div>
+
+        <!-- Mektup Gövdesi -->
+        <div style="padding:1.5rem 1rem;">
+          <div style="max-width:440px; margin:0 auto; background:#fff; border:2px solid #1a1a1a; box-shadow:4px 4px 0px #1a1a1a; border-radius:2px;">
+            
+            <!-- Şablon Başlığı -->
+            <div style="padding:16px 20px 12px 20px; border-bottom:2px solid #1a1a1a; background-color:#fbf7ee;">
+              <div style="font-family:'Courier New', monospace; font-size:9px; font-weight:bold; letter-spacing:1.5px; color:#8b1e0f; margin-bottom:4px;">
+                ✦ MATBAA & EDEBİYAT BÜLTENİ
+              </div>
+              <div style="font-family:Georgia, serif; font-size:18px; font-weight:bold; letter-spacing:2px; color:#1a1a1a;">
+                PRATFALL
+              </div>
+              <div style="font-family:'Courier New', monospace; font-size:9px; color:#666; margin-top:2px;">
+                Kusurlu Kalma Çabası · Bağımsız Edebiyat
+              </div>
+            </div>
+
+            <!-- İçerik Alanı -->
+            <div style="padding:20px;">
+              <h2 id="prevTitle" style="font-family:Georgia, serif; font-size:18px; color:#1a1a1a; margin:0 0 14px 0; line-height:1.35;">
+                Yeni Sayımız Matbaadan Çıktı
+              </h2>
+
+              <div id="prevContent" style="font-family:Georgia, serif; font-size:13.5px; line-height:1.75; color:#222; min-height:80px; white-space:pre-line;">
+                Sevgili Pratfall Okuru,
+                
+                Bu sayımızda sokakların tereddüdünü ve unutulmuş dizeleri bir araya getirdik...
+              </div>
+
+              <!-- Önizleme Butonu -->
+              <div id="prevBtnWrap" style="text-align:center; margin-top:20px; display:none;">
+                <span id="prevBtn" style="display:inline-block; background:#1a1a1a; color:#fbf7ee; padding:8px 18px; font-family:'Courier New', monospace; font-size:11px; font-weight:bold; border:2px solid #1a1a1a;">
+                  Yeni Sayıyı İncele ↗
+                </span>
+              </div>
+            </div>
+
+            <!-- Şablon Altbilgisi -->
+            <div style="padding:12px 20px; border-top:1px solid #eee; background-color:#faf7ee; font-size:10px; color:#777; text-align:center; font-family:'Courier New', monospace;">
+              &copy; <?= date('Y'); ?> PRATFALL Edebiyat Dergisi & Platformu<br>
+              <span style="color:#999; text-decoration:underline;">Abonelikten Ayrıl</span>
+            </div>
+
+          </div>
+        </div>
+
       </div>
 
-      <div style="display:flex; justify-content:space-between; align-items:center; padding:0.6rem 0; font-size:0.85rem;">
-        <span style="color:var(--adm-muted);">Gönderim Motoru:</span>
-        <span><?= $has_smtp ? '✅ cPanel SMTP' : '⚠️ PHP Mail()'; ?></span>
+      <!-- İpuçları Kutusu -->
+      <div style="margin-top:1.25rem; background:var(--adm-surface-alt); border:1px solid var(--adm-border); border-radius:6px; padding:1rem; font-size:0.78rem; line-height:1.6; color:var(--adm-muted);">
+        <strong style="color:var(--adm-text); display:block; margin-bottom:0.35rem;">✦ Spam Filtrelerine Takılmama Rehberi:</strong>
+        • Konu başlığında tamamen BÜYÜK HARFLER veya "ÜCRETSİZ, KAZAN" gibi kelimeler kullanmayın.<br>
+        • Metin ve bağlantı dengesini koruyun; edebi ve doğal mektup dili en yüksek açılma oranına sahiptir.<br>
+        • E-postalarınız kurumsal cPanel SPF/DKIM ve TLS şifrelemesiyle güvenli şekilde imzalanır.
       </div>
     </div>
-
-    <div class="card" style="background:#faf7f0; border:1px solid #e0dacb;">
-      <h4 style="margin:0 0 0.75rem 0; font-size:0.95rem; font-family:Georgia, serif;">✦ Pratfall Edebi Tasarım Şablonu</h4>
-      <p style="font-size:0.8rem; line-height:1.6; color:#555; margin:0 0 0.75rem 0;">
-        Gönderdiğiniz tüm e-postalar otomatik olarak Pratfall'ın brutalist kağıt estetiğine bürünür:
-      </p>
-      <ul style="font-size:0.78rem; line-height:1.6; color:#555; padding-left:1.2rem; margin:0;">
-        <li>Zarif Georgia tipografisi ve sol kırmızı kaşe çizgisi.</li>
-        <li>Kişiye özel tek tıkla abonelikten ayrılma bağlantısı (KVKK / GDPR zorunluluğu).</li>
-        <li>Tüm e-posta istemcileriyle (Gmail, Apple Mail, Outlook) %100 mobil uyumlu.</li>
-      </ul>
-    </div>
-
   </div>
 
 </div>
 
+<!-- CANLI ÖNİZLEME VE MOD DİNAMİĞİ JAVASCRIPT -->
 <script>
 function toggleSendMode(mode) {
   var box = document.getElementById('testEmailBox');
   var btnLabel = document.getElementById('btnLabel');
+  var cardTest = document.getElementById('cardTestMode');
+  var cardAll = document.getElementById('cardAllMode');
+
   if (mode === 'test') {
     box.style.display = 'block';
     btnLabel.innerText = 'Test E-Postasını Gönder';
+    cardTest.style.borderColor = 'var(--adm-primary)';
+    cardTest.style.background = 'var(--adm-surface)';
+    cardAll.style.borderColor = 'var(--adm-border)';
+    cardAll.style.background = 'var(--adm-surface-alt)';
   } else {
     box.style.display = 'none';
-    btnLabel.innerText = 'Tüm Abonelere (<?= $active_count; ?> Kişi) Dağıt ↗';
+    btnLabel.innerText = 'Tüm Abonelere (<?= $active_count; ?> Kişi) Dağıt 🚀';
+    cardAll.style.borderColor = 'var(--adm-primary)';
+    cardAll.style.background = 'var(--adm-surface)';
+    cardTest.style.borderColor = 'var(--adm-border)';
+    cardTest.style.background = 'var(--adm-surface-alt)';
   }
 }
 
+// Canlı Önizleme Senkronizasyonu
+var inSubject = document.getElementById('inputSubject');
+var inTitle   = document.getElementById('inputTitle');
+var inContent = document.getElementById('inputContent');
+var inBtnText = document.getElementById('inputBtnText');
+var inBtnUrl  = document.getElementById('inputBtnUrl');
+
+var pSubject  = document.getElementById('prevSubject');
+var pTitle    = document.getElementById('prevTitle');
+var pContent  = document.getElementById('prevContent');
+var pBtnWrap  = document.getElementById('prevBtnWrap');
+var pBtn      = document.getElementById('prevBtn');
+var charCount = document.getElementById('subjectCharCount');
+
+function syncPreview() {
+  if (inSubject) {
+    pSubject.innerText = inSubject.value.trim() || '(Konu Başlığı)';
+    charCount.innerText = inSubject.value.length + ' / 80';
+    if (inSubject.value.length > 70) {
+      charCount.style.color = '#ef4444';
+    } else {
+      charCount.style.color = 'var(--adm-muted)';
+    }
+  }
+  if (inTitle) {
+    pTitle.innerText = inTitle.value.trim() || 'Yeni Sayımız Matbaadan Çıktı';
+  }
+  if (inContent) {
+    pContent.innerText = inContent.value.trim() || 'Sevgili Pratfall Okuru,\n\nBu sayımızda sokakların tereddüdünü ve unutulmuş dizeleri bir araya getirdik...';
+  }
+  if (inBtnText && pBtn && pBtnWrap) {
+    var txt = inBtnText.value.trim();
+    if (txt) {
+      pBtn.innerText = txt;
+      pBtnWrap.style.display = 'block';
+    } else {
+      pBtnWrap.style.display = 'none';
+    }
+  }
+}
+
+inSubject?.addEventListener('input', syncPreview);
+inTitle?.addEventListener('input', syncPreview);
+inContent?.addEventListener('input', syncPreview);
+inBtnText?.addEventListener('input', syncPreview);
+inBtnUrl?.addEventListener('input', syncPreview);
+
+// Hızlı Tipografi Ekleme
+function insertSnippet(before, after) {
+  var area = inContent;
+  if (!area) return;
+  var start = area.selectionStart;
+  var end = area.selectionEnd;
+  var text = area.value;
+  var sel = text.substring(start, end);
+
+  after = after || '';
+  var replace = before + sel + after;
+  area.value = text.substring(0, start) + replace + text.substring(end);
+  area.focus();
+  area.selectionStart = start + before.length;
+  area.selectionEnd = start + before.length + sel.length;
+  syncPreview();
+}
+
+// Form Gönderim Doğrulaması
 document.getElementById('bultenSendForm')?.addEventListener('submit', function(e) {
   var mode = document.querySelector('input[name="send_mode"]:checked')?.value;
   if (mode === 'all') {
-    if (!confirm('DİKKAT: Bu bülten kayıtlı olan TÜM <?= $active_count; ?> aktif aboneye gönderilecektir. Onaylıyor musunuz?')) {
+    var count = <?= (int) $active_count; ?>;
+    if (!confirm('DİKKAT: Bu edebi bülten sistemde kayıtlı olan TÜM ' + count + ' aktif aboneye eşzamanlı olarak gönderilecektir. Gönderimi başlatmak istiyor musunuz?')) {
       e.preventDefault();
       return false;
     }
@@ -264,6 +482,9 @@ document.getElementById('bultenSendForm')?.addEventListener('submit', function(e
   btn.disabled = true;
   document.getElementById('btnLabel').innerText = 'Gönderiliyor, lütfen bekleyin...';
 });
+
+// İlk Yükleme Senkronizasyonu
+syncPreview();
 </script>
 
 <?php
