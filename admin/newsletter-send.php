@@ -104,7 +104,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
             } else {
                 $unsub_url = SITE_URL . '/bulten/ayril?token=DEMO_TEST_TOKEN';
                 $html = Mailer::createTemplate( $title, $formatted_content, $unsub_url, $btn_text, $btn_url, $custom_tpl );
-                $res = Mailer::send( $test_email, '[TEST] ' . $subject, $html );
+                $res = Mailer::send( $test_email, $subject, $html );
 
                 if ( $res['success'] ) {
                     $msg = "✦ Test bülteni <strong>{$test_email}</strong> adresine başarıyla iletildi! Gelen kutunuzu (ve varsa spam/tanıtım kutusunu) kontrol edebilirsiniz.";

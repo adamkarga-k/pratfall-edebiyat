@@ -33,7 +33,7 @@ class Mailer {
         $fromName   = Database::get_setting( 'smtp_from_name', 'Pratfall Edebiyat Bülteni' );
 
         if ( empty( $fromEmail ) ) {
-            $fromEmail = ! empty( $user ) && filter_var( $user, FILTER_VALIDATE_EMAIL ) ? $user : 'bulten@pratfall.com.tr';
+            $fromEmail = ! empty( $user ) && filter_var( $user, FILTER_VALIDATE_EMAIL ) ? $user : 'mail@pratfall.com.tr';
         }
 
         // 1. SMTP Yapılandırılmışsa Doğrudan SMTP Soketi ile Gönder
@@ -133,8 +133,13 @@ class Mailer {
             return [ 'success' => false, 'message' => 'SMTP sunucusu hazır yanıtı vermedi: ' . trim( $res ) ];
         }
 
+        $domain = ! empty( $_SERVER['HTTP_HOST'] ) ? preg_replace( '/:\d+$/', '', $_SERVER['HTTP_HOST'] ) : 'pratfall.com.tr';
+        if ( strpos( $domain, 'localhost' ) !== false || strpos( $domain, '127.0.0.1' ) !== false || empty( $domain ) ) {
+            $domain = 'pratfall.com.tr';
+        }
+
         // EHLO
-        $sendCommand( 'EHLO ' . ( $_SERVER['SERVER_NAME'] ?? 'localhost' ) );
+        $sendCommand( 'EHLO ' . $domain );
         $readResponse();
 
         // STARTTLS
@@ -146,7 +151,7 @@ class Mailer {
                 return [ 'success' => false, 'message' => 'STARTTLS başlatılamadı: ' . trim( $tlsRes ) ];
             }
             stream_socket_enable_crypto( $socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT );
-            $sendCommand( 'EHLO ' . ( $_SERVER['SERVER_NAME'] ?? 'localhost' ) );
+            $sendCommand( 'EHLO ' . $domain );
             $readResponse();
         }
 
@@ -201,14 +206,12 @@ class Mailer {
 
         $headers = [];
         $headers[] = 'Date: ' . date( 'r' );
-        $headers[] = 'Message-ID: ' . $messageId;
+        $headers[] = 'To: ' . $to;
         $headers[] = 'From: =?UTF-8?B?' . base64_encode( $fromName ) . '?= <' . $fromEmail . '>';
-        $headers[] = 'Reply-To: <' . $fromEmail . '>';
-        $headers[] = 'Return-Path: <' . $fromEmail . '>';
-        $headers[] = 'To: <' . $to . '>';
+        $headers[] = 'Reply-To: ' . $fromEmail;
         $headers[] = 'Subject: =?UTF-8?B?' . base64_encode( $subject ) . '?=';
+        $headers[] = 'Message-ID: ' . $messageId;
         $headers[] = 'MIME-Version: 1.0';
-        $headers[] = 'X-Mailer: Pratfall Standalone Engine';
         $headers[] = 'Content-Type: multipart/alternative; boundary="' . $boundary . '"';
 
         $body = implode( "\r\n", $headers ) . "\r\n\r\n";
