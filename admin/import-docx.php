@@ -33,7 +33,11 @@ if ( isset( $_GET['action'] ) && $_GET['action'] === 'ajax_save_cover' && $_SERV
         exit;
     }
 
-    $opt_file = ImageOptimizer::optimize_base64_image( $imageData, PATH_UPLOADS . '/covers', 'kapak' );
+    $title  = trim( (string) ( $_POST['title'] ?? '' ) );
+    $author = trim( (string) ( $_POST['author'] ?? '' ) );
+    $prefix = ! empty( $title ) ? Database::slugify( trim( $title . ' ' . $author ) ) : 'kapak';
+
+    $opt_file = ImageOptimizer::optimize_base64_image( $imageData, PATH_UPLOADS . '/covers', $prefix );
     if ( $opt_file ) {
         $url = SITE_URL . '/uploads/covers/' . $opt_file;
         echo json_encode( [ 'success' => true, 'url' => $url, 'filename' => $opt_file ] );
@@ -1562,6 +1566,8 @@ require PATH_ADMIN . '/layout/header.php';
     const formData = new FormData();
     formData.append('csrf_token', '<?= Auth::csrf_token(); ?>');
     formData.append('image_data', dataUrl);
+    formData.append('title', document.getElementById('coverGenTitle').value.trim());
+    formData.append('author', document.getElementById('coverGenAuthor').value.trim());
 
     fetch('<?= SITE_URL; ?>/admin/import-docx.php?action=ajax_save_cover', {
       method: 'POST',
@@ -1653,6 +1659,10 @@ require PATH_ADMIN . '/layout/header.php';
       }
       let categoryName = catSelect ? catSelect.value.trim() : 'Deneme';
 
+      // 8 Farklı Edebi Tasarım Temasını Dönüşümlü Uygula (Arka arkaya aynı tema gelmez)
+      const themes = ['paper', 'fanzine', 'blueprint', 'dark', 'bordeaux', 'postage', 'kraft', 'emerald'];
+      setCoverTheme(themes[i % themes.length]);
+
       // Canvas'a çiz
       drawCoverImage(postTitle, authorName, categoryName);
 
@@ -1660,6 +1670,8 @@ require PATH_ADMIN . '/layout/header.php';
       const formData = new FormData();
       formData.append('csrf_token', '<?= Auth::csrf_token(); ?>');
       formData.append('image_data', dataUrl);
+      formData.append('title', postTitle);
+      formData.append('author', authorName);
 
       try {
         const res = await fetch('<?= SITE_URL; ?>/admin/import-docx.php?action=ajax_save_cover', {

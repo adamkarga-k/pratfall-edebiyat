@@ -120,7 +120,16 @@ class ImageOptimizer {
 
         $supports_webp = function_exists( 'imagewebp' ) && extension_loaded( 'gd' );
         $final_ext     = $supports_webp ? 'webp' : 'png';
-        $filename      = $prefix . '_' . time() . '_' . uniqid() . '.' . $final_ext;
+        
+        $clean_slug    = Database::slugify( $prefix );
+        if ( empty( $clean_slug ) || $clean_slug === 'cover' || $clean_slug === 'kapak' ) {
+            $filename  = 'kapak_' . time() . '_' . uniqid() . '.' . $final_ext;
+        } else {
+            $filename  = $clean_slug . '.' . $final_ext;
+            if ( file_exists( rtrim( $target_dir, '/' ) . '/' . $filename ) ) {
+                $filename = $clean_slug . '-' . time() . '.' . $final_ext;
+            }
+        }
         $dest          = rtrim( $target_dir, '/' ) . '/' . $filename;
 
         if ( extension_loaded( 'gd' ) && function_exists( 'imagecreatefromstring' ) ) {

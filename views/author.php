@@ -132,16 +132,8 @@ require PATH_VIEWS . '/layout/header.php';
   </header>
 
   <!-- Tırtıklı Perfore Ayraç -->
-  <div class="perforated-divider" style="margin-top: 3.5rem; margin-bottom: 2rem;">
+  <div class="perforated-divider" style="margin-top: 3.5rem; margin-bottom: 2.5rem;">
     <span class="perforated-badge">✂ · <?= $is_poet ? 'ŞAİRİN MATBAA ÇIKTILARI' : 'YAZARIN MATBAA ÇIKTILARI'; ?> · ✦</span>
-  </div>
-
-  <!-- 2. BÖLÜM BAŞLIĞI -->
-  <div class="section-headline" style="margin-bottom:2rem;">
-    <h2 class="section-headline-title">
-      <span><?= htmlspecialchars( $author['name'], ENT_QUOTES, 'UTF-8' ); ?> Tarafından Kaleme Alınan <?= $is_poet ? 'Şiirler & Eserler' : 'Eserler'; ?></span>
-      <span class="tape-badge rot-p1" style="font-size:0.75rem;"><?= count( $posts ); ?> ESER</span>
-    </h2>
   </div>
 
   <!-- 3. YAZARIN ESERLERİ GALERİSİ -->

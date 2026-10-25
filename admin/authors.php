@@ -444,9 +444,15 @@ require PATH_ADMIN . '/layout/header.php';
                       ✍️ Yazar
                     </span>
                   <?php endif; ?>
-                  <span style="font-size:0.8rem; color:var(--admin-muted, #64748b);">
-                    <?= htmlspecialchars( $a['title'] ?? '—', ENT_QUOTES, 'UTF-8' ); ?>
-                  </span>
+                  <?php 
+                  $title_clean = trim( (string) ( $a['title'] ?? '' ) );
+                  $is_generic  = in_array( mb_strtolower( $title_clean, 'UTF-8' ), [ 'şair', 'sair', 'yazar', '—', '-' ] );
+                  if ( ! empty( $title_clean ) && ! $is_generic ) : 
+                  ?>
+                    <span style="font-size:0.8rem; color:var(--admin-muted, #64748b);">
+                      <?= htmlspecialchars( $title_clean, ENT_QUOTES, 'UTF-8' ); ?>
+                    </span>
+                  <?php endif; ?>
                 </div>
               </td>
               <td style="max-width:240px; font-size:0.8rem; color:var(--admin-muted); font-style:italic; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">

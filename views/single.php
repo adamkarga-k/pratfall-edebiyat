@@ -154,7 +154,7 @@ require PATH_VIEWS . '/layout/header.php';
           </div>
         <?php endif; ?>
         <a href="<?= Helpers::author_url( $post ); ?>" class="stamp-tag">
-          <?= htmlspecialchars( $post['author_name'], ENT_QUOTES, 'UTF-8' ); ?> Adlı <?= $is_author_poet ? 'Şairin Tüm Şiirleri & Eserleri' : 'Yazarın Tüm Eserleri'; ?> ↗
+          Tüm Eserleri ↗
         </a>
       </div>
     </div>

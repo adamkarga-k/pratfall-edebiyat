@@ -40,9 +40,22 @@ if ( $action === 'ajax_save_cover' && $_SERVER['REQUEST_METHOD'] === 'POST' ) {
         exit;
     }
 
-    $opt_file = ImageOptimizer::optimize_base64_image( $imageData, PATH_UPLOADS . '/covers', 'kapak' );
+    $title   = trim( (string) ( $_POST['title'] ?? '' ) );
+    $author  = trim( (string) ( $_POST['author'] ?? '' ) );
+    $post_id = (int) ( $_POST['post_id'] ?? 0 );
+
+    $prefix = 'kapak';
+    if ( ! empty( $title ) ) {
+        $prefix = Database::slugify( trim( $title . ' ' . $author ) );
+    }
+
+    $opt_file = ImageOptimizer::optimize_base64_image( $imageData, PATH_UPLOADS . '/covers', $prefix );
     if ( $opt_file ) {
         $url = SITE_URL . '/uploads/covers/' . $opt_file;
+        if ( $post_id > 0 ) {
+            $update_stmt = $db->prepare( "UPDATE posts SET featured_image = ? WHERE id = ?" );
+            $update_stmt->execute( [ $url, $post_id ] );
+        }
         echo json_encode( [ 'success' => true, 'url' => $url, 'filename' => $opt_file ] );
     } else {
         echo json_encode( [ 'success' => false, 'message' => 'Görsel sunucuya kaydedilemedi.' ] );
@@ -925,7 +938,10 @@ require PATH_ADMIN . '/layout/header.php';
         Platformda kayıtlı tüm denemeler, şiirler ve edebi metinler.
       </p>
     </div>
-    <div style="display:flex; gap:0.5rem;">
+    <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+      <button type="button" onclick="startBatchCoverGeneration(false)" class="btn btn-sm" style="background:#ffffff; color:#b45309; border:1.5px solid #f59e0b; font-weight:600; display:inline-flex; align-items:center; gap:0.35rem;" title="8 farklı dönüşümlü tema ve SEO isimleriyle kapak üret">
+        <span>🎨</span> Toplu Kapak Üret
+      </button>
       <a href="<?= SITE_URL; ?>/admin/import-docx.php" class="btn btn-accent btn-sm">
         <span>📥</span> Word İçe Aktar
       </a>
@@ -937,6 +953,39 @@ require PATH_ADMIN . '/layout/header.php';
 
   <?php if ( ! empty( $msg ) ) : ?>
     <div class="alert alert-success">✓ <?= htmlspecialchars( $msg, ENT_QUOTES, 'UTF-8' ); ?></div>
+  <?php endif; ?>
+
+  <?php
+  // Toplu Kapak Üretimi için Tüm Eserler
+  $all_posts_batch = $db->query( "
+      SELECT p.id, p.title, p.category, p.featured_image, a.name AS author_name, a.title AS author_title, a.bio AS author_bio 
+      FROM posts p 
+      LEFT JOIN authors a ON p.author_id = a.id 
+      ORDER BY p.id ASC
+  " )->fetchAll();
+
+  $uncovered_count = count( array_filter( $all_posts_batch, fn( $p ) => empty( $p['featured_image'] ) ) );
+  ?>
+
+  <?php if ( $uncovered_count > 0 ) : ?>
+    <div style="background:linear-gradient(135deg, #fffbeb, #fef3c7); border:1.5px solid #f59e0b; border-radius:8px; padding:1rem 1.25rem; margin-bottom:1.25rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; box-shadow:0 4px 12px rgba(245, 158, 11, 0.1);">
+      <div>
+        <div style="font-weight:700; color:#92400e; font-size:0.95rem; display:flex; align-items:center; gap:0.4rem;">
+          <span>🎨</span> <strong><?= $uncovered_count; ?> Adet Eserin Öne Çıkan Görseli Bulunmuyor</strong>
+        </div>
+        <div style="font-size:0.82rem; color:#b45309; margin-top:0.25rem;">
+          Tüm eserlerinize 8 farklı edebi tema arka arkaya tekrar etmeyecek şekilde ve eser-yazar adını içeren SEO uyumlu WebP formatında kapaklar atayabilirsiniz.
+        </div>
+      </div>
+      <div style="display:flex; gap:0.5rem; align-items:center;">
+        <button type="button" onclick="startBatchCoverGeneration(false)" class="btn btn-sm" style="background:#b45309; color:#ffffff; font-weight:700; padding:0.5rem 1rem; border:none; cursor:pointer;">
+          ⚡ Eksik Kapakları Otomatik Üret (<?= $uncovered_count; ?>)
+        </button>
+        <button type="button" onclick="startBatchCoverGeneration(true)" class="btn btn-sm btn-secondary" style="font-size:0.75rem;">
+          Tümünü Baştan Üret
+        </button>
+      </div>
+    </div>
   <?php endif; ?>
 
   <?php
@@ -2071,13 +2120,16 @@ function setCoverFont(font) {
   drawCoverImage();
 }
 
-function drawCoverImage() {
-  const canvas = document.getElementById('coverGenCanvas');
+function drawCoverImage(customTitle, customAuthor, customCat, customRole, customTheme, customFont, targetCanvas) {
+  const canvas = targetCanvas || document.getElementById('coverGenCanvas');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   const w = canvas.width;  // 1200
   const h = canvas.height; // 675
   const m = 38;
+
+  const thm = customTheme || currentCoverTheme || 'paper';
+  const fnt = customFont || currentCoverFont || 'serif';
 
   // Katman Seçenekleri
   const optTape = document.getElementById('coverOptTape') ? document.getElementById('coverOptTape').checked : true;
@@ -2096,7 +2148,7 @@ function drawCoverImage() {
   let stampColor = 'rgba(139, 30, 15, 0.82)';
   let tapeColor = 'rgba(235, 218, 185, 0.88)';
 
-  if (currentCoverTheme === 'paper') {
+  if (thm === 'paper') {
     bgColor = '#ede5d5';
     cardBg = '#faf6ed';
     textColor = '#1e1c19';
@@ -2107,7 +2159,7 @@ function drawCoverImage() {
     badgeText = '#141416';
     stampColor = 'rgba(139, 30, 15, 0.82)';
     tapeColor = 'rgba(235, 218, 185, 0.88)';
-  } else if (currentCoverTheme === 'fanzine') {
+  } else if (thm === 'fanzine') {
     bgColor = '#e5e3dc';
     cardBg = '#ffffff';
     textColor = '#050505';
@@ -2118,7 +2170,7 @@ function drawCoverImage() {
     badgeText = '#ffffff';
     stampColor = 'rgba(0, 0, 0, 0.88)';
     tapeColor = 'rgba(254, 240, 138, 0.9)'; // Sarı fanzin koli bandı
-  } else if (currentCoverTheme === 'blueprint') {
+  } else if (thm === 'blueprint') {
     bgColor = '#edf3f8';
     cardBg = '#f8fbfe';
     textColor = '#0f172a';
@@ -2129,7 +2181,7 @@ function drawCoverImage() {
     badgeText = '#1e40af';
     stampColor = 'rgba(30, 64, 175, 0.82)';
     tapeColor = 'rgba(219, 234, 254, 0.88)';
-  } else if (currentCoverTheme === 'dark') {
+  } else if (thm === 'dark') {
     bgColor = '#0f0f10';
     cardBg = '#18181b';
     textColor = '#f4f4f5';
@@ -2140,7 +2192,7 @@ function drawCoverImage() {
     badgeText = '#f59e0b';
     stampColor = 'rgba(245, 158, 11, 0.85)';
     tapeColor = 'rgba(63, 63, 70, 0.8)';
-  } else if (currentCoverTheme === 'bordeaux') {
+  } else if (thm === 'bordeaux') {
     bgColor = '#380a0f';
     cardBg = '#4c0d14';
     textColor = '#fdf8f0';
@@ -2151,7 +2203,7 @@ function drawCoverImage() {
     badgeText = '#fbbf24';
     stampColor = 'rgba(251, 191, 36, 0.88)';
     tapeColor = 'rgba(180, 83, 9, 0.7)';
-  } else if (currentCoverTheme === 'postage') {
+  } else if (thm === 'postage') {
     bgColor = '#f4efe6';
     cardBg = '#fcf9f2';
     textColor = '#1c1917';
@@ -2162,7 +2214,7 @@ function drawCoverImage() {
     badgeText = '#b91c1c';
     stampColor = 'rgba(185, 28, 28, 0.82)';
     tapeColor = 'rgba(245, 230, 205, 0.85)';
-  } else if (currentCoverTheme === 'kraft') {
+  } else if (thm === 'kraft') {
     bgColor = '#cbb396';
     cardBg = '#dbc1a4';
     textColor = '#2e1d11';
@@ -2173,7 +2225,7 @@ function drawCoverImage() {
     badgeText = '#7c2d12';
     stampColor = 'rgba(74, 44, 17, 0.85)';
     tapeColor = 'rgba(161, 98, 7, 0.75)';
-  } else if (currentCoverTheme === 'emerald') {
+  } else if (thm === 'emerald') {
     bgColor = '#09231d';
     cardBg = '#0e352c';
     textColor = '#fefce8';
@@ -2191,7 +2243,7 @@ function drawCoverImage() {
   ctx.fillRect(0, 0, w, h);
 
   // 1.b Tema Özel Arka Plan Çizgileri
-  if (currentCoverTheme === 'blueprint') {
+  if (thm === 'blueprint') {
     ctx.save();
     ctx.strokeStyle = 'rgba(30, 64, 175, 0.12)';
     ctx.lineWidth = 1;
@@ -2215,21 +2267,21 @@ function drawCoverImage() {
     ctx.lineTo(m + 55, h);
     ctx.stroke();
     ctx.restore();
-  } else if (currentCoverTheme === 'postage') {
+  } else if (thm === 'postage') {
     drawAirmailBorders(ctx, w, h, 26);
   }
 
   // 2. İç Blok / Kart (Hard Shadow & Container)
-  const cardPad = currentCoverTheme === 'postage' ? 36 : 28;
+  const cardPad = thm === 'postage' ? 36 : 28;
   const cardX = cardPad;
   const cardY = cardPad;
   const cardW = w - (cardPad * 2);
   const cardH = h - (cardPad * 2);
 
   // Brutalist Sert Gölge (Paper, Fanzine, Kraft temalarında)
-  if (currentCoverTheme === 'paper' || currentCoverTheme === 'fanzine' || currentCoverTheme === 'kraft') {
+  if (thm === 'paper' || thm === 'fanzine' || thm === 'kraft') {
     ctx.save();
-    ctx.fillStyle = currentCoverTheme === 'fanzine' ? '#000000' : 'rgba(0, 0, 0, 0.22)';
+    ctx.fillStyle = thm === 'fanzine' ? '#000000' : 'rgba(0, 0, 0, 0.22)';
     ctx.fillRect(cardX + 10, cardY + 10, cardW, cardH);
     ctx.restore();
   }
@@ -2240,10 +2292,10 @@ function drawCoverImage() {
 
   // Kart Çerçevesi
   ctx.strokeStyle = frameColor;
-  ctx.lineWidth = currentCoverTheme === 'fanzine' ? 5 : 3.5;
+  ctx.lineWidth = thm === 'fanzine' ? 5 : 3.5;
   ctx.strokeRect(cardX, cardY, cardW, cardH);
 
-  if (currentCoverTheme === 'fanzine') {
+  if (thm === 'fanzine') {
     // Üst kesik/perfore çizgi süsü
     ctx.save();
     ctx.setLineDash([12, 8]);
@@ -2258,12 +2310,12 @@ function drawCoverImage() {
     ctx.fillStyle = '#000';
     ctx.fillText('✂ [ KUSURLU FANZİN KAPAK BASKISI - SAYI: 01 ]', cardX + 35, cardY + 23);
     ctx.restore();
-  } else if (currentCoverTheme === 'bordeaux' || currentCoverTheme === 'emerald') {
+  } else if (thm === 'bordeaux' || thm === 'emerald') {
     // Çift yaldız çizgi & köşe süsleri
     ctx.strokeStyle = accentColor;
     ctx.lineWidth = 1.5;
     ctx.strokeRect(cardX + 10, cardY + 10, cardW - 20, cardH - 20);
-  } else if (currentCoverTheme === 'dark' || currentCoverTheme === 'blueprint') {
+  } else if (thm === 'dark' || thm === 'blueprint') {
     // 4 köşeye matbaa krosları
     const crossOffset = 20;
     drawCornerCross(ctx, cardX + crossOffset, cardY + crossOffset, 10, accentColor);
@@ -2273,7 +2325,7 @@ function drawCoverImage() {
   }
 
   // Posta Pulu Figürü (Postage Teması için)
-  if (currentCoverTheme === 'postage') {
+  if (thm === 'postage') {
     ctx.save();
     const stampW = 95;
     const stampH = 115;
@@ -2311,8 +2363,8 @@ function drawCoverImage() {
   }
 
   // 3. Üst Logo & Platform Başlığı
-  const badgeTitle = document.getElementById('coverGenBadge').value.trim() || 'PRATFALL · EDEBİYAT & FİKİR & KÜLTÜR & SANAT PLATFORMU';
-  const category = (document.getElementById('coverGenCategory') ? document.getElementById('coverGenCategory').value.trim() : 'Edebiyat') || 'Edebiyat';
+  const badgeTitle = (document.getElementById('coverGenBadge') ? document.getElementById('coverGenBadge').value.trim() : '') || 'PRATFALL · EDEBİYAT & FİKİR & KÜLTÜR & SANAT PLATFORMU';
+  const category = (customCat || (document.getElementById('coverGenCategory') ? document.getElementById('coverGenCategory').value.trim() : 'Edebiyat')) || 'Edebiyat';
 
   ctx.font = 'bold 15px "Courier New", monospace';
   ctx.fillStyle = mutedColor;
@@ -2321,7 +2373,7 @@ function drawCoverImage() {
   ctx.fillText(badgeTitle.toUpperCase(), w / 2, headY);
 
   // Kategori Pulu (Sağ Üst Köşede)
-  if (currentCoverTheme !== 'postage') {
+  if (thm !== 'postage') {
     ctx.save();
     ctx.translate(cardX + cardW - 35, headY - 4);
     ctx.rotate(-0.02);
@@ -2352,7 +2404,7 @@ function drawCoverImage() {
   ctx.setLineDash([]);
 
   // 4. Alt Bilgi Çubuğu (Yazar & Edebi Arşiv)
-  const author = (document.getElementById('coverGenAuthor') ? document.getElementById('coverGenAuthor').value.trim() : 'Pratfall Yazarı') || 'Pratfall Yazarı';
+  const author = (customAuthor || (document.getElementById('coverGenAuthor') ? document.getElementById('coverGenAuthor').value.trim() : 'Pratfall Yazarı')) || 'Pratfall Yazarı';
   const footDivY = cardY + cardH - 74;
 
   ctx.strokeStyle = frameColor;
@@ -2366,9 +2418,9 @@ function drawCoverImage() {
 
   // Yazar / Şair Bilgisi
   const coverRoleEl = document.getElementById('coverGenRole');
-  const catInput = document.getElementById('coverGenCategory');
-  const catVal = catInput ? catInput.value.toLowerCase() : '';
-  const isPoet = (coverRoleEl && coverRoleEl.value === 'poet') || catVal.includes('şiir') || catVal.includes('siir');
+  const catVal = category.toLowerCase();
+  const roleVal = customRole || (coverRoleEl ? coverRoleEl.value : '');
+  const isPoet = (roleVal === 'poet') || catVal.includes('şiir') || catVal.includes('siir');
   const rolePrefix = isPoet ? 'ŞAİR: ' : 'YAZAR: ';
   let cleanAuthor = author.replace(/^(yazar|şair|sair)\s*:\s*/i, '').trim();
 
@@ -2383,8 +2435,8 @@ function drawCoverImage() {
   ctx.fillText('WWW.PRATFALL.COM.TR · KUSURLU KALMA ÇABASI', w / 2, footDivY + 58);
 
   // 5. Orta Başlık Alanı
-  const rawTitle = (document.getElementById('coverGenTitle') ? document.getElementById('coverGenTitle').value.trim() : 'Kusurlu Kalma Çabası') || 'Kusurlu Kalma Çabası';
-  const fontFam = currentCoverFont === 'mono' ? '"Courier New", monospace' : 'Georgia, serif';
+  const rawTitle = (customTitle || (document.getElementById('coverGenTitle') ? document.getElementById('coverGenTitle').value.trim() : 'Kusurlu Kalma Çabası')) || 'Kusurlu Kalma Çabası';
+  const fontFam = fnt === 'mono' ? '"Courier New", monospace' : 'Georgia, serif';
 
   function wrapTitle(text, fSize) {
     ctx.font = `bold ${fSize}px ${fontFam}`;
@@ -2406,51 +2458,39 @@ function drawCoverImage() {
     return lns;
   }
 
-  let titleSize = 56;
-  let titleLines = wrapTitle(rawTitle, titleSize);
-  let lineHeight = titleSize * 1.35;
-  let totalTitleH = titleLines.length * lineHeight;
-  const maxTitleH = footDivY - headDivY - 60;
+  let fontSize = 48;
+  let titleLines = wrapTitle(rawTitle, fontSize);
+  const availMidH = footDivY - headDivY - 40;
 
-  while (totalTitleH > maxTitleH && titleSize > 28) {
-    titleSize -= 3;
-    lineHeight = titleSize * 1.35;
-    titleLines = wrapTitle(rawTitle, titleSize);
-    totalTitleH = titleLines.length * lineHeight;
+  while ((titleLines.length * (fontSize * 1.35) > availMidH) && fontSize > 22) {
+    fontSize -= 2;
+    titleLines = wrapTitle(rawTitle, fontSize);
   }
 
-  const centerContentY = (headDivY + footDivY) / 2;
-  const titleStartY = centerContentY - (totalTitleH / 2) + (titleSize * 0.38);
+  const lineHeight = fontSize * 1.35;
+  const totalH = titleLines.length * lineHeight;
+  const midCenterY = (headDivY + footDivY) / 2;
+  const startY = midCenterY - (totalH / 2) + (fontSize * 0.4);
 
-  // Fanzin Temasında Başlığın Arkasında Sarı Vurgulayıcı Bant
-  if (currentCoverTheme === 'fanzine' && titleLines.length > 0) {
+  // Fanzin Temasında Başlık Altı Fosforlu Çizgi
+  if (thm === 'fanzine' && titleLines.length > 0) {
     ctx.save();
-    ctx.fillStyle = 'rgba(254, 240, 138, 0.75)';
+    ctx.fillStyle = 'rgba(254, 240, 138, 0.85)';
     for (let k = 0; k < titleLines.length; k++) {
-      ctx.font = `bold ${titleSize}px ${fontFam}`;
-      const metrics = ctx.measureText(titleLines[k]);
-      const lW = metrics.width;
-      const lx = (w / 2) - (lW / 2) - 10;
-      const ly = titleStartY + (k * lineHeight) - (titleSize * 0.85);
-      ctx.fillRect(lx, ly, lW + 20, titleSize * 1.05);
+      ctx.font = `bold ${fontSize}px ${fontFam}`;
+      const lw = ctx.measureText(titleLines[k]).width;
+      const lx = (w / 2) - (lw / 2) - 8;
+      const ly = startY + (k * lineHeight) - (fontSize * 0.72);
+      ctx.fillRect(lx, ly, lw + 16, fontSize * 0.86);
     }
     ctx.restore();
   }
 
-  // Başlık Metnini Çiz
-  ctx.textAlign = 'center';
-  ctx.font = `bold ${titleSize}px ${fontFam}`;
+  ctx.font = `bold ${fontSize}px ${fontFam}`;
   ctx.fillStyle = textColor;
-  for (let i = 0; i < titleLines.length; i++) {
-    ctx.fillText(titleLines[i], w / 2, titleStartY + (i * lineHeight));
-  }
-
-  // Başlığın Altına Edebi Ayraç
-  const ornamentY = titleStartY + (titleLines.length * lineHeight) + 12;
-  if (ornamentY < footDivY - 14) {
-    ctx.font = 'bold 20px Georgia, serif';
-    ctx.fillStyle = accentColor;
-    ctx.fillText('◆  ·  —  ·  ◆', w / 2, ornamentY);
+  ctx.textAlign = 'center';
+  for (let k = 0; k < titleLines.length; k++) {
+    ctx.fillText(titleLines[k], w / 2, startY + (k * lineHeight));
   }
 
   // 6. Kusurlu Katmanlar (Koli Bandı & Matbaa Kaşesi)
@@ -2468,10 +2508,9 @@ function drawCoverImage() {
 
   // 7. Kağıt Lif & Doku (Noise) Katmanı
   if (optTexture) {
-    drawNoiseTexture(ctx, w, h, 2400, (currentCoverTheme === 'dark' || currentCoverTheme === 'emerald') ? 'rgba(255, 255, 255, 0.035)' : 'rgba(0, 0, 0, 0.04)');
+    drawNoiseTexture(ctx, w, h, 2400, (thm === 'dark' || thm === 'emerald') ? 'rgba(255, 255, 255, 0.035)' : 'rgba(0, 0, 0, 0.04)');
   }
 }
-
 function saveGeneratedCoverToPost() {
   const canvas = document.getElementById('coverGenCanvas');
   const btn = document.getElementById('saveCoverBtn');
@@ -2486,6 +2525,12 @@ function saveGeneratedCoverToPost() {
   const formData = new FormData();
   formData.append('csrf_token', '<?= Auth::csrf_token(); ?>');
   formData.append('image_data', dataUrl);
+
+  const titleEl = document.getElementById('coverGenTitle');
+  const authorEl = document.getElementById('coverGenAuthor');
+  formData.append('title', titleEl ? titleEl.value.trim() : '');
+  formData.append('author', authorEl ? authorEl.value.trim() : '');
+  formData.append('post_id', '<?= isset($post['id']) ? (int)$post['id'] : 0; ?>');
 
   fetch('<?= SITE_URL; ?>/admin/posts.php?action=ajax_save_cover', {
     method: 'POST',
@@ -2521,13 +2566,226 @@ function saveGeneratedCoverToPost() {
 
 function downloadCoverImage() {
   const canvas = document.getElementById('coverGenCanvas');
-  const title = (document.getElementById('coverGenTitle').value || 'pratfall-kapak').toLowerCase().replace(/[^a-z0-9]/g, '-');
+  const title = (document.getElementById('coverGenTitle') ? document.getElementById('coverGenTitle').value : 'pratfall').toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  const author = (document.getElementById('coverGenAuthor') ? document.getElementById('coverGenAuthor').value : '').toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
   const link = document.createElement('a');
-  link.download = `kapak-${title}-${Date.now()}.png`;
+  link.download = `kapak-${title}${author ? '-' + author : ''}.png`;
   link.href = canvas.toDataURL('image/png');
   link.click();
 }
+
+// -------------------------------------------------------------
+// TOPLU KAPAK ÜRETİM MOTORU (8 Dönüşümlü Tema + SEO İsimlendirme)
+// -------------------------------------------------------------
+const COVER_THEMES_CYCLE = ['paper', 'fanzine', 'blueprint', 'dark', 'bordeaux', 'postage', 'kraft', 'emerald'];
+let batchCoverRunning = false;
+let batchCoverCancel = false;
+
+function openBatchCoverModal() {
+  const modal = document.getElementById('batchCoverModal');
+  if (modal) modal.style.display = 'flex';
+}
+
+function closeBatchCoverModal() {
+  if (batchCoverRunning) {
+    if (!confirm('Toplu kapak üretimi devam ediyor. İptal etmek istediğinize emin misiniz?')) {
+      return;
+    }
+    batchCoverCancel = true;
+  }
+  const modal = document.getElementById('batchCoverModal');
+  if (modal) modal.style.display = 'none';
+}
+
+async function startBatchCoverGeneration(forceAll = false) {
+  const allPosts = window.PRATFALL_BATCH_POSTS || [];
+  if (!allPosts || allPosts.length === 0) {
+    alert('İşlem yapılacak eser bulunamadı.');
+    return;
+  }
+
+  const postsToProcess = forceAll ? allPosts : allPosts.filter(p => !p.has_cover);
+
+  if (postsToProcess.length === 0) {
+    alert('Kapağı eksik olan herhangi bir eser bulunamadı. Tüm eserlerin kapağı zaten mevcut!\nDilerseniz "Tümünü Baştan Üret" seçeneğini kullanabilirsiniz.');
+    return;
+  }
+
+  const promptMsg = forceAll 
+    ? `${postsToProcess.length} adet eserin tümünün kapağı 8 farklı dönüşümlü tema ve SEO dosya adlarıyla baştan üretilecek. Devam edilsin mi?`
+    : `${postsToProcess.length} adet kapağı eksik olan esere 8 farklı dönüşümlü tema ve SEO dosya adlarıyla kapak üretilecek. Devam edilsin mi?`;
+
+  if (!confirm(promptMsg)) return;
+
+  openBatchCoverModal();
+  batchCoverRunning = true;
+  batchCoverCancel = false;
+
+  const pBar = document.getElementById('batchCoverProgressBar');
+  const pText = document.getElementById('batchCoverProgressText');
+  const pCount = document.getElementById('batchCoverCountText');
+  const pCurrent = document.getElementById('batchCoverCurrentTitle');
+  const pCanvas = document.getElementById('batchCoverCanvas');
+  const pBtnStop = document.getElementById('batchCoverStopBtn');
+  const pBtnDone = document.getElementById('batchCoverDoneBtn');
+
+  if (pBtnStop) pBtnStop.style.display = 'inline-flex';
+  if (pBtnDone) pBtnDone.style.display = 'none';
+
+  let completed = 0;
+  let errors = 0;
+
+  for (let i = 0; i < postsToProcess.length; i++) {
+    if (batchCoverCancel) {
+      if (pCurrent) pCurrent.innerHTML = '<span style="color:#ef4444; font-weight:700;">İşlem kullanıcı tarafından durduruldu.</span>';
+      break;
+    }
+
+    const post = postsToProcess[i];
+    // 8 tema sırayla döner: 0:paper, 1:fanzine, 2:blueprint, 3:dark, 4:bordeaux, 5:postage, 6:kraft, 7:emerald...
+    // Bu sayede ARKA ARKAYA ASLA AYNI TEMA GELMEZ!
+    const theme = COVER_THEMES_CYCLE[i % COVER_THEMES_CYCLE.length];
+    const font = (i % 2 === 0) ? 'serif' : 'mono';
+
+    if (pCurrent) {
+      pCurrent.innerHTML = `<strong>(${i + 1}/${postsToProcess.length})</strong> [${theme.toUpperCase()}] "${post.title}" - <em>${post.author}</em>`;
+    }
+
+    // 16:9 canvas üzerinde çiz
+    drawCoverImage(post.title, post.author, post.category, post.role, theme, font, pCanvas);
+
+    // Canvas'ı dataUrl olarak al ve ajax_save_cover'a gönder
+    const dataUrl = pCanvas.toDataURL('image/png');
+    const formData = new FormData();
+    formData.append('csrf_token', '<?= Auth::csrf_token(); ?>');
+    formData.append('image_data', dataUrl);
+    formData.append('title', post.title);
+    formData.append('author', post.author);
+    formData.append('post_id', post.id);
+
+    try {
+      const res = await fetch('<?= SITE_URL; ?>/admin/posts.php?action=ajax_save_cover', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if (data.success) {
+        completed++;
+        post.has_cover = true;
+        post.image = data.url;
+      } else {
+        errors++;
+      }
+    } catch (err) {
+      errors++;
+    }
+
+    const pct = Math.round(((i + 1) / postsToProcess.length) * 100);
+    if (pBar) pBar.style.width = pct + '%';
+    if (pText) pText.innerText = pct + '%';
+    if (pCount) pCount.innerText = `${i + 1} / ${postsToProcess.length} Tamamlandı (${errors > 0 ? errors + ' hata' : 'sorunsuz'})`;
+
+    // Arayüzün nefes alması için küçük bir bekleme
+    await new Promise(r => setTimeout(r, 120));
+  }
+
+  batchCoverRunning = false;
+  if (pBtnStop) pBtnStop.style.display = 'none';
+  if (pBtnDone) pBtnDone.style.display = 'inline-flex';
+
+  if (!batchCoverCancel) {
+    if (pCurrent) {
+      pCurrent.innerHTML = `<span style="color:#10b981; font-weight:700;">✓ Tebrikler! ${completed} esere 8 farklı dönüşümlü edebi temada ve SEO isimleriyle kapaklar başarıyla üretilip atandı!</span>`;
+    }
+  }
+}
+
+<?php
+$batch_posts_json = [];
+if (!empty($all_posts_batch)) {
+    foreach ($all_posts_batch as $p) {
+        $author_bio = $p['author_bio'] ?? '';
+        $author_title = $p['author_title'] ?? '';
+        $is_poet = (
+            stripos($author_bio, 'şair') !== false || 
+            stripos($author_bio, 'sair') !== false ||
+            stripos($author_title, 'şair') !== false || 
+            stripos($author_title, 'sair') !== false ||
+            stripos($p['category'] ?? '', 'şiir') !== false ||
+            stripos($p['category'] ?? '', 'siir') !== false
+        );
+        $batch_posts_json[] = [
+            'id' => (int)$p['id'],
+            'title' => $p['title'],
+            'author' => $p['author_name'] ?: 'Pratfall Yazarı',
+            'category' => $p['category'] ?: 'Deneme & Edebiyat',
+            'role' => $is_poet ? 'poet' : 'writer',
+            'has_cover' => !empty($p['featured_image']),
+            'image' => $p['featured_image'] ?? ''
+        ];
+    }
+}
+?>
+window.PRATFALL_BATCH_POSTS = <?= json_encode($batch_posts_json, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 </script>
+
+<!-- TOPLU KAPAK GÖRSELİ ÜRETİCİ MODAL -->
+<div id="batchCoverModal" style="display:none; position:fixed; inset:0; z-index:999999; background:rgba(0,0,0,0.78); backdrop-filter:blur(6px); align-items:center; justify-content:center; padding:1.5rem;">
+  <div style="background:var(--adm-card, #fff); max-width:820px; width:100%; border-radius:14px; border:1px solid var(--adm-border); box-shadow:0 30px 60px rgba(0,0,0,0.4); overflow:hidden; display:flex; flex-direction:column;">
+    
+    <div style="padding:1.25rem 1.5rem; border-bottom:1px solid var(--adm-border); display:flex; justify-content:space-between; align-items:center; background:#fafbfc;">
+      <div style="display:flex; align-items:center; gap:0.6rem;">
+        <span style="font-size:1.5rem;">🎨</span>
+        <div>
+          <h3 style="margin:0; font-size:1.15rem; font-weight:700;">Toplu Edebi Kapak Görseli Üretimi</h3>
+          <span style="font-size:0.78rem; color:var(--adm-muted);">8 farklı dönüşümlü tema (arka arkaya asla aynı tema gelmez) · SEO uyumlu WebP kayıt</span>
+        </div>
+      </div>
+      <button type="button" onclick="closeBatchCoverModal()" style="background:transparent; border:none; font-size:1.5rem; cursor:pointer; color:var(--adm-muted); padding:0 0.5rem;">&times;</button>
+    </div>
+
+    <div style="padding:1.5rem; display:flex; flex-direction:column; gap:1.2rem;">
+      
+      <!-- İlerleme Çubuğu -->
+      <div>
+        <div style="display:flex; justify-content:space-between; font-size:0.85rem; font-weight:600; margin-bottom:0.4rem;">
+          <span id="batchCoverCountText">Hazırlanıyor...</span>
+          <span id="batchCoverProgressText" style="color:var(--adm-primary); font-weight:700;">0%</span>
+        </div>
+        <div style="width:100%; height:12px; background:#e2e8f0; border-radius:6px; overflow:hidden;">
+          <div id="batchCoverProgressBar" style="width:0%; height:100%; background:linear-gradient(90deg, #b45309, #d97706); transition:width 0.2s ease;"></div>
+        </div>
+      </div>
+
+      <!-- Anlık İşlenen Eser -->
+      <div id="batchCoverCurrentTitle" style="font-size:0.85rem; color:#475569; background:#f8fafc; border:1px solid #e2e8f0; padding:0.65rem 0.9rem; border-radius:6px; min-height:2.4rem; display:flex; align-items:center;">
+        İşlem başlatılıyor...
+      </div>
+
+      <!-- Canlı Görselleştirme Alanı -->
+      <div style="display:flex; justify-content:center; background:#18181b; padding:0.75rem; border-radius:8px; border:1px solid #27272a;">
+        <canvas id="batchCoverCanvas" width="1200" height="675" style="max-width:100%; width:540px; height:auto; border-radius:4px; box-shadow:0 4px 16px rgba(0,0,0,0.5); display:block;"></canvas>
+      </div>
+
+      <!-- Butonlar & Durum -->
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.5rem;">
+        <div style="font-size:0.75rem; color:var(--adm-muted);">
+          ✦ Tüm görseller <code>uploads/covers/[eser-adi]-[yazar-adi].webp</code> olarak kaydedilir.
+        </div>
+        <div style="display:flex; gap:0.6rem;">
+          <button type="button" id="batchCoverStopBtn" onclick="closeBatchCoverModal()" class="btn btn-secondary btn-sm" style="font-weight:600;">
+            İşlemi Durdur
+          </button>
+          <button type="button" id="batchCoverDoneBtn" onclick="window.location.reload()" class="btn btn-primary btn-sm" style="display:none; font-weight:700;">
+            ✓ Tamamlandı (Sayfayı Yenile)
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
 
 <!-- OTOMATİK ÖNE ÇIKAN KAPAK GÖRSELİ ÜRETİCİ MODAL (CANVAS MOTORU) -->
 <div id="coverGeneratorModal" style="display:none; position:fixed; inset:0; z-index:99999; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); align-items:center; justify-content:center; padding:1.5rem;">
