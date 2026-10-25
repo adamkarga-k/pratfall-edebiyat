@@ -18,7 +18,7 @@ ini_set( 'display_errors', '0' );
 date_default_timezone_set( 'Europe/Istanbul' );
 
 // Sürüm Bilgisi
-define( 'PRATFALL_APP_VERSION', '1.5.0' );
+define( 'PRATFALL_APP_VERSION', '1.5.1' );
 
 // Oturum Başlatma (Güvenli Çerez Ayarlarıyla)
 if ( session_status() === PHP_SESSION_NONE ) {

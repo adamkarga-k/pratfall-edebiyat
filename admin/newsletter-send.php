@@ -38,6 +38,12 @@ $btn_url     = trim( (string) ( $_POST['btn_url'] ?? '' ) );
 $test_email  = trim( (string) ( $_POST['test_email'] ?? ( Auth::user()['email'] ?? 'mail@pratfall.com.tr' ) ) );
 $send_mode   = $_POST['send_mode'] ?? 'test';
 
+// Şablon Başlık ve İmzaları
+$top_badge   = trim( (string) ( $_POST['top_badge'] ?? Database::get_setting( 'newsletter_top_badge', '✦ MATBAA & EDEBİYAT BÜLTENİ' ) ) );
+$brand_name  = trim( (string) ( $_POST['brand_name'] ?? Database::get_setting( 'newsletter_brand_name', 'PRATFALL' ) ) );
+$slogan      = trim( (string) ( $_POST['slogan'] ?? Database::get_setting( 'newsletter_slogan', 'Kusurlu Kalma Çabası · Bağımsız Edebiyat Platformu' ) ) );
+$footer_note = trim( (string) ( $_POST['footer_note'] ?? Database::get_setting( 'newsletter_footer_note', 'Bu e-posta, Pratfall Edebiyat Platformu bültenine kayıt olduğunuz için iletilmiştir.' ) ) );
+
 // GÖNDERİM İŞLEMİ
 if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
     if ( ! Auth::verify_csrf( $_POST['csrf_token'] ?? '' ) ) {
@@ -45,6 +51,19 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
     } elseif ( empty( $subject ) || empty( $title ) || empty( $content ) ) {
         $err = 'Lütfen Konu, E-Posta Başlığı ve İçerik alanlarını eksiksiz doldurun.';
     } else {
+        // Yeni şablon başlıklarını veritabanına kaydet (Kalıcı olsun)
+        Database::set_setting( 'newsletter_top_badge', $top_badge );
+        Database::set_setting( 'newsletter_brand_name', $brand_name );
+        Database::set_setting( 'newsletter_slogan', $slogan );
+        Database::set_setting( 'newsletter_footer_note', $footer_note );
+
+        $custom_tpl = [
+            'top_badge'   => $top_badge,
+            'brand_name'  => $brand_name,
+            'slogan'      => $slogan,
+            'footer_note' => $footer_note,
+        ];
+
         // İçeriği satır sonlarına göre paragraflara çevir
         $formatted_content = nl2br( $content );
 
@@ -54,7 +73,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
                 $err = 'Lütfen geçerli bir test e-posta adresi yazın.';
             } else {
                 $unsub_url = SITE_URL . '/bulten/ayril?token=DEMO_TEST_TOKEN';
-                $html = Mailer::createTemplate( $title, $formatted_content, $unsub_url, $btn_text, $btn_url );
+                $html = Mailer::createTemplate( $title, $formatted_content, $unsub_url, $btn_text, $btn_url, $custom_tpl );
                 $res = Mailer::send( $test_email, '[TEST] ' . $subject, $html );
 
                 if ( $res['success'] ) {
@@ -80,7 +99,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
                     }
 
                     $unsub_url = SITE_URL . '/bulten/ayril?token=' . $sub['unsubscribe_token'];
-                    $html = Mailer::createTemplate( $title, $formatted_content, $unsub_url, $btn_text, $btn_url );
+                    $html = Mailer::createTemplate( $title, $formatted_content, $unsub_url, $btn_text, $btn_url, $custom_tpl );
                     
                     $res = Mailer::send( $decrypted_email, $subject, $html );
                     if ( $res['success'] ) {
@@ -244,6 +263,40 @@ require PATH_ADMIN . '/layout/header.php';
         </div>
       </div>
 
+      <!-- ŞABLON METİNLERİNİ ÖZELLEŞTİRME KARTI -->
+      <div style="background:var(--adm-surface-alt); padding:1.25rem; border-radius:var(--adm-radius-sm); margin-bottom:1.5rem; border:1px solid var(--adm-border);">
+        <details open>
+          <summary style="font-size:0.88rem; font-weight:700; cursor:pointer; user-select:none; display:flex; align-items:center; gap:0.5rem; color:var(--adm-text);">
+            <span>🎨 Şablon Başlıklarını & İmzalarını Özelleştir</span>
+            <span class="stamp-tag" style="font-size:0.68rem; margin-left:auto; background:#fff;">Canlı Önizlemeli</span>
+          </summary>
+          <p style="font-size:0.75rem; color:var(--adm-muted); margin:0.5rem 0 1rem 0;">
+            E-postanın üstündeki kırmızı rozet, dergi adı, sloganı ve altbilgi notunu buradan dilediğiniz gibi değiştirebilirsiniz.
+          </p>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+            <div>
+              <label class="form-label" style="font-size:0.78rem; font-weight:600;">En Üst Kırmızı Rozet Metni:</label>
+              <input type="text" name="top_badge" id="inputTopBadge" class="form-control" value="<?= htmlspecialchars( $top_badge, ENT_QUOTES, 'UTF-8' ); ?>" placeholder="✦ MATBAA & EDEBİYAT BÜLTENİ" style="font-size:0.85rem;" />
+            </div>
+            <div>
+              <label class="form-label" style="font-size:0.78rem; font-weight:600;">Dergi / Marka Adı:</label>
+              <input type="text" name="brand_name" id="inputBrandName" class="form-control" value="<?= htmlspecialchars( $brand_name, ENT_QUOTES, 'UTF-8' ); ?>" placeholder="PRATFALL" style="font-size:0.85rem; font-weight:700;" />
+            </div>
+          </div>
+
+          <div style="margin-bottom:1rem;">
+            <label class="form-label" style="font-size:0.78rem; font-weight:600;">Başlık Altındaki Slogan / Açıklama:</label>
+            <input type="text" name="slogan" id="inputSlogan" class="form-control" value="<?= htmlspecialchars( $slogan, ENT_QUOTES, 'UTF-8' ); ?>" placeholder="Kusurlu Kalma Çabası · Bağımsız Edebiyat Platformu" style="font-size:0.85rem;" />
+          </div>
+
+          <div>
+            <label class="form-label" style="font-size:0.78rem; font-weight:600;">En Alttaki Bilgilendirme Notu:</label>
+            <input type="text" name="footer_note" id="inputFooterNote" class="form-control" value="<?= htmlspecialchars( $footer_note, ENT_QUOTES, 'UTF-8' ); ?>" placeholder="Bu e-posta, Pratfall Edebiyat Platformu bültenine kayıt olduğunuz için iletilmiştir." style="font-size:0.85rem;" />
+          </div>
+        </details>
+      </div>
+
       <!-- Gönderim Seçenekleri -->
       <div style="border-top:1px solid var(--adm-border); padding-top:1.5rem;">
         <label class="form-label" style="font-weight:700; margin-bottom:0.85rem;">
@@ -323,14 +376,14 @@ require PATH_ADMIN . '/layout/header.php';
             
             <!-- Şablon Başlığı -->
             <div style="padding:16px 20px 12px 20px; border-bottom:2px solid #1a1a1a; background-color:#fbf7ee;">
-              <div style="font-family:'Courier New', monospace; font-size:9px; font-weight:bold; letter-spacing:1.5px; color:#8b1e0f; margin-bottom:4px;">
-                ✦ MATBAA & EDEBİYAT BÜLTENİ
+              <div id="prevTopBadge" style="font-family:'Courier New', monospace; font-size:9px; font-weight:bold; letter-spacing:1.5px; color:#8b1e0f; margin-bottom:4px;">
+                <?= htmlspecialchars( $top_badge, ENT_QUOTES, 'UTF-8' ); ?>
               </div>
-              <div style="font-family:Georgia, serif; font-size:18px; font-weight:bold; letter-spacing:2px; color:#1a1a1a;">
-                PRATFALL
+              <div id="prevBrandName" style="font-family:Georgia, serif; font-size:18px; font-weight:bold; letter-spacing:2px; color:#1a1a1a;">
+                <?= htmlspecialchars( $brand_name, ENT_QUOTES, 'UTF-8' ); ?>
               </div>
-              <div style="font-family:'Courier New', monospace; font-size:9px; color:#666; margin-top:2px;">
-                Kusurlu Kalma Çabası · Bağımsız Edebiyat
+              <div id="prevSlogan" style="font-family:'Courier New', monospace; font-size:9px; color:#666; margin-top:2px;">
+                <?= htmlspecialchars( $slogan, ENT_QUOTES, 'UTF-8' ); ?>
               </div>
             </div>
 
@@ -356,8 +409,13 @@ require PATH_ADMIN . '/layout/header.php';
 
             <!-- Şablon Altbilgisi -->
             <div style="padding:12px 20px; border-top:1px solid #eee; background-color:#faf7ee; font-size:10px; color:#777; text-align:center; font-family:'Courier New', monospace;">
-              &copy; <?= date('Y'); ?> PRATFALL Edebiyat Dergisi & Platformu<br>
-              <span style="color:#999; text-decoration:underline;">Abonelikten Ayrıl</span>
+              <div id="prevFooterNote" style="margin-bottom:6px; line-height:1.4;">
+                <?= htmlspecialchars( $footer_note, ENT_QUOTES, 'UTF-8' ); ?>
+              </div>
+              <div>
+                <a href="<?= SITE_URL; ?>" style="color:#1a1a1a; text-decoration:underline;">pratfall.com.tr</a> · 
+                <span style="color:#8b1e0f; text-decoration:underline; font-weight:bold;">Abonelikten Ayrıl</span>
+              </div>
             </div>
 
           </div>
@@ -403,18 +461,26 @@ function toggleSendMode(mode) {
 }
 
 // Canlı Önizleme Senkronizasyonu
-var inSubject = document.getElementById('inputSubject');
-var inTitle   = document.getElementById('inputTitle');
-var inContent = document.getElementById('inputContent');
-var inBtnText = document.getElementById('inputBtnText');
-var inBtnUrl  = document.getElementById('inputBtnUrl');
+var inSubject    = document.getElementById('inputSubject');
+var inTitle      = document.getElementById('inputTitle');
+var inContent    = document.getElementById('inputContent');
+var inBtnText    = document.getElementById('inputBtnText');
+var inBtnUrl     = document.getElementById('inputBtnUrl');
+var inTopBadge   = document.getElementById('inputTopBadge');
+var inBrandName  = document.getElementById('inputBrandName');
+var inSlogan     = document.getElementById('inputSlogan');
+var inFooterNote = document.getElementById('inputFooterNote');
 
-var pSubject  = document.getElementById('prevSubject');
-var pTitle    = document.getElementById('prevTitle');
-var pContent  = document.getElementById('prevContent');
-var pBtnWrap  = document.getElementById('prevBtnWrap');
-var pBtn      = document.getElementById('prevBtn');
-var charCount = document.getElementById('subjectCharCount');
+var pSubject     = document.getElementById('prevSubject');
+var pTitle       = document.getElementById('prevTitle');
+var pContent     = document.getElementById('prevContent');
+var pBtnWrap     = document.getElementById('prevBtnWrap');
+var pBtn         = document.getElementById('prevBtn');
+var pTopBadge    = document.getElementById('prevTopBadge');
+var pBrandName   = document.getElementById('prevBrandName');
+var pSlogan      = document.getElementById('prevSlogan');
+var pFooterNote  = document.getElementById('prevFooterNote');
+var charCount    = document.getElementById('subjectCharCount');
 
 function syncPreview() {
   if (inSubject) {
@@ -441,6 +507,18 @@ function syncPreview() {
       pBtnWrap.style.display = 'none';
     }
   }
+  if (inTopBadge && pTopBadge) {
+    pTopBadge.innerText = inTopBadge.value.trim() || '✦ MATBAA & EDEBİYAT BÜLTENİ';
+  }
+  if (inBrandName && pBrandName) {
+    pBrandName.innerText = inBrandName.value.trim() || 'PRATFALL';
+  }
+  if (inSlogan && pSlogan) {
+    pSlogan.innerText = inSlogan.value.trim() || 'Kusurlu Kalma Çabası · Bağımsız Edebiyat Platformu';
+  }
+  if (inFooterNote && pFooterNote) {
+    pFooterNote.innerText = inFooterNote.value.trim() || 'Bu e-posta, Pratfall Edebiyat Platformu bültenine kayıt olduğunuz için iletilmiştir.';
+  }
 }
 
 inSubject?.addEventListener('input', syncPreview);
@@ -448,6 +526,10 @@ inTitle?.addEventListener('input', syncPreview);
 inContent?.addEventListener('input', syncPreview);
 inBtnText?.addEventListener('input', syncPreview);
 inBtnUrl?.addEventListener('input', syncPreview);
+inTopBadge?.addEventListener('input', syncPreview);
+inBrandName?.addEventListener('input', syncPreview);
+inSlogan?.addEventListener('input', syncPreview);
+inFooterNote?.addEventListener('input', syncPreview);
 
 // Hızlı Tipografi Ekleme
 function insertSnippet(before, after) {

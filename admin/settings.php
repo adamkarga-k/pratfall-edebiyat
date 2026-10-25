@@ -31,6 +31,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
                 'manifesto_title', 'manifesto_badge', 'manifesto_tag', 'manifesto_p1', 'manifesto_p2',
                 'footer_slogan', 'footer_desc', 'footer_newsletter_title', 'footer_newsletter_desc', 'footer_copyright',
                 'smtp_host', 'smtp_port', 'smtp_secure', 'smtp_user', 'smtp_pass', 'smtp_from_email', 'smtp_from_name',
+                'newsletter_top_badge', 'newsletter_brand_name', 'newsletter_slogan', 'newsletter_footer_note',
                 'google_search_console_code', 'google_analytics_id'
             ];
 

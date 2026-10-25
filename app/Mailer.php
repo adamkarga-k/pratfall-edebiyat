@@ -236,11 +236,15 @@ class Mailer {
     }
 
     /**
-     * Pratfall Özel Edebi Bülten Şablonu Oluştur
+     * Edebi Brutalist E-Posta Şablonu Üretir (Özelleştirilebilir Başlık, Slogan ve Rozet)
      */
-    public static function createTemplate( string $title, string $contentHtml, string $unsubscribeUrl, string $buttonText = '', string $buttonUrl = '' ): string {
-        $siteUrl = defined( 'SITE_URL' ) ? SITE_URL : 'https://pratfall.com.tr';
-        $siteName = 'PRATFALL';
+    public static function createTemplate( string $title, string $contentHtml, string $unsubscribeUrl, string $buttonText = '', string $buttonUrl = '', array $custom = [] ): string {
+        $siteUrl   = defined( 'SITE_URL' ) ? SITE_URL : 'https://pratfall.com.tr';
+        
+        $topBadge  = ! empty( $custom['top_badge'] ) ? $custom['top_badge'] : Database::get_setting( 'newsletter_top_badge', '✦ MATBAA & EDEBİYAT BÜLTENİ' );
+        $brandName = ! empty( $custom['brand_name'] ) ? $custom['brand_name'] : Database::get_setting( 'newsletter_brand_name', 'PRATFALL' );
+        $slogan    = ! empty( $custom['slogan'] ) ? $custom['slogan'] : Database::get_setting( 'newsletter_slogan', 'Kusurlu Kalma Çabası · Bağımsız Edebiyat Platformu' );
+        $footerNote= ! empty( $custom['footer_note'] ) ? $custom['footer_note'] : Database::get_setting( 'newsletter_footer_note', 'Bu e-posta, Pratfall Edebiyat Platformu bültenine kayıt olduğunuz için iletilmiştir.' );
 
         $buttonHtml = '';
         if ( ! empty( $buttonText ) && ! empty( $buttonUrl ) ) {
@@ -269,9 +273,9 @@ class Mailer {
           <!-- Üst Edebi Başlık / Logo -->
           <tr>
             <td style="padding:28px 32px 20px 32px; border-bottom:2px solid #1a1a1a; background-color:#fbf7ee;">
-              <div style="font-family:\'Courier New\', Courier, monospace; font-size:11px; font-weight:bold; letter-spacing:2px; color:#8b1e0f; margin-bottom:6px;">✦ MATBAA & EDEBİYAT BÜLTENİ</div>
-              <div style="font-family:Georgia, serif; font-size:24px; font-weight:bold; letter-spacing:3px; color:#1a1a1a;">' . $siteName . '</div>
-              <div style="font-family:\'Courier New\', Courier, monospace; font-size:11px; color:#666666; margin-top:4px;">Kusurlu Kalma Çabası · Bağımsız Edebiyat Platformu</div>
+              <div style="font-family:\'Courier New\', Courier, monospace; font-size:11px; font-weight:bold; letter-spacing:2px; color:#8b1e0f; margin-bottom:6px;">' . htmlspecialchars( $topBadge, ENT_QUOTES, 'UTF-8' ) . '</div>
+              <div style="font-family:Georgia, serif; font-size:24px; font-weight:bold; letter-spacing:3px; color:#1a1a1a;">' . htmlspecialchars( $brandName, ENT_QUOTES, 'UTF-8' ) . '</div>
+              <div style="font-family:\'Courier New\', Courier, monospace; font-size:11px; color:#666666; margin-top:4px;">' . htmlspecialchars( $slogan, ENT_QUOTES, 'UTF-8' ) . '</div>
             </td>
           </tr>
 
@@ -293,7 +297,7 @@ class Mailer {
           <!-- Altbilgi & Ayrılma Linki (KVKK / GDPR Uyumlu) -->
           <tr>
             <td style="padding:22px 32px; background-color:#faf7f0; border-top:1px solid #e0dacb; font-family:\'Courier New\', Courier, monospace; font-size:11px; color:#777777; line-height:1.6;">
-              <div>Bu e-posta, Pratfall Edebiyat Platformu bültenine kayıt olduğunuz için iletilmiştir.</div>
+              <div>' . htmlspecialchars( $footerNote, ENT_QUOTES, 'UTF-8' ) . '</div>
               <div style="margin-top:10px;">
                 <a href="' . $siteUrl . '" style="color:#1a1a1a; text-decoration:underline;">pratfall.com.tr</a> · 
                 <a href="' . $unsubscribeUrl . '" style="color:#8b1e0f; text-decoration:underline; font-weight:bold;">Abonelikten Ayrıl</a>
