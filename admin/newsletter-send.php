@@ -4,6 +4,7 @@
  * 
  * Şifreli kasadaki kayıtlı abonelere edebi bülten ve duyuru gönderir.
  * cPanel / Kurumsal SMTP veya yerel PHP mail() altyapısını kullanır.
+ * 4 Farklı Edebi E-Posta Tasarım Şablonu içerir.
  */
 
 if ( ! defined( 'PRATFALL_ROOT' ) ) {
@@ -35,14 +36,15 @@ $title       = trim( (string) ( $_POST['title'] ?? '' ) );
 $content     = trim( (string) ( $_POST['content'] ?? '' ) );
 $btn_text    = trim( (string) ( $_POST['btn_text'] ?? '' ) );
 $btn_url     = trim( (string) ( $_POST['btn_url'] ?? '' ) );
-$test_email  = trim( (string) ( $_POST['test_email'] ?? ( Auth::user()['email'] ?? 'mail@pratfall.com.tr' ) ) );
+$test_email  = trim( (string) ( $_POST['test_email'] ?? ( Auth::user()['email'] ?? 'adamkarga.net@gmail.com' ) ) );
 $send_mode   = $_POST['send_mode'] ?? 'test';
 
-// Şablon Başlık ve İmzaları
-$top_badge   = trim( (string) ( $_POST['top_badge'] ?? Database::get_setting( 'newsletter_top_badge', '✦ MATBAA & EDEBİYAT BÜLTENİ' ) ) );
+// Şablon Başlık, İmzaları ve Teması (Kullanıcının belirlediği kalıcı varsayılanlar)
+$top_badge   = trim( (string) ( $_POST['top_badge'] ?? Database::get_setting( 'newsletter_top_badge', '✦' ) ) );
 $brand_name  = trim( (string) ( $_POST['brand_name'] ?? Database::get_setting( 'newsletter_brand_name', 'PRATFALL' ) ) );
-$slogan      = trim( (string) ( $_POST['slogan'] ?? Database::get_setting( 'newsletter_slogan', 'Kusurlu Kalma Çabası · Bağımsız Edebiyat Platformu' ) ) );
-$footer_note = trim( (string) ( $_POST['footer_note'] ?? Database::get_setting( 'newsletter_footer_note', 'Bu e-posta, Pratfall Edebiyat Platformu bültenine kayıt olduğunuz için iletilmiştir.' ) ) );
+$slogan      = trim( (string) ( $_POST['slogan'] ?? Database::get_setting( 'newsletter_slogan', 'Kusurlu Kalma Çabası' ) ) );
+$footer_note = trim( (string) ( $_POST['footer_note'] ?? Database::get_setting( 'newsletter_footer_note', 'Bu e-posta, Pratfall Dergimize eser gönderdiğiniz için gelmektedir. Rahatsızlık verdiysek aşağıdaki bağlantıyı ziyaret edebilirsin.' ) ) );
+$tpl_style   = trim( (string) ( $_POST['template_style'] ?? Database::get_setting( 'newsletter_template_style', 'brutalist' ) ) );
 
 // GÖNDERİM İŞLEMİ
 if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
@@ -51,17 +53,19 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
     } elseif ( empty( $subject ) || empty( $title ) || empty( $content ) ) {
         $err = 'Lütfen Konu, E-Posta Başlığı ve İçerik alanlarını eksiksiz doldurun.';
     } else {
-        // Yeni şablon başlıklarını veritabanına kaydet (Kalıcı olsun)
+        // Şablon ayarlarını kalıcı olarak veritabanına kaydet
         Database::set_setting( 'newsletter_top_badge', $top_badge );
         Database::set_setting( 'newsletter_brand_name', $brand_name );
         Database::set_setting( 'newsletter_slogan', $slogan );
         Database::set_setting( 'newsletter_footer_note', $footer_note );
+        Database::set_setting( 'newsletter_template_style', $tpl_style );
 
         $custom_tpl = [
             'top_badge'   => $top_badge,
             'brand_name'  => $brand_name,
             'slogan'      => $slogan,
             'footer_note' => $footer_note,
+            'style'       => $tpl_style,
         ];
 
         // İçeriği satır sonlarına göre paragraflara çevir
@@ -126,7 +130,7 @@ require PATH_ADMIN . '/layout/header.php';
   <div>
     <h1 class="admin-title">📬 Bülten Dağıtım Masası</h1>
     <p style="margin:0.25rem 0 0 0; color:var(--adm-muted); font-size:0.9rem;">
-      Kayıtlı edebiyat severlere şık, neo-brutalist matbaa şablonuyla e-posta mektubu gönderin.
+      Kayıtlı edebiyat severlere şık, seçilebilir edebi temalarla bülten mektubu gönderin.
     </p>
   </div>
   <div style="display:flex; gap:0.75rem; align-items:center;">
@@ -205,6 +209,51 @@ require PATH_ADMIN . '/layout/header.php';
   <div class="admin-card" style="margin:0;">
     <form method="POST" action="<?= SITE_URL; ?>/admin/newsletter-send.php" id="bultenSendForm">
       <input type="hidden" name="csrf_token" value="<?= Auth::csrf_token(); ?>" />
+      <input type="hidden" name="template_style" id="inputTemplateStyle" value="<?= htmlspecialchars( $tpl_style, ENT_QUOTES, 'UTF-8' ); ?>" />
+
+      <!-- ŞABLON TEMA SEÇİCİ (4 FARKLI EDEBİ TASARIM) -->
+      <div style="margin-bottom:1.5rem; background:var(--adm-surface-alt); padding:1.25rem; border-radius:var(--adm-radius-sm); border:1px solid var(--adm-border);">
+        <label class="form-label" style="font-weight:700; margin-bottom:0.6rem; display:flex; align-items:center; justify-content:space-between;">
+          <span>🎨 E-Posta Tasarım Temasını Seçin:</span>
+          <span class="stamp-tag" style="font-size:0.68rem; background:#fff;">4 Farklı Stil</span>
+        </label>
+        
+        <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:0.65rem;">
+          
+          <!-- Tema 1: Kusurlu Matbaa (Brutalist) -->
+          <div class="theme-choice-card <?= $tpl_style === 'brutalist' ? 'is-active' : ''; ?>" onclick="selectTheme('brutalist')" id="themeCard_brutalist">
+            <div style="display:flex; align-items:center; gap:0.4rem; font-weight:700; font-size:0.82rem;">
+              <span>📰</span> Kusurlu Matbaa
+            </div>
+            <div style="font-size:0.7rem; color:var(--adm-muted); margin-top:2px;">Krem kağıt, neo-brutalist sert gölge, kırmızı mühür</div>
+          </div>
+
+          <!-- Tema 2: Daktilo Noir (Monokrom) -->
+          <div class="theme-choice-card <?= $tpl_style === 'noir' ? 'is-active' : ''; ?>" onclick="selectTheme('noir')" id="themeCard_noir">
+            <div style="display:flex; align-items:center; gap:0.4rem; font-weight:700; font-size:0.82rem;">
+              <span>🖤</span> Daktilo Noir
+            </div>
+            <div style="font-size:0.7rem; color:var(--adm-muted); margin-top:2px;">Derin koyu gece teması, köz turuncusu vurgu</div>
+          </div>
+
+          <!-- Tema 3: Edebi Mektup (Kraft Parşömen) -->
+          <div class="theme-choice-card <?= $tpl_style === 'kraft' ? 'is-active' : ''; ?>" onclick="selectTheme('kraft')" id="themeCard_kraft">
+            <div style="display:flex; align-items:center; gap:0.4rem; font-weight:700; font-size:0.82rem;">
+              <span>📜</span> Edebi Mektup
+            </div>
+            <div style="font-size:0.7rem; color:var(--adm-muted); margin-top:2px;">Sıcak kraft parşömen, bordo nostaljik damga</div>
+          </div>
+
+          <!-- Tema 4: Minimal Zen (Modern) -->
+          <div class="theme-choice-card <?= $tpl_style === 'minimal' ? 'is-active' : ''; ?>" onclick="selectTheme('minimal')" id="themeCard_minimal">
+            <div style="display:flex; align-items:center; gap:0.4rem; font-weight:700; font-size:0.82rem;">
+              <span>🕊️</span> Minimal Zen
+            </div>
+            <div style="font-size:0.7rem; color:var(--adm-muted); margin-top:2px;">Tertemiz beyaz zemin, çerçevesiz modern tipografi</div>
+          </div>
+
+        </div>
+      </div>
 
       <!-- E-Posta Konusu -->
       <div class="form-group" style="margin-bottom:1.25rem;">
@@ -263,21 +312,21 @@ require PATH_ADMIN . '/layout/header.php';
         </div>
       </div>
 
-      <!-- ŞABLON METİNLERİNİ ÖZELLEŞTİRME KARTI -->
+      <!-- ŞABLON METİNLERİNİ ÖZELLEŞTİRME KARTI (KULLANICININ İSTEDİĞİ METİNLER) -->
       <div style="background:var(--adm-surface-alt); padding:1.25rem; border-radius:var(--adm-radius-sm); margin-bottom:1.5rem; border:1px solid var(--adm-border);">
         <details open>
           <summary style="font-size:0.88rem; font-weight:700; cursor:pointer; user-select:none; display:flex; align-items:center; gap:0.5rem; color:var(--adm-text);">
-            <span>🎨 Şablon Başlıklarını & İmzalarını Özelleştir</span>
-            <span class="stamp-tag" style="font-size:0.68rem; margin-left:auto; background:#fff;">Canlı Önizlemeli</span>
+            <span>🖋️ Şablon Başlıklarını & İmzalarını Özelleştir</span>
+            <span class="stamp-tag" style="font-size:0.68rem; margin-left:auto; background:#fff;">Kalıcı Olarak Kaydedilir</span>
           </summary>
           <p style="font-size:0.75rem; color:var(--adm-muted); margin:0.5rem 0 1rem 0;">
-            E-postanın üstündeki kırmızı rozet, dergi adı, sloganı ve altbilgi notunu buradan dilediğiniz gibi değiştirebilirsiniz.
+            E-postanın üstündeki kırmızı rozet, dergi adı, sloganı ve altbilgi notunu buradan dilediğiniz gibi değiştirebilirsiniz. Canlı önizlemede anında güncellenir.
           </p>
 
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
             <div>
-              <label class="form-label" style="font-size:0.78rem; font-weight:600;">En Üst Kırmızı Rozet Metni:</label>
-              <input type="text" name="top_badge" id="inputTopBadge" class="form-control" value="<?= htmlspecialchars( $top_badge, ENT_QUOTES, 'UTF-8' ); ?>" placeholder="✦ MATBAA & EDEBİYAT BÜLTENİ" style="font-size:0.85rem;" />
+              <label class="form-label" style="font-size:0.78rem; font-weight:600;">En Üst Rozet / İşaret:</label>
+              <input type="text" name="top_badge" id="inputTopBadge" class="form-control" value="<?= htmlspecialchars( $top_badge, ENT_QUOTES, 'UTF-8' ); ?>" placeholder="✦" style="font-size:0.85rem;" />
             </div>
             <div>
               <label class="form-label" style="font-size:0.78rem; font-weight:600;">Dergi / Marka Adı:</label>
@@ -287,12 +336,12 @@ require PATH_ADMIN . '/layout/header.php';
 
           <div style="margin-bottom:1rem;">
             <label class="form-label" style="font-size:0.78rem; font-weight:600;">Başlık Altındaki Slogan / Açıklama:</label>
-            <input type="text" name="slogan" id="inputSlogan" class="form-control" value="<?= htmlspecialchars( $slogan, ENT_QUOTES, 'UTF-8' ); ?>" placeholder="Kusurlu Kalma Çabası · Bağımsız Edebiyat Platformu" style="font-size:0.85rem;" />
+            <input type="text" name="slogan" id="inputSlogan" class="form-control" value="<?= htmlspecialchars( $slogan, ENT_QUOTES, 'UTF-8' ); ?>" placeholder="Kusurlu Kalma Çabası" style="font-size:0.85rem;" />
           </div>
 
           <div>
             <label class="form-label" style="font-size:0.78rem; font-weight:600;">En Alttaki Bilgilendirme Notu:</label>
-            <input type="text" name="footer_note" id="inputFooterNote" class="form-control" value="<?= htmlspecialchars( $footer_note, ENT_QUOTES, 'UTF-8' ); ?>" placeholder="Bu e-posta, Pratfall Edebiyat Platformu bültenine kayıt olduğunuz için iletilmiştir." style="font-size:0.85rem;" />
+            <textarea name="footer_note" id="inputFooterNote" rows="2" class="form-control" placeholder="Bu e-posta, Pratfall Dergimize eser gönderdiğiniz için gelmektedir..." style="font-size:0.85rem; line-height:1.5;"><?= htmlspecialchars( $footer_note, ENT_QUOTES, 'UTF-8' ); ?></textarea>
           </div>
         </details>
       </div>
@@ -358,25 +407,25 @@ require PATH_ADMIN . '/layout/header.php';
         <div style="font-weight:700; font-size:0.9rem; display:flex; align-items:center; gap:0.5rem;">
           <span>👁️</span> Canlı E-Posta Önizlemesi
         </div>
-        <span class="stamp-tag" style="font-size:0.68rem;">Gmail / Apple Mail</span>
+        <span id="badgeActiveTheme" class="stamp-tag" style="font-size:0.68rem; font-weight:700;">Kusurlu Matbaa</span>
       </div>
 
       <!-- Simüle E-Posta İstemcisi Penceresi -->
-      <div style="background:#f4eee1; border:1px solid #d4ccb8; border-radius:6px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+      <div id="prevClientWindow" style="background:#f4eee1; border:1px solid #d4ccb8; border-radius:6px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.06); transition:background 0.3s ease;">
         
         <!-- İstemci Başlık Çubuğu -->
-        <div style="background:#e5ded0; padding:0.5rem 0.85rem; border-bottom:1px solid #d4ccb8; font-size:0.75rem; font-family:var(--adm-font-mono); color:#555;">
+        <div id="prevClientBar" style="background:#e5ded0; padding:0.5rem 0.85rem; border-bottom:1px solid #d4ccb8; font-size:0.75rem; font-family:var(--adm-font-mono); color:#555;">
           <div><strong>Kimden:</strong> PRATFALL &lt;mail@pratfall.com.tr&gt;</div>
           <div style="margin-top:2px;"><strong>Konu:</strong> <span id="prevSubject" style="color:#1a1a1a; font-weight:700;">(Konu Başlığı)</span></div>
         </div>
 
         <!-- Mektup Gövdesi -->
         <div style="padding:1.5rem 1rem;">
-          <div style="max-width:440px; margin:0 auto; background:#fff; border:2px solid #1a1a1a; box-shadow:4px 4px 0px #1a1a1a; border-radius:2px;">
+          <div id="prevClientCard" style="max-width:440px; margin:0 auto; background:#fff; border:2px solid #1a1a1a; box-shadow:4px 4px 0px #1a1a1a; border-radius:2px; transition:all 0.3s ease;">
             
             <!-- Şablon Başlığı -->
-            <div style="padding:16px 20px 12px 20px; border-bottom:2px solid #1a1a1a; background-color:#fbf7ee;">
-              <div id="prevTopBadge" style="font-family:'Courier New', monospace; font-size:9px; font-weight:bold; letter-spacing:1.5px; color:#8b1e0f; margin-bottom:4px;">
+            <div id="prevCardHeader" style="padding:16px 20px 12px 20px; border-bottom:2px solid #1a1a1a; background-color:#fbf7ee; transition:all 0.3s ease;">
+              <div id="prevTopBadge" style="font-family:'Courier New', monospace; font-size:11px; font-weight:bold; letter-spacing:1.5px; color:#8b1e0f; margin-bottom:4px;">
                 <?= htmlspecialchars( $top_badge, ENT_QUOTES, 'UTF-8' ); ?>
               </div>
               <div id="prevBrandName" style="font-family:Georgia, serif; font-size:18px; font-weight:bold; letter-spacing:2px; color:#1a1a1a;">
@@ -388,12 +437,12 @@ require PATH_ADMIN . '/layout/header.php';
             </div>
 
             <!-- İçerik Alanı -->
-            <div style="padding:20px;">
-              <h2 id="prevTitle" style="font-family:Georgia, serif; font-size:18px; color:#1a1a1a; margin:0 0 14px 0; line-height:1.35;">
+            <div id="prevCardBody" style="padding:20px; color:#222; transition:all 0.3s ease;">
+              <h2 id="prevTitle" style="font-family:Georgia, serif; font-size:18px; color:#111; margin:0 0 14px 0; line-height:1.35; border-left:3px solid #8b1e0f; padding-left:10px;">
                 Yeni Sayımız Matbaadan Çıktı
               </h2>
 
-              <div id="prevContent" style="font-family:Georgia, serif; font-size:13.5px; line-height:1.75; color:#222; min-height:80px; white-space:pre-line;">
+              <div id="prevContent" style="font-family:Georgia, serif; font-size:13.5px; line-height:1.75; min-height:80px; white-space:pre-line;">
                 Sevgili Pratfall Okuru,
                 
                 Bu sayımızda sokakların tereddüdünü ve unutulmuş dizeleri bir araya getirdik...
@@ -408,13 +457,13 @@ require PATH_ADMIN . '/layout/header.php';
             </div>
 
             <!-- Şablon Altbilgisi -->
-            <div style="padding:12px 20px; border-top:1px solid #eee; background-color:#faf7ee; font-size:10px; color:#777; text-align:center; font-family:'Courier New', monospace;">
+            <div id="prevCardFooter" style="padding:12px 20px; border-top:1px solid #eee; background-color:#faf7ee; font-size:10px; color:#777; text-align:center; font-family:'Courier New', monospace; transition:all 0.3s ease;">
               <div id="prevFooterNote" style="margin-bottom:6px; line-height:1.4;">
                 <?= htmlspecialchars( $footer_note, ENT_QUOTES, 'UTF-8' ); ?>
               </div>
               <div>
-                <a href="<?= SITE_URL; ?>" style="color:#1a1a1a; text-decoration:underline;">pratfall.com.tr</a> · 
-                <span style="color:#8b1e0f; text-decoration:underline; font-weight:bold;">Abonelikten Ayrıl</span>
+                <span id="prevSiteLink" style="text-decoration:underline;">pratfall.com.tr</span> · 
+                <span id="prevUnsubLink" style="text-decoration:underline; font-weight:bold; color:#8b1e0f;">Abonelikten Ayrıl</span>
               </div>
             </div>
 
@@ -434,6 +483,27 @@ require PATH_ADMIN . '/layout/header.php';
   </div>
 
 </div>
+
+<style>
+.theme-choice-card {
+  background: var(--adm-surface);
+  border: 1.5px solid var(--adm-border);
+  padding: 0.75rem 0.85rem;
+  border-radius: var(--adm-radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+.theme-choice-card:hover {
+  border-color: var(--adm-subtle);
+  transform: translateY(-1px);
+}
+.theme-choice-card.is-active {
+  border-color: var(--adm-primary);
+  background: var(--adm-surface);
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.1);
+}
+</style>
 
 <!-- CANLI ÖNİZLEME VE MOD DİNAMİĞİ JAVASCRIPT -->
 <script>
@@ -458,6 +528,171 @@ function toggleSendMode(mode) {
     cardTest.style.borderColor = 'var(--adm-border)';
     cardTest.style.background = 'var(--adm-surface-alt)';
   }
+}
+
+// 4 FARKLI EDEBİ TEMA TANIMLARI
+var themeStyles = {
+  brutalist: {
+    label: 'Kusurlu Matbaa (Brutalist)',
+    windowBg: '#f4eee1',
+    windowBarBg: '#e5ded0',
+    windowBarColor: '#555',
+    cardBg: '#ffffff',
+    cardBorder: '2px solid #1a1a1a',
+    cardShadow: '4px 4px 0px #1a1a1a',
+    headerBg: '#fbf7ee',
+    headerBorder: '2px solid #1a1a1a',
+    topBadgeColor: '#8b1e0f',
+    brandColor: '#1a1a1a',
+    sloganColor: '#666666',
+    titleColor: '#111111',
+    titleBorder: '3px solid #8b1e0f',
+    bodyColor: '#222222',
+    btnBg: '#1a1a1a',
+    btnColor: '#fbf7ee',
+    btnBorder: '2px solid #1a1a1a',
+    footerBg: '#faf7ee',
+    footerBorder: '1px solid #e0dacb',
+    footerColor: '#777777',
+    unsubColor: '#8b1e0f'
+  },
+  noir: {
+    label: 'Daktilo Noir (Koyu)',
+    windowBg: '#141416',
+    windowBarBg: '#1f1f23',
+    windowBarColor: '#999',
+    cardBg: '#1c1c20',
+    cardBorder: '1.5px solid #33333b',
+    cardShadow: '0 8px 24px rgba(0,0,0,0.6)',
+    headerBg: '#18181b',
+    headerBorder: '1.5px solid #33333b',
+    topBadgeColor: '#ea580c',
+    brandColor: '#ffffff',
+    sloganColor: '#a1a1aa',
+    titleColor: '#ffffff',
+    titleBorder: '3px solid #ea580c',
+    bodyColor: '#d4d4d8',
+    btnBg: '#ea580c',
+    btnColor: '#ffffff',
+    btnBorder: '2px solid #ea580c',
+    footerBg: '#18181b',
+    footerBorder: '1px solid #27272a',
+    footerColor: '#71717a',
+    unsubColor: '#ea580c'
+  },
+  kraft: {
+    label: 'Edebi Mektup (Kraft)',
+    windowBg: '#eae3d2',
+    windowBarBg: '#ded5c0',
+    windowBarColor: '#665',
+    cardBg: '#fcfaf5',
+    cardBorder: '1.5px solid #cfc2a9',
+    cardShadow: '4px 4px 14px rgba(78,50,30,0.1)',
+    headerBg: '#f4eee1',
+    headerBorder: '1.5px solid #cfc2a9',
+    topBadgeColor: '#8c351e',
+    brandColor: '#38160d',
+    sloganColor: '#785b4f',
+    titleColor: '#2c120a',
+    titleBorder: '3px solid #8c351e',
+    bodyColor: '#3d2b22',
+    btnBg: '#8c351e',
+    btnColor: '#faf7ee',
+    btnBorder: '2px solid #8c351e',
+    footerBg: '#f2ebd9',
+    footerBorder: '1px solid #dfd4bf',
+    footerColor: '#755c4d',
+    unsubColor: '#8c351e'
+  },
+  minimal: {
+    label: 'Minimal Zen (Modern)',
+    windowBg: '#fafafa',
+    windowBarBg: '#f3f4f6',
+    windowBarColor: '#666',
+    cardBg: '#ffffff',
+    cardBorder: '1px solid #e5e7eb',
+    cardShadow: '0 2px 10px rgba(0,0,0,0.04)',
+    headerBg: '#ffffff',
+    headerBorder: '1px solid #f3f4f6',
+    topBadgeColor: '#6b7280',
+    brandColor: '#111827',
+    sloganColor: '#6b7280',
+    titleColor: '#111827',
+    titleBorder: 'none',
+    bodyColor: '#374151',
+    btnBg: '#111827',
+    btnColor: '#ffffff',
+    btnBorder: '1px solid #111827',
+    footerBg: '#f9fafb',
+    footerBorder: '1px solid #f3f4f6',
+    footerColor: '#9ca3af',
+    unsubColor: '#ef4444'
+  }
+};
+
+function selectTheme(key) {
+  var hiddenInput = document.getElementById('inputTemplateStyle');
+  if (hiddenInput) hiddenInput.value = key;
+
+  // Kart aktiflik durumu
+  document.querySelectorAll('.theme-choice-card').forEach(function(el) {
+    el.classList.remove('is-active');
+  });
+  var activeCard = document.getElementById('themeCard_' + key);
+  if (activeCard) activeCard.classList.add('is-active');
+
+  // Canlı Önizleme Renklerini Güncelle
+  var t = themeStyles[key] || themeStyles.brutalist;
+  
+  var win = document.getElementById('prevClientWindow');
+  var bar = document.getElementById('prevClientBar');
+  var card = document.getElementById('prevClientCard');
+  var hdr = document.getElementById('prevCardHeader');
+  var badge = document.getElementById('prevTopBadge');
+  var brand = document.getElementById('prevBrandName');
+  var slogan = document.getElementById('prevSlogan');
+  var title = document.getElementById('prevTitle');
+  var body = document.getElementById('prevCardBody');
+  var btn = document.getElementById('prevBtn');
+  var ftr = document.getElementById('prevCardFooter');
+  var unsub = document.getElementById('prevUnsubLink');
+  var themeBadge = document.getElementById('badgeActiveTheme');
+
+  if (themeBadge) themeBadge.innerText = t.label;
+  if (win) win.style.background = t.windowBg;
+  if (bar) {
+    bar.style.background = t.windowBarBg;
+    bar.style.color = t.windowBarColor;
+  }
+  if (card) {
+    card.style.background = t.cardBg;
+    card.style.border = t.cardBorder;
+    card.style.boxShadow = t.cardShadow;
+  }
+  if (hdr) {
+    hdr.style.background = t.headerBg;
+    hdr.style.borderBottom = t.headerBorder;
+  }
+  if (badge) badge.style.color = t.topBadgeColor;
+  if (brand) brand.style.color = t.brandColor;
+  if (slogan) slogan.style.color = t.sloganColor;
+  if (title) {
+    title.style.color = t.titleColor;
+    title.style.borderLeft = t.titleBorder;
+    title.style.paddingLeft = (t.titleBorder === 'none') ? '0' : '10px';
+  }
+  if (body) body.style.color = t.bodyColor;
+  if (btn) {
+    btn.style.background = t.btnBg;
+    btn.style.color = t.btnColor;
+    btn.style.border = t.btnBorder;
+  }
+  if (ftr) {
+    ftr.style.background = t.footerBg;
+    ftr.style.borderTop = t.footerBorder;
+    ftr.style.color = t.footerColor;
+  }
+  if (unsub) unsub.style.color = t.unsubColor;
 }
 
 // Canlı Önizleme Senkronizasyonu
@@ -508,16 +743,16 @@ function syncPreview() {
     }
   }
   if (inTopBadge && pTopBadge) {
-    pTopBadge.innerText = inTopBadge.value.trim() || '✦ MATBAA & EDEBİYAT BÜLTENİ';
+    pTopBadge.innerText = inTopBadge.value.trim() || '✦';
   }
   if (inBrandName && pBrandName) {
     pBrandName.innerText = inBrandName.value.trim() || 'PRATFALL';
   }
   if (inSlogan && pSlogan) {
-    pSlogan.innerText = inSlogan.value.trim() || 'Kusurlu Kalma Çabası · Bağımsız Edebiyat Platformu';
+    pSlogan.innerText = inSlogan.value.trim() || 'Kusurlu Kalma Çabası';
   }
   if (inFooterNote && pFooterNote) {
-    pFooterNote.innerText = inFooterNote.value.trim() || 'Bu e-posta, Pratfall Edebiyat Platformu bültenine kayıt olduğunuz için iletilmiştir.';
+    pFooterNote.innerText = inFooterNote.value.trim() || 'Bu e-posta, Pratfall Dergimize eser gönderdiğiniz için gelmektedir. Rahatsızlık verdiysek aşağıdaki bağlantıyı ziyaret edebilirsin.';
   }
 }
 
@@ -565,7 +800,9 @@ document.getElementById('bultenSendForm')?.addEventListener('submit', function(e
   document.getElementById('btnLabel').innerText = 'Gönderiliyor, lütfen bekleyin...';
 });
 
-// İlk Yükleme Senkronizasyonu
+// İlk Yükleme
+var currentTpl = '<?= htmlspecialchars( $tpl_style, ENT_QUOTES, 'UTF-8' ); ?>' || 'brutalist';
+selectTheme(currentTpl);
 syncPreview();
 </script>
 
