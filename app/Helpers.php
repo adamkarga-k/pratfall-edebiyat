@@ -38,9 +38,20 @@ class Helpers {
             return false;
         }
 
-        $title = $author['title'] ?? ( $author['author_title'] ?? '' );
-        $bio   = $author['bio'] ?? ( $author['author_bio'] ?? '' );
-        $quote = $author['quote'] ?? '';
+        // Eğer post dizisi geldiyse author_title / author_bio önceliklidir (çünkü $author['title'] yazının başlığıdır!)
+        if ( isset( $author['author_title'] ) || isset( $author['author_bio'] ) ) {
+            $title = $author['author_title'] ?? '';
+            $bio   = $author['author_bio'] ?? '';
+            $quote = $author['author_quote'] ?? '';
+
+            if ( empty( $title ) && empty( $bio ) && ! empty( $author['author_slug'] ) ) {
+                return self::is_poet( $author['author_slug'] );
+            }
+        } else {
+            $title = $author['title'] ?? '';
+            $bio   = $author['bio'] ?? '';
+            $quote = $author['quote'] ?? '';
+        }
 
         $haystack = self::turkish_lower( $title . ' ' . $bio . ' ' . $quote );
 
@@ -61,7 +72,14 @@ class Helpers {
         $is_poet = false;
 
         if ( is_array( $author ) ) {
-            $slug = $author['slug'] ?? ( $author['author_slug'] ?? $default_slug );
+            // DİKKAT: Post dizisi geldiyse 'author_slug' önceliklidir ($author['slug'] yazının kendi slug'ıdır!)
+            if ( ! empty( $author['author_slug'] ) ) {
+                $slug = $author['author_slug'];
+            } elseif ( ! empty( $author['slug'] ) ) {
+                $slug = $author['slug'];
+            } else {
+                $slug = $default_slug;
+            }
             $is_poet = self::is_poet( $author );
         } else {
             $slug = (string) $author;
