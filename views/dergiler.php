@@ -50,11 +50,6 @@ require PATH_VIEWS . '/layout/header.php';
               <?= htmlspecialchars( $mag['title'], ENT_QUOTES, 'UTF-8' ); ?>
             </a>
           </h3>
-          <?php if ( ! empty( $mag['period'] ) ) : ?>
-            <div style="margin-bottom:0.75rem;">
-              <span class="dergi-period"><?= htmlspecialchars( $mag['period'], ENT_QUOTES, 'UTF-8' ); ?></span>
-            </div>
-          <?php endif; ?>
           <a href="<?= htmlspecialchars( $mag['buy_url'] ?? '#', ENT_QUOTES, 'UTF-8' ); ?>" target="_blank" rel="noopener" class="dergi-buy-btn">
             Sayıyı İncele ↗
           </a>

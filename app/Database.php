@@ -10,7 +10,7 @@
 class Database {
 
     private static ?PDO $pdo = null;
-    const DB_SYSTEM_VERSION = '1.4.8';
+    const DB_SYSTEM_VERSION = '1.5.1';
 
     /**
      * PDO Bağlantısını Getir (Singleton)
@@ -278,6 +278,166 @@ class Database {
         } catch ( Throwable $e ) {}
     }
 
+    /**
+     * 9. Sayıyı Otomatik Olarak Dergiler Tablosuna Ekle ve En Başa Yerleştir
+     */
+    public static function ensure_issue_9(): void {
+        try {
+            $db = self::$pdo;
+            $stmt = $db->query( "SELECT id FROM magazines WHERE issue_no LIKE '%9%' OR buy_url LIKE '%775321%'" );
+            $row = $stmt ? $stmt->fetch() : null;
+            $cover_url = ( defined( 'SITE_URL' ) ? SITE_URL : 'https://pratfall.com.tr' ) . '/uploads/covers/pratfall-sayi-9.jpg';
+            $buy_url   = 'https://www.kitapyurdu.com/kitap/pratfall-sayi-9-edebiyat-fikir-kultur-sanat-202611/775321.html?publisher_id=11968';
+
+            if ( ! $row ) {
+                // Diğer tüm sayıların order_num değerini 1 kaydır
+                $db->exec( "UPDATE magazines SET order_num = order_num + 1" );
+
+                $insert = $db->prepare( "
+                    INSERT INTO magazines (issue_no, title, period, price, cover_image, buy_url, order_num)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                " );
+                $insert->execute( [
+                    'Sayı #9',
+                    '2026 Kasım',
+                    '2026 Kasım',
+                    '200 ₺',
+                    $cover_url,
+                    $buy_url,
+                    1
+                ] );
+            } else {
+                // Daha önce eklenmişse güncel görsel ve linkle eşitle
+                $upd = $db->prepare( "
+                    UPDATE magazines SET 
+                        issue_no = 'Sayı #9',
+                        title = '2026 Kasım',
+                        period = '2026 Kasım',
+                        price = '200 ₺',
+                        cover_image = ?,
+                        buy_url = ?,
+                        order_num = 1
+                    WHERE id = ?
+                " );
+                $upd->execute( [ $cover_url, $buy_url, $row['id'] ] );
+            }
+        } catch ( Throwable $e ) {}
+    }
+
+    /**
+     * Yeni Çıkan Kitapları (Nehirler Çağıldarken & Divane) Kitaplığa Ekle
+     */
+    public static function ensure_new_books(): void {
+        try {
+            $db = self::$pdo;
+            $site_url = defined( 'SITE_URL' ) ? SITE_URL : 'https://pratfall.com.tr';
+
+            $new_books = [
+                [
+                    'title'        => 'Nehirler Çağıldarken',
+                    'author'       => 'Mustafa Sefa Çakır',
+                    'cover_image'  => $site_url . '/uploads/covers/nehirler-cagildarken.jpg',
+                    'buy_url'      => 'https://www.kitapyurdu.com/kitap/nehirler-cagildarken/773830.html',
+                    'price'        => '156 ₺',
+                    'publish_year' => '2026 · 1. Baskı',
+                    'description'  => 'Bir bir çekiliyor dünyadan iyiler / Kimisi yaşamak gölgesinde kalacak / Çağın vicdanını yüceltmek için / Kimisi bir nehrin rüzgârında akacak',
+                    'author_title' => 'Şair & Yazar',
+                    'author_slug'  => 'mustafa-sefa-cakir',
+                    'author_bio'   => "Pratfall Kitaplığı şairi. 'Nehirler Çağıldarken' adlı eserin yazarı.",
+                    'author_web'   => 'https://www.kitapyurdu.com/yazar/mustafa-sefa-cakir/221542.html',
+                ],
+                [
+                    'title'        => 'Divane',
+                    'author'       => 'Şevkinaz Bir',
+                    'cover_image'  => $site_url . '/uploads/covers/divane.jpg',
+                    'buy_url'      => 'https://www.kitapyurdu.com/kitap/divane/775009.html',
+                    'price'        => '176 ₺',
+                    'publish_year' => '2026 · 1. Baskı',
+                    'description'  => 'Divane, 1981’den 2025’e uzanan yılların defteri. Gaz sobasının başında pijama diken bir annenin türküsünden Akdeniz’e bırakılan bir yıldıza, evlatlara anlatılan masallardan Rabbe açılan ellere uzanan şiirler.',
+                    'author_title' => 'Şair',
+                    'author_slug'  => 'sevkinaz-bir',
+                    'author_bio'   => "Pratfall Kitaplığı şairi. 'Divane' adlı eserin yazarı.",
+                    'author_web'   => 'https://www.kitapyurdu.com/yazar/sevkinaz-bir/300373.html',
+                ],
+            ];
+
+            // 1. Yazarlar Tablosuna Ekle (Eğer yoksa)
+            $check_author = $db->prepare( "SELECT id FROM authors WHERE name = ? OR slug = ?" );
+            $ins_author   = $db->prepare( "
+                INSERT INTO authors (name, slug, title, quote, bio, photo, twitter, instagram, website)
+                VALUES (?, ?, ?, '', ?, '', '', '', ?)
+            " );
+
+            foreach ( $new_books as $nb ) {
+                $check_author->execute( [ $nb['author'], $nb['author_slug'] ] );
+                if ( ! $check_author->fetch() ) {
+                    $ins_author->execute( [
+                        $nb['author'],
+                        $nb['author_slug'],
+                        $nb['author_title'],
+                        $nb['author_bio'],
+                        $nb['author_web']
+                    ] );
+                }
+            }
+
+            // 2. Kitaplar Tablosuna Ekle
+            $check_book = $db->prepare( "SELECT id FROM books WHERE title = ? OR buy_url LIKE ?" );
+            $ins_book   = $db->prepare( "
+                INSERT INTO books (title, author, cover_image, buy_url, price, publish_year, description, order_num)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            " );
+            $upd_book   = $db->prepare( "
+                UPDATE books SET 
+                    author = ?, cover_image = ?, buy_url = ?, price = ?, 
+                    publish_year = ?, description = ?, order_num = ?
+                WHERE id = ?
+            " );
+
+            $inserted_count = 0;
+            foreach ( $new_books as $nb ) {
+                $check_book->execute( [ $nb['title'], '%' . basename( parse_url( $nb['buy_url'], PHP_URL_PATH ) ) . '%' ] );
+                if ( ! $check_book->fetch() ) {
+                    $inserted_count++;
+                }
+            }
+
+            if ( $inserted_count > 0 ) {
+                $db->exec( "UPDATE books SET order_num = order_num + {$inserted_count}" );
+            }
+
+            $order = 1;
+            foreach ( $new_books as $nb ) {
+                $check_book->execute( [ $nb['title'], '%' . basename( parse_url( $nb['buy_url'], PHP_URL_PATH ) ) . '%' ] );
+                $b_row = $check_book->fetch();
+                if ( ! $b_row ) {
+                    $ins_book->execute( [
+                        $nb['title'],
+                        $nb['author'],
+                        $nb['cover_image'],
+                        $nb['buy_url'],
+                        $nb['price'],
+                        $nb['publish_year'],
+                        $nb['description'],
+                        $order
+                    ] );
+                } else {
+                    $upd_book->execute( [
+                        $nb['author'],
+                        $nb['cover_image'],
+                        $nb['buy_url'],
+                        $nb['price'],
+                        $nb['publish_year'],
+                        $nb['description'],
+                        $order,
+                        $b_row['id']
+                    ] );
+                }
+                $order++;
+            }
+        } catch ( Throwable $e ) {}
+    }
+
     public static function ensure_subscribers(): void {
         try {
             $db = self::$pdo;
@@ -492,12 +652,15 @@ class Database {
 
         // Demo Dergiler
         $magazines = [
-            [ 'Sayı #18', 'Kusursuzluğun İflası', 'Güz / Kış 2026', '120 ₺', 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=500&q=80', '#', 1 ],
-            [ 'Sayı #17', 'Çatlaklardan Sızan Şiir', 'İlkbahar / Yaz 2026', '110 ₺', 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=500&q=80', '#', 2 ],
-            [ 'Sayı #16', 'Daktilo ve Sokak Fanzinleri', 'Kış 2025', '95 ₺', 'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=500&q=80', '#', 3 ],
-            [ 'Sayı #15', 'Matbaanın ve Mürekkebin Külü', 'Güz 2025', '95 ₺', 'https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=500&q=80', '#', 4 ],
-            [ 'Sayı #14', 'Kelimelerin Anatomisi', 'Yaz 2025', '85 ₺', 'https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?auto=format&fit=crop&w=500&q=80', '#', 5 ],
-            [ 'Sayı #13', 'Gece Vardiyası Metinleri', 'İlkbahar 2025', '85 ₺', 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=500&q=80', '#', 6 ],
+            [ 'Sayı #9', '2026 Kasım', '2026 Kasım', '200 ₺', ( defined('SITE_URL') ? SITE_URL : 'https://pratfall.com.tr' ) . '/uploads/covers/pratfall-sayi-9.jpg', 'https://www.kitapyurdu.com/kitap/pratfall-sayi-9-edebiyat-fikir-kultur-sanat-202611/775321.html?publisher_id=11968', 1 ],
+            [ 'Sayı #8', '2026 Ekim', '2026 Ekim', '180 ₺', 'https://adamkarga.net/wp-content/uploads/pratfall-sekizinci-sayi.png', 'https://www.kitapyurdu.com/dergi/pratfall-sayi-8-edebiyat-fikir-kultur-sanat-202610/770583.html', 2 ],
+            [ 'Sayı #7', '2026 Ağustos', '2026 Ağustos', '180 ₺', 'https://adamkarga.net/wp-content/uploads/pratfall-7.jpg', 'https://www.kitapyurdu.com/kitap/pratfall-sayi-7-edebiyat-fikir-kultur-sanat-20268/764299.html', 3 ],
+            [ 'Sayı #6', '2026 Temmuz', '2026 Temmuz', '180 ₺', 'https://adamkarga.net/wp-content/uploads/pratfall-6.jpg', 'https://www.shopier.com/ShowProductNew/products.php?id=30256885', 4 ],
+            [ 'Sayı #5', '2026 Şubat', '2026 Şubat', '150 ₺', 'https://adamkarga.net/wp-content/uploads/pratfall-bes.jpg', 'https://www.shopier.com/ShowProductNew/products.php?id=26226993', 5 ],
+            [ 'Sayı #4', '2026 Ocak', '2026 Ocak', '140 ₺', 'https://adamkarga.net/wp-content/uploads/pratfall-dort.jpg', 'https://www.shopier.com/ShowProductNew/products.php?id=25574044', 6 ],
+            [ 'Sayı #3', '2025 Aralık', '2025 Aralık', '130 ₺', 'https://adamkarga.net/wp-content/uploads/pratfall-uc.jpg', 'https://www.shopier.com/ShowProductNew/products.php?id=24773824', 7 ],
+            [ 'Sayı #2', '2025 Kasım', '2025 Kasım', '120 ₺', 'https://adamkarga.net/wp-content/uploads/pratfall-iki.jpg', 'https://www.shopier.com/ShowProductNew/products.php?id=24097477', 8 ],
+            [ 'Sayı #1', '2025 Ekim', '2025 Ekim', '120 ₺', 'https://adamkarga.net/wp-content/uploads/pratfall-sayi-bir.jpg', 'https://www.shopier.com/ShowProductNew/products.php?id=23351989', 9 ],
         ];
 
         $stmt = $db->prepare( "
@@ -613,6 +776,8 @@ class Database {
             self::normalize_existing_poems();
             self::clear_all_post_tags_once();
             self::ensure_performance_indexes();
+            self::ensure_issue_9();
+            self::ensure_new_books();
             self::vacuum_and_optimize();
 
             // Sürümü kaydet

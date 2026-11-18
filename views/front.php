@@ -127,28 +127,28 @@ $books = $db->query( "SELECT * FROM books ORDER BY order_num ASC, id DESC" )->fe
 if ( empty( $magazines ) ) {
     $magazines = [
         [
-            'issue_no'    => 'Sayı #18',
-            'title'       => 'Kusursuzluğun İflası',
-            'period'      => 'Güz / Kış 2026',
-            'price'       => '120 ₺',
-            'cover_image' => 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=500&q=80',
-            'buy_url'     => '#'
+            'issue_no'    => 'Sayı #9',
+            'title'       => '2026 Kasım',
+            'period'      => '2026 Kasım',
+            'price'       => '200 ₺',
+            'cover_image' => SITE_URL . '/uploads/covers/pratfall-sayi-9.jpg',
+            'buy_url'     => 'https://www.kitapyurdu.com/kitap/pratfall-sayi-9-edebiyat-fikir-kultur-sanat-202611/775321.html?publisher_id=11968'
         ],
         [
-            'issue_no'    => 'Sayı #17',
-            'title'       => 'Çatlaklardan Sızan Şiir',
-            'period'      => 'İlkbahar / Yaz 2026',
-            'price'       => '110 ₺',
-            'cover_image' => 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=500&q=80',
-            'buy_url'     => '#'
+            'issue_no'    => 'Sayı #8',
+            'title'       => '2026 Ekim',
+            'period'      => '2026 Ekim',
+            'price'       => '180 ₺',
+            'cover_image' => 'https://adamkarga.net/wp-content/uploads/pratfall-sekizinci-sayi.png',
+            'buy_url'     => 'https://www.kitapyurdu.com/dergi/pratfall-sayi-8-edebiyat-fikir-kultur-sanat-202610/770583.html'
         ],
         [
-            'issue_no'    => 'Sayı #16',
-            'title'       => 'Daktilo Sesleri & Sis',
-            'period'      => 'Kış 2025',
-            'price'       => '95 ₺',
-            'cover_image' => 'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=500&q=80',
-            'buy_url'     => '#'
+            'issue_no'    => 'Sayı #7',
+            'title'       => '2026 Ağustos',
+            'period'      => '2026 Ağustos',
+            'price'       => '180 ₺',
+            'cover_image' => 'https://adamkarga.net/wp-content/uploads/pratfall-7.jpg',
+            'buy_url'     => 'https://www.kitapyurdu.com/kitap/pratfall-sayi-7-edebiyat-fikir-kultur-sanat-20268/764299.html'
         ]
     ];
 }
@@ -206,11 +206,6 @@ require PATH_VIEWS . '/layout/header.php';
                   <?= htmlspecialchars( $mag['title'], ENT_QUOTES, 'UTF-8' ); ?>
                 </a>
               </h3>
-              <?php if ( ! empty( $mag['period'] ) ) : ?>
-                <div style="margin-bottom:0.4rem;">
-                  <span class="dergi-period"><?= htmlspecialchars( $mag['period'], ENT_QUOTES, 'UTF-8' ); ?></span>
-                </div>
-              <?php endif; ?>
               <a href="<?= htmlspecialchars( $mag['buy_url'] ?? '#', ENT_QUOTES, 'UTF-8' ); ?>" target="_blank" rel="noopener" class="dergi-buy-btn">
                 İncele ↗
               </a>

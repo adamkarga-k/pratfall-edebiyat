@@ -10,6 +10,8 @@
 # 2. Kullanıcı Tarafından Yüklenen Resimler
 /uploads/*
 !/uploads/.gitkeep
+!/uploads/covers/
+!/uploads/covers/*
 !/uploads/docx-images/.gitkeep
 
 # 3. Sistem ve Geçici Dosyalar
