@@ -42,6 +42,21 @@ if ( function_exists( 'shell_exec' ) ) {
 @chmod( $repo_dir . '/style.css', 0644 );
 @chmod( $repo_dir . '/.htaccess', 0644 );
 
+// 4. Veritabanı ve Sürüm Yükseltmelerini Anında Uygula
+if ( file_exists( $repo_dir . '/config.php' ) ) {
+    require_once $repo_dir . '/config.php';
+    if ( class_exists( 'Database' ) ) {
+        try {
+            Database::run_migrations_if_needed();
+            Database::ensure_issue_9();
+            Database::ensure_new_books();
+            $output[] = "Veritabanı güncellemeleri başarıyla uygulandı (v" . Database::DB_SYSTEM_VERSION . ").";
+        } catch ( Throwable $te ) {
+            $output[] = "Veritabanı güncelleme notu: " . $te->getMessage();
+        }
+    }
+}
+
 header( 'Content-Type: application/json; charset=utf-8' );
 echo json_encode( [
     'status'    => 'success',

@@ -10,7 +10,7 @@
 class Database {
 
     private static ?PDO $pdo = null;
-    const DB_SYSTEM_VERSION = '1.5.1';
+    const DB_SYSTEM_VERSION = '1.5.2';
 
     /**
      * PDO Bağlantısını Getir (Singleton)
@@ -753,6 +753,19 @@ class Database {
      * Kullanıcı isteği doğrultusunda mevcut yazılardaki tüm anlamsız/otomatik etiketleri temizle.
      * Bu işlem 1 defa çalışır (flag ile korunur), böylece kullanıcının sonradan ekleyeceği SEO etiketleri silinmez.
      */
+    public static function clear_all_post_tags_once(): void {
+        try {
+            if ( ! self::$pdo ) {
+                return;
+            }
+            $flag = self::get_setting( 'tags_cleared_once', '0' );
+            if ( $flag !== '1' ) {
+                self::$pdo->exec( "UPDATE posts SET tags = '' WHERE tags IS NOT NULL AND tags != ''" );
+                self::set_setting( 'tags_cleared_once', '1' );
+            }
+        } catch ( Throwable $e ) {}
+    }
+
     /**
      * Şema ve veri iyileştirmelerini her istek yerine yalnızca sürüm yükseltildiğinde 1 defa çalıştırır.
      * Bu sayede site sayfaları açılırken veritabanı gereksiz DDL ve UPDATE sorgularıyla kilitlenmez.
@@ -767,18 +780,18 @@ class Database {
             }
 
             // Sürüm yükseltildiğinde veya ilk açılışta 1 defa çalıştır
-            self::ensure_initial_posts();
-            self::ensure_categories();
-            self::ensure_columns();
-            self::ensure_books();
-            self::ensure_subscribers();
-            self::clean_mecmua_settings();
-            self::normalize_existing_poems();
-            self::clear_all_post_tags_once();
-            self::ensure_performance_indexes();
-            self::ensure_issue_9();
-            self::ensure_new_books();
-            self::vacuum_and_optimize();
+            try { self::ensure_initial_posts(); } catch ( Throwable $t ) {}
+            try { self::ensure_categories(); } catch ( Throwable $t ) {}
+            try { self::ensure_columns(); } catch ( Throwable $t ) {}
+            try { self::ensure_books(); } catch ( Throwable $t ) {}
+            try { self::ensure_subscribers(); } catch ( Throwable $t ) {}
+            try { self::clean_mecmua_settings(); } catch ( Throwable $t ) {}
+            try { self::normalize_existing_poems(); } catch ( Throwable $t ) {}
+            try { self::clear_all_post_tags_once(); } catch ( Throwable $t ) {}
+            try { self::ensure_performance_indexes(); } catch ( Throwable $t ) {}
+            try { self::ensure_issue_9(); } catch ( Throwable $t ) {}
+            try { self::ensure_new_books(); } catch ( Throwable $t ) {}
+            try { self::vacuum_and_optimize(); } catch ( Throwable $t ) {}
 
             // Sürümü kaydet
             self::set_setting( 'db_system_version', self::DB_SYSTEM_VERSION );
